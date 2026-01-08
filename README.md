@@ -1,50 +1,71 @@
-# Welcome to your Expo app 👋
+<img src="./readme/title1.svg"/>
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<br><br>
 
-## Get started
+<!-- project overview -->
+<img src="./readme/title2.svg"/>
 
-1. Install dependencies
+> Description here.
+>
+> Description here.
 
-   ```bash
-   npm install
-   ```
+<br><br>
 
-2. Start the app
+<!-- System Design -->
+<img src="./readme/title3.svg"/>
 
-   ```bash
-   npx expo start
-   ```
+### Add Title Here
 
-In the output, you'll find options to open the app in a
+- To be decided on later on.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+<br><br>
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+<!-- Project Highlights -->
+<img src="./readme/title4.svg"/>
 
-## Get a fresh project
+### Add Title Here
 
-When you're ready, run:
+- List the sexy features.
 
-```bash
-npm run reset-project
-```
+<br><br>
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+<!-- Demo -->
+<img src="./readme/title5.svg"/>
 
-## Learn more
+### User Screens (Mobile)
 
-To learn more about developing your project with Expo, look at the following resources:
+| Login screen                            | Register screen                       | Register screen                       |
+| --------------------------------------- | ------------------------------------- | ------------------------------------- |
+| ![Landing](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Admin Screens (Web)
 
-## Join the community
+| Login screen                            | Register screen                       |
+| --------------------------------------- | ------------------------------------- |
+| ![Landing](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) |
 
-Join our community of developers creating universal apps.
+<br><br>
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+<!-- Development & Testing -->
+<img src="./readme/title6.svg"/>
+
+### Add Title Here
+
+| Services                                | Validation                            | Testing                               |
+| --------------------------------------- | ------------------------------------- | ------------------------------------- |
+| ![Landing](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) |
+
+<br><br>
+
+<!-- Deployment -->
+<img src="./readme/title7.svg"/>
+
+### Add Title Here
+
+- Description here.
+
+| Postman API 1                           | Postman API 2                         | Postman API 3                         |
+| --------------------------------------- | ------------------------------------- | ------------------------------------- |
+| ![Landing](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) |
+
+<br><br>
