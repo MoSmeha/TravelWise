@@ -1,7 +1,9 @@
 import { BudgetLevel, LocationClassification, TravelStyle } from '@prisma/client';
 import OpenAI from 'openai';
 import prisma from '../lib/prisma';
+import * as googlePlacesService from './google-places.service';
 
+// Define Place type locally since it's not exported from Prisma
 // Define Place type locally since it's not exported from Prisma
 type Place = {
   id: string;
@@ -17,6 +19,9 @@ type Place = {
   longitude: number;
   scamWarning?: string | null;
   city: string;
+  imageUrl?: string | null;
+  imageUrls?: string[];
+  googlePlaceId?: string | null;
   [key: string]: any; // For additional fields
 };
 
@@ -272,6 +277,49 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   const totalEstimatedCostUSD = days.reduce((sum, day) => {
     return sum + day.locations.reduce((dSum, loc) => dSum + (loc.costMinUSD || 20), 0);
   }, 0);
+
+  // Enrich with images if missing
+  // We do this asynchronously but await it to ensure images are available for the user
+  console.log('🖼️ Checking for missing images...');
+  
+  for (const day of days) {
+    for (let i = 0; i < day.locations.length; i++) {
+        const location = day.locations[i];
+        
+        // If image is missing and we have a googlePlaceId, fetch it
+        if ((!location.imageUrl || location.imageUrl === '') && location.googlePlaceId) {
+            try {
+                console.log(`🖼️ Fetching image for ${location.name} (${location.googlePlaceId})...`);
+                const details = await googlePlacesService.getPlaceDetails(location.googlePlaceId);
+                
+                if (details.data && details.data.photos && details.data.photos.length > 0) {
+                    const mainPhoto = details.data.photos[0];
+                    const allPhotos = details.data.photos;
+                    
+                    // Update in-memory object
+                    location.imageUrl = mainPhoto;
+                    location.imageUrls = allPhotos;
+                    
+                    // Update database asynchronously
+                    prisma.place.update({
+                        where: { id: location.id },
+                        data: {
+                            imageUrl: mainPhoto,
+                            imageUrls: allPhotos,
+                            lastEnrichedAt: new Date()
+                        }
+                    }).then(() => {
+                        console.log(`✅ Saved images for ${location.name}`);
+                    }).catch(err => {
+                        console.error(`❌ Failed to save images for ${location.name}:`, err);
+                    });
+                }
+            } catch (error) {
+                console.error(`❌ Failed to fetch image for ${location.name}:`, error);
+            }
+        }
+    }
+  }
   
   // Mini-AI Polish: Generate warnings, tourist traps, and local tips
   let warnings: Array<{ title: string; description: string }> = [];
