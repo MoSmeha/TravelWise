@@ -1,14 +1,10 @@
-import OpenAI from 'openai';
 import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/circuit-breaker';
+import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils';
 
 // ==========================================
 // EMBEDDING SERVICE
 // Generates embeddings for RAG using OpenAI with fallback
 // ==========================================
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 // Configuration
 interface EmbeddingConfig {
@@ -23,10 +19,8 @@ const PRIMARY_CONFIG: EmbeddingConfig = {
   dimensions: 1536,
 };
 
-// Check if OpenAI is configured
-export function isOpenAIConfigured(): boolean {
-  return !!process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here';
-}
+// isOpenAIConfigured is now imported from openai.utils.ts
+export { isOpenAIConfigured } from '../utils/openai.utils';
 
 // Generate a single embedding
 export async function generateEmbedding(text: string): Promise<number[]> {
@@ -40,7 +34,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
       CIRCUIT_BREAKERS.openAI,
       'OpenAI Embeddings',
       async () => {
-        const response = await openai.embeddings.create({
+        const response = await getOpenAIClient().embeddings.create({
           model: PRIMARY_CONFIG.model,
           input: text,
         });
@@ -73,7 +67,7 @@ export async function batchGenerateEmbeddings(texts: string[]): Promise<number[]
       CIRCUIT_BREAKERS.openAI,
       'OpenAI Embeddings',
       async () => {
-        const response = await openai.embeddings.create({
+        const response = await getOpenAIClient().embeddings.create({
           model: PRIMARY_CONFIG.model,
           input: texts,
         });

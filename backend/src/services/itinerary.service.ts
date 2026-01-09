@@ -1,10 +1,10 @@
 import { BudgetLevel, LocationClassification, TravelStyle } from '@prisma/client';
-import OpenAI from 'openai';
 import prisma from '../lib/prisma';
 import * as googlePlacesService from './google-places.service';
+import { haversineDistance } from '../utils/geo.utils';
+import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils';
 
-// Define Place type locally since it's not exported from Prisma
-// Define Place type locally since it's not exported from Prisma
+// Place type for itinerary locations
 type Place = {
   id: string;
   name: string;
@@ -58,18 +58,7 @@ export interface ItineraryResult {
   localTips: string[];
 }
 
-// Calculate distance between two lat/lng points (Haversine formula)
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+// calculateDistance is now imported from geo.utils.ts as haversineDistance
 
 // Group locations by proximity
 function clusterLocationsByProximity(locations: Place[], maxPerDay: number): Place[][] {
@@ -90,7 +79,7 @@ function clusterLocationsByProximity(locations: Place[], maxPerDay: number): Pla
       let minDistance = Infinity;
       
       remaining.forEach((loc, idx) => {
-        const dist = calculateDistance(centroidLat, centroidLon, loc.latitude, loc.longitude);
+        const dist = haversineDistance(centroidLat, centroidLon, loc.latitude, loc.longitude);
         if (dist < minDistance) {
           minDistance = dist;
           closestIdx = idx;
@@ -119,11 +108,11 @@ async function generateAIPolish(
   touristTraps: Array<{ name: string; reason: string }>;
   localTips: string[];
 }> {
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  
-  if (!process.env.OPENAI_API_KEY) {
+  if (!isOpenAIConfigured()) {
     return { warnings: [], touristTraps: [], localTips: [] };
   }
+  
+  const openai = getOpenAIClient();
   
   // Build context from itinerary
   const locationNames = days.flatMap(d => d.locations.map((l: any) => l.name)).join(', ');

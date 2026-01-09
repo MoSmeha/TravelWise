@@ -2,6 +2,7 @@ import { ChunkType as PrismaChunkType } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { chunkItinerary, ItineraryData } from './chunking.service';
 import { batchGenerateEmbeddings, cosineSimilarity, generateEmbedding } from './embedding.service';
+import { getOpenAIClient } from '../utils/openai.utils';
 
 // ==========================================
 // RAG RETRIEVAL SERVICE
@@ -260,11 +261,7 @@ export async function generateActionResponse(
   chunks: RetrievalResult['chunks'],
   staleWarning?: string
 ): Promise<RAGResponse> {
-  const { default: OpenAI } = await import('openai');
-  
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  const openai = getOpenAIClient();
   
   // Construct context with embedded Place IDs
   const context = chunks.map(c => {
