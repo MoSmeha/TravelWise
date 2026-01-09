@@ -44,6 +44,8 @@ export interface Location {
   aiReasoning?: string;
   scamWarning?: string;
   travelTimeFromPrevious?: string;
+  imageUrl?: string;
+  imageUrls?: string[];
 }
 
 // ============ HOTEL ============
@@ -153,6 +155,8 @@ export interface Place {
   costMaxUSD?: number;
   localTip?: string;
   scamWarning?: string;
+  imageUrl?: string;
+  imageUrls?: string[];
 }
 
 export interface ChecklistItem {

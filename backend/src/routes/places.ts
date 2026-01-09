@@ -10,6 +10,63 @@ const router = express.Router();
 
 // GET /api/places/photos - Get Google Places photos for a location
 // MUST be before /:id route to avoid being caught by it
+// GET /api/places/photos - Get Google Places photos for a location
+// MUST be before /:id route to avoid being caught by it
+router.get('/photos', async (req, res) => {
+  try {
+    const { name, lat, lng } = req.query;
+    
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({ error: 'name is required' });
+    }
+    
+    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'Google Places API not configured' });
+    }
+    
+    // Build location bias
+    const locationBias = lat && lng ? `&locationbias=point:${lat},${lng}` : '';
+    // Find place ID first
+    const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(name)}&inputtype=textquery${locationBias}&fields=place_id,name&key=${apiKey}`;
+    
+    const searchResponse = await fetch(searchUrl);
+    const searchData: any = await searchResponse.json();
+    
+    if (searchData.status !== 'OK' || !searchData.candidates || searchData.candidates.length === 0) {
+      return res.json({ photos: [], reviews: [] });
+    }
+    
+    const placeId = searchData.candidates[0].place_id;
+    
+    // Get details (photos and reviews)
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=photos,reviews&key=${apiKey}`;
+    const detailsResponse = await fetch(detailsUrl);
+    const detailsData: any = await detailsResponse.json();
+    
+    if (detailsData.status === 'OK' && detailsData.result) {
+      const photos = (detailsData.result.photos || []).map((p: any) => 
+        `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${p.photo_reference}&key=${apiKey}`
+      );
+      
+      const reviews = (detailsData.result.reviews || []).slice(0, 5).map((r: any) => ({
+        author: r.author_name,
+        rating: r.rating,
+        text: r.text,
+        time: r.relative_time_description
+      }));
+      
+      return res.json({ photos, reviews });
+    }
+    
+    return res.json({ photos: [], reviews: [] });
+    
+  } catch (error) {
+    console.error('Error fetching photos:', error);
+    res.status(500).json({ error: 'Failed to fetch photos' });
+  }
+});
+
 // GET /api/places/search - Search for a place (DB first, then Google with ingestion)
 router.get('/search', async (req, res) => {
   try {

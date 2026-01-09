@@ -262,6 +262,14 @@ export default function ItineraryScreen() {
                   <Text style={styles.locationName}>{location.name}</Text>
                 </View>
 
+                {location.imageUrl && (
+                  <RNImage
+                    source={{ uri: location.imageUrl }}
+                    style={styles.locationImage}
+                    resizeMode="cover"
+                  />
+                )}
+
                 <Text style={styles.locationCategory}>{location.category}</Text>
                 <Text style={styles.locationDescription}>
                   {location.description}
@@ -726,6 +734,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     marginBottom: 6,
+  },
+  locationImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 12,
   },
   locationDescription: {
     fontSize: 14,
