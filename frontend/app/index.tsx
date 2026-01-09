@@ -311,7 +311,7 @@ export default function HomeScreen() {
 
         {/* Info Box */}
         <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>What you'll get:</Text>
+          <Text style={styles.infoTitle}>What you&apos;ll get:</Text>
           <Text style={styles.infoItem}>✨ Hidden gems locals love</Text>
           <Text style={styles.infoItem}>🏨 Hotel recommendations with booking links</Text>
           <Text style={styles.infoItem}>⚠️ Tourist traps to avoid</Text>

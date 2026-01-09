@@ -50,6 +50,7 @@ export default function MapScreen() {
     if (selectedLocation) {
       fetchPhotosForLocation(selectedLocation.id, selectedLocation.name, selectedLocation.latitude, selectedLocation.longitude);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLocation]);
 
   useEffect(() => {
@@ -252,7 +253,7 @@ export default function MapScreen() {
                         {locationPhotos[selectedLocation.id].reviews[0].author} ⭐{locationPhotos[selectedLocation.id].reviews[0].rating}
                       </Text>
                       <Text style={styles.miniReviewText} numberOfLines={3}>
-                        "{locationPhotos[selectedLocation.id].reviews[0].text}"
+                        &quot;{locationPhotos[selectedLocation.id].reviews[0].text}&quot;
                       </Text>
                     </View>
                   </View>

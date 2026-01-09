@@ -122,7 +122,7 @@ export async function getWeatherForecast(
         
         return response.json();
       }
-    );
+    ) as any;
     
     if (result.list && result.list.length > 0) {
       // Group by day and calculate daily summary
@@ -193,7 +193,7 @@ function processForecastData(list: any[]): WeatherForecast[] {
       acc[c] = (acc[c] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    const mainCondition = Object.entries(conditionCounts)
+    const mainCondition = (Object.entries(conditionCounts) as [string, number][])
       .sort((a, b) => b[1] - a[1])[0][0];
     
     // Get icon from midday if available
@@ -219,8 +219,8 @@ function processForecastData(list: any[]): WeatherForecast[] {
 
 // Get historical averages as fallback
 function getHistoricalFallback(
-  lat: number, 
-  lng: number, 
+  _lat: number, 
+  _lng: number, 
   days: number, 
   reason: string
 ): WeatherResult {
