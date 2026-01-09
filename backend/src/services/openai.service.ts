@@ -1,12 +1,7 @@
 import 'dotenv/config';
 
-import OpenAI from 'openai';
-
 import { Airport, CountryConfig } from '../config/countries.config';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getOpenAIClient } from '../utils/openai.utils';
 
 // ============ TYPES ============
 
@@ -190,6 +185,7 @@ https://www.booking.com/searchresults.html?ss=[Hotel+Name]+[City]+${country.name
 RESPOND WITH ONLY VALID JSON. NO EXPLANATIONS OUTSIDE JSON.`;
 
   try {
+    const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
       model: 'gpt-4.1', // Ensure this model supports large context. If not, use 'gpt-4-turbo-preview'
       messages: [{ role: 'user', content: prompt }],
