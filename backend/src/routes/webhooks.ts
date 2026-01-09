@@ -66,7 +66,7 @@ router.get('/upcoming-trips', async (req, res) => {
 
 // GET /api/webhooks/unchecked-items
 // Returns itineraries with unchecked checklist items, flight in <24 hours
-router.get('/unchecked-items', async (req, res) => {
+router.get('/unchecked-items', async (_req: express.Request, res: express.Response) => {
   try {
     const now = new Date();
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);

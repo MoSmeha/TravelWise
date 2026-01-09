@@ -12,7 +12,7 @@ const router = express.Router();
 // MUST be before /:id route to avoid being caught by it
 // GET /api/places/photos - Get Google Places photos for a location
 // MUST be before /:id route to avoid being caught by it
-router.get('/photos', async (req, res) => {
+router.get('/photos', async (req: express.Request, res: express.Response) => {
   try {
     const { name, lat, lng } = req.query;
     
@@ -63,7 +63,7 @@ router.get('/photos', async (req, res) => {
     
   } catch (error) {
     console.error('Error fetching photos:', error);
-    res.status(500).json({ error: 'Failed to fetch photos' });
+    return res.status(500).json({ error: 'Failed to fetch photos' });
   }
 });
 
