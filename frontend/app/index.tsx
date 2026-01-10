@@ -11,8 +11,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { countryService, itineraryService } from '../services/api';
-import type { Airport, CountryConfig, TravelStyle } from '../types/api';
+import { useCountries } from '../hooks/queries/useCountries';
+import { useGenerateItinerary } from '../hooks/mutations/useItinerary';
+import type { Airport, TravelStyle } from '../types/api';
 
 // Available travel styles
 const TRAVEL_STYLES: { key: TravelStyle; label: string; emoji: string }[] = [
@@ -26,9 +27,9 @@ const TRAVEL_STYLES: { key: TravelStyle; label: string; emoji: string }[] = [
 export default function HomeScreen() {
   const router = useRouter();
   
-  // Countries data from API
-  const [countries, setCountries] = useState<CountryConfig[]>([]);
-  const [loadingCountries, setLoadingCountries] = useState(true);
+  // React Query Hooks
+  const { data: countries = [], isLoading: loadingCountries } = useCountries();
+  const generateItineraryMutation = useGenerateItinerary();
   
   // Form state
   const [selectedCountryKey, setSelectedCountryKey] = useState<string>('');
@@ -37,37 +38,21 @@ export default function HomeScreen() {
   const [budgetUSD, setBudgetUSD] = useState('');
   const [selectedStyles, setSelectedStyles] = useState<TravelStyle[]>(['food', 'culture']);
   const [travelDate, setTravelDate] = useState(''); // Format: YYYY-MM-DD
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false); // Handled by mutation status
 
-  // Load countries on mount
+  // Set defaults when countries load
   useEffect(() => {
-    loadCountries();
-  }, []);
-
-  const loadCountries = async () => {
-    try {
-      setLoadingCountries(true);
-      const data = await countryService.getCountries();
-      setCountries(data);
-      
-      // Select first country by default
-      if (data.length > 0) {
-        const firstCountry = data[0];
-        setSelectedCountryKey(firstCountry.key);
-        if (firstCountry.airports.length > 0) {
-          setSelectedAirportCode(firstCountry.airports[0].code);
-        }
-        // Set default budget to minimum * days
-        const defaultDays = 5;
-        setBudgetUSD(String(firstCountry.minBudgetPerDay * defaultDays));
+    if (countries.length > 0 && !selectedCountryKey) {
+      const firstCountry = countries[0];
+      setSelectedCountryKey(firstCountry.key);
+      if (firstCountry.airports.length > 0) {
+        setSelectedAirportCode(firstCountry.airports[0].code);
       }
-    } catch (error) {
-      console.error('Failed to load countries:', error);
-      Alert.alert('Error', 'Failed to load countries. Check your backend connection.');
-    } finally {
-      setLoadingCountries(false);
+      // Set default budget to minimum * days
+      const defaultDays = 5;
+      setBudgetUSD(String(firstCountry.minBudgetPerDay * defaultDays));
     }
-  };
+  }, [countries, selectedCountryKey]);
 
   // Get currently selected country
   const selectedCountry = countries.find(c => c.key === selectedCountryKey);
@@ -144,7 +129,7 @@ export default function HomeScreen() {
     if (dailyBudget >= 150) budgetLevel = 'HIGH';
     else if (dailyBudget >= 80) budgetLevel = 'MEDIUM';
 
-    setLoading(true);
+    // setLoading(true);
     try {
       // Backend expects: cityId, budgetLevel, travelStyle (singular)
       // We map country -> cityId (MVP behavior)
@@ -158,7 +143,7 @@ export default function HomeScreen() {
         startDate: travelDate || undefined,
       };
 
-      const response = await itineraryService.generateItinerary(payload);
+      const response = await generateItineraryMutation.mutateAsync(payload);
 
       // Navigate to map screen with data
       router.push({
@@ -179,8 +164,6 @@ export default function HomeScreen() {
       }
 
       Alert.alert(title, message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -295,11 +278,11 @@ export default function HomeScreen() {
         </Text>
 
         <TouchableOpacity
-          style={[styles.generateButton, loading && styles.generateButtonDisabled]}
+          style={[styles.generateButton, generateItineraryMutation.isPending && styles.generateButtonDisabled]}
           onPress={handleGenerate}
-          disabled={loading}
+          disabled={generateItineraryMutation.isPending}
         >
-          {loading ? (
+          {generateItineraryMutation.isPending ? (
             <View style={styles.loadingButton}>
               <ActivityIndicator color="#fff" />
               <Text style={styles.generateButtonText}> Generating with AI...</Text>

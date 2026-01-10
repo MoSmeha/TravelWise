@@ -4,7 +4,6 @@ import {
     ActivityIndicator,
     Alert,
     Linking,
-    Image as RNImage,
     ScrollView,
     StyleSheet,
     Text,
@@ -12,15 +11,9 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { API_BASE_URL } from '../config/api';
-import { itineraryService } from '../services/api';
-import type { Hotel, ItineraryResponse, Location, RAGResponse } from '../types/api';
-
-const PIN_COLORS = {
-  HIDDEN_GEM: '#22c55e',
-  CONDITIONAL: '#f97316',
-  TOURIST_TRAP: '#ef4444',
-};
+import { LocationItem } from '../components/itinerary/LocationItem';
+import { useAskQuestion } from '../hooks/mutations/useItinerary';
+import type { Hotel, ItineraryResponse, RAGResponse } from '../types/api';
 
 export default function ItineraryScreen() {
   const params = useLocalSearchParams();
@@ -30,35 +23,11 @@ export default function ItineraryScreen() {
   // RAG Chatbot state
   const [chatQuestion, setChatQuestion] = useState('');
   const [chatAnswer, setChatAnswer] = useState<RAGResponse | null>(null);
-  const [chatLoading, setChatLoading] = useState(false);
   const [showChat, setShowChat] = useState(false);
   
-  // Photo state for locations
-  const [locationPhotos, setLocationPhotos] = useState<Record<string, { photos: string[], reviews: any[], loading: boolean }>>({});
-  
-  // Fetch photos for a location
-  const fetchPhotosForLocation = async (locationId: string, locationName: string, lat?: number, lng?: number) => {
-    if (locationPhotos[locationId]?.photos.length > 0 || locationPhotos[locationId]?.loading) return;
-    
-    setLocationPhotos(prev => ({ ...prev, [locationId]: { photos: [], reviews: [], loading: true } }));
-    
-    try {
-      const params = new URLSearchParams({ name: locationName });
-      if (lat) params.append('lat', lat.toString());
-      if (lng) params.append('lng', lng.toString());
-      
-      const response = await fetch(`${API_BASE_URL}/places/photos?${params}`);
-      const data = await response.json();
-      
-      setLocationPhotos(prev => ({
-        ...prev,
-        [locationId]: { photos: data.photos || [], reviews: data.reviews || [], loading: false }
-      }));
-    } catch (error) {
-      console.error('Failed to fetch photos:', error);
-      setLocationPhotos(prev => ({ ...prev, [locationId]: { photos: [], reviews: [], loading: false } }));
-    }
-  };
+  // React Query Hooks
+  const askQuestionMutation = useAskQuestion();
+
 
   useEffect(() => {
     if (params.data) {
@@ -77,25 +46,18 @@ export default function ItineraryScreen() {
     if (!chatQuestion.trim() || !data?.itinerary.id) return;
     
     try {
-      setChatLoading(true);
       setChatAnswer(null);
-      const response = await itineraryService.askQuestion(data.itinerary.id, chatQuestion);
+      const response = await askQuestionMutation.mutateAsync({
+        itineraryId: data.itinerary.id,
+        question: chatQuestion,
+      });
       setChatAnswer(response);
     } catch (err: any) {
       Alert.alert(
         'Error', 
         err.response?.data?.message || 'Failed to get answer. Embeddings may not be generated yet.'
       );
-    } finally {
-      setChatLoading(false);
     }
-  };
-
-  const formatCost = (loc: Location) => {
-    if (loc.costMinUSD && loc.costMaxUSD) {
-      return `$${loc.costMinUSD}-$${loc.costMaxUSD}`;
-    }
-    return 'Cost varies';
   };
 
   const handleHotelBook = (url: string) => {
@@ -250,109 +212,7 @@ export default function ItineraryScreen() {
             )}
 
             {day.locations.map((location, index) => (
-              <View key={location.id} style={styles.locationCard}>
-                <View style={styles.locationHeader}>
-                  <View
-                    style={[
-                      styles.locationBadge,
-                      { backgroundColor: PIN_COLORS[location.classification] },
-                    ]}
-                  />
-                  <Text style={styles.locationNumber}>{index + 1}</Text>
-                  <Text style={styles.locationName}>{location.name}</Text>
-                </View>
-
-                {location.imageUrl && (
-                  <RNImage
-                    source={{ uri: location.imageUrl }}
-                    style={styles.locationImage}
-                    resizeMode="cover"
-                  />
-                )}
-
-                <Text style={styles.locationCategory}>{location.category}</Text>
-                <Text style={styles.locationDescription}>
-                  {location.description}
-                </Text>
-
-                <View style={styles.locationDetails}>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>💰 Cost:</Text>
-                    <Text style={styles.detailValue}>{formatCost(location)}</Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>⏰ Best time:</Text>
-                    <Text style={styles.detailValue}>
-                      {location.bestTimeToVisit}
-                    </Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>👥 Crowd:</Text>
-                    <Text style={styles.detailValue}>{location.crowdLevel}</Text>
-                  </View>
-                  {location.travelTimeFromPrevious && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>🚗 Travel:</Text>
-                      <Text style={styles.detailValue}>{location.travelTimeFromPrevious}</Text>
-                    </View>
-                  )}
-                </View>
-
-                {location.aiReasoning && (
-                  <View style={styles.reasoningBox}>
-                    <Text style={styles.reasoningText}>
-                      🤖 {location.aiReasoning}
-                    </Text>
-                  </View>
-                )}
-
-                {location.scamWarning && (
-                  <View style={styles.scamWarningBox}>
-                    <Text style={styles.scamWarningText}>
-                      🚨 {location.scamWarning}
-                    </Text>
-                  </View>
-                )}
-                
-                {/* Photos and Reviews Section */}
-                <TouchableOpacity 
-                  style={styles.loadPhotosButton}
-                  onPress={() => fetchPhotosForLocation(location.id, location.name, location.latitude, location.longitude)}
-                >
-                  <Text style={styles.loadPhotosButtonText}>
-                    {locationPhotos[location.id]?.loading ? '⏳ Loading...' : '📷 View Photos & Reviews'}
-                  </Text>
-                </TouchableOpacity>
-                
-                {locationPhotos[location.id] && !locationPhotos[location.id].loading && (
-                  <>
-                    {locationPhotos[location.id].photos.length > 0 && (
-                      <ScrollView horizontal style={styles.photoGallery} showsHorizontalScrollIndicator={false}>
-                        {locationPhotos[location.id].photos.map((photoUrl, photoIdx) => (
-                          <RNImage 
-                            key={photoIdx} 
-                            source={{ uri: photoUrl }} 
-                            style={styles.galleryPhoto}
-                            resizeMode="cover"
-                          />
-                        ))}
-                      </ScrollView>
-                    )}
-                    
-                    {locationPhotos[location.id].reviews.length > 0 && (
-                      <View style={styles.reviewsSection}>
-                        <Text style={styles.reviewsSectionTitle}>📝 Reviews</Text>
-                        {locationPhotos[location.id].reviews.map((review, reviewIdx) => (
-                          <View key={reviewIdx} style={styles.reviewCard}>
-                            <Text style={styles.reviewAuthor}>{review.author} ⭐{review.rating}</Text>
-                            <Text style={styles.reviewText} numberOfLines={3}>{review.text}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    )}
-                  </>
-                )}
-              </View>
+              <LocationItem key={location.id} location={location} index={index} />
             ))}
           </View>
         ))}
@@ -399,11 +259,11 @@ export default function ItineraryScreen() {
                   multiline
                 />
                 <TouchableOpacity
-                  style={[styles.chatSendButton, chatLoading && styles.chatSendButtonDisabled]}
+                  style={[styles.chatSendButton, askQuestionMutation.isPending && styles.chatSendButtonDisabled]}
                   onPress={askQuestion}
-                  disabled={chatLoading}
+                  disabled={askQuestionMutation.isPending}
                 >
-                  {chatLoading ? (
+                  {askQuestionMutation.isPending ? (
                     <ActivityIndicator color="#fff" size="small" />
                   ) : (
                     <Text style={styles.chatSendButtonText}>Ask</Text>

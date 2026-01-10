@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
     ActivityIndicator,
     Image,
@@ -10,13 +10,11 @@ import {
     View,
 } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps';
-import api, { placesService } from '../services/api';
+import { usePlaces, usePlacePhotos } from '../hooks/queries/usePlaces';
 import type { Place } from '../types/api';
 
 // ==========================================
 // PLACES PAGE - Map View
-// Shows places from database on an interactive map
-// Fetches photos from Google Places API on click
 // ==========================================
 
 const PIN_COLORS: Record<string, string> = {
@@ -27,57 +25,24 @@ const PIN_COLORS: Record<string, string> = {
 
 export default function PlacesScreen() {
   // Places state
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: placesResponse, isLoading: loading, error: queryError, refetch } = usePlaces({ limit: 100 });
+  const places = placesResponse?.data || [];
+  const error = queryError ? (queryError as Error).message : null;
+
   const [filter, setFilter] = useState<'all' | 'HIDDEN_GEM' | 'CONDITIONAL' | 'TOURIST_TRAP'>('all');
   
   // Selected place for modal
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [placePhotos, setPlacePhotos] = useState<string[]>([]);
-  const [loadingPhotos, setLoadingPhotos] = useState(false);
   
-  useEffect(() => {
-    loadPlaces();
-  }, []);
-  
-  const loadPlaces = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await placesService.getPlaces({ limit: 100 });
-      console.log('Loaded places:', response.data.length);
-      setPlaces(response.data);
-    } catch (err: any) {
-      console.error('Failed to load places:', err);
-      setError(err.message || 'Failed to load places from database');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Fetch Google Places photos when a place is selected
-  const fetchGooglePhotos = async (placeName: string, latitude: number, longitude: number) => {
-    try {
-      setLoadingPhotos(true);
-      setPlacePhotos([]);
-      
-      // Call backend to get Google Places photos
-      const response = await api.get('/places/photos', {
-        params: { name: placeName, lat: latitude, lng: longitude }
-      });
-      
-      if (response.data.photos && response.data.photos.length > 0) {
-        setPlacePhotos(response.data.photos);
-      }
-    } catch (err) {
-      console.log('Could not fetch Google photos:', err);
-      // Silently fail - photos are optional
-    } finally {
-      setLoadingPhotos(false);
-    }
-  };
+  // Photos for selected place
+  const { data: photosData, isLoading: loadingPhotos } = usePlacePhotos(
+    selectedPlace?.name || '',
+    selectedPlace?.latitude,
+    selectedPlace?.longitude,
+    modalVisible && !!selectedPlace
+  );
+  const placePhotos = photosData?.photos || [];
   
   const filteredPlaces = filter === 'all' 
     ? places 
@@ -112,14 +77,9 @@ export default function PlacesScreen() {
     };
   };
   
-  const openPlaceModal = async (place: Place) => {
+  const openPlaceModal = (place: Place) => {
     setSelectedPlace(place);
     setModalVisible(true);
-    
-    // Fetch Google Places photos
-    if (place.latitude && place.longitude) {
-      fetchGooglePhotos(place.name, place.latitude, place.longitude);
-    }
   };
   
   // Get places with valid coordinates
@@ -143,7 +103,7 @@ export default function PlacesScreen() {
         <Text style={styles.errorHint}>
           Make sure the backend is running and the database migration has been applied.
         </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadPlaces}>
+        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
