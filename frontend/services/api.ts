@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { z } from 'zod';
 import { API_BASE_URL } from '../config/api';
 import type {
+  ChecklistItem,
   CountryConfig,
   GenerateItineraryRequest,
   ItineraryResponse,
@@ -8,6 +10,12 @@ import type {
   PlacesResponse,
   RAGResponse
 } from '../types/api';
+import {
+  ChecklistItemSchema,
+  CountryConfigSchema,
+  ItineraryResponseSchema,
+  RAGResponseSchema
+} from '../types/schemas';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,19 +28,21 @@ const api = axios.create({
 export const countryService = {
   async getCountries(): Promise<CountryConfig[]> {
     const response = await api.get<{ countries: CountryConfig[] }>('/itinerary/countries');
-    return response.data.countries;
+    const schema = z.object({ countries: z.array(CountryConfigSchema) });
+    const parsed = schema.parse(response.data);
+    return parsed.countries;
   },
 };
 
 export const itineraryService = {
   async generateItinerary(request: GenerateItineraryRequest): Promise<ItineraryResponse> {
     const response = await api.post<ItineraryResponse>('/itinerary/generate', request);
-    return response.data;
+    return ItineraryResponseSchema.parse(response.data);
   },
   
   async askQuestion(itineraryId: string, question: string): Promise<RAGResponse> {
     const response = await api.post<RAGResponse>(`/itinerary/${itineraryId}/ask`, { question });
-    return response.data;
+    return RAGResponseSchema.parse(response.data);
   },
 };
 
@@ -67,9 +77,9 @@ export const placesService = {
 };
 
 export const checklistService = {
-  async getChecklist(itineraryId: string): Promise<import('../types/api').ChecklistItem[]> {
-    const response = await api.get<{ data: import('../types/api').ChecklistItem[] }>(`/checklist/${itineraryId}`);
-    return response.data.data || [];
+  async getChecklist(itineraryId: string): Promise<ChecklistItem[]> {
+    const response = await api.get<{ data: ChecklistItem[] }>(`/checklist/${itineraryId}`);
+    return z.array(ChecklistItemSchema).parse(response.data.data || []);
   },
 
   async toggleChecklistItem(itemId: string): Promise<import('../types/api').ChecklistItem> {
@@ -77,18 +87,18 @@ export const checklistService = {
     throw new Error("Method signature update needed");
   },
 
-  async updateChecklistItemStatus(itemId: string, isChecked: boolean): Promise<import('../types/api').ChecklistItem> {
-    const response = await api.patch<{ data: import('../types/api').ChecklistItem }>(`/checklist/${itemId}`, { isChecked });
-    return response.data.data;
+  async updateChecklistItemStatus(itemId: string, isChecked: boolean): Promise<ChecklistItem> {
+    const response = await api.patch<{ data: ChecklistItem }>(`/checklist/${itemId}`, { isChecked });
+    return ChecklistItemSchema.parse(response.data.data);
   },
 
-  async addChecklistItem(itineraryId: string, item: string, category: string = 'ESSENTIALS'): Promise<import('../types/api').ChecklistItem> {
-    const response = await api.post<{ data: import('../types/api').ChecklistItem }>(`/checklist/${itineraryId}`, { 
+  async addChecklistItem(itineraryId: string, item: string, category: string = 'ESSENTIALS'): Promise<ChecklistItem> {
+    const response = await api.post<{ data: ChecklistItem }>(`/checklist/${itineraryId}`, { 
       item, 
       category,
       reason: 'User added item'
     });
-    return response.data.data;
+    return ChecklistItemSchema.parse(response.data.data);
   },
 };
 
