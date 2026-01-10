@@ -58,6 +58,12 @@ export const placesService = {
     const response = await api.get<{ data: { name: string; placeCount: number }[] }>('/places/meta/cities');
     return response.data.data;
   },
+
+  async getPlacePhotos(name: string, lat?: number, lng?: number): Promise<{ photos: string[]; reviews: any[] }> {
+    const params = { name, lat, lng };
+    const response = await api.get<{ photos: string[]; reviews: any[] }>('/places/photos', { params });
+    return response.data;
+  },
 };
 
 export const checklistService = {
