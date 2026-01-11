@@ -1,6 +1,7 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express, NextFunction, Request, Response } from 'express';
+import authRouter from './routes/auth';
 import checklistRouter from './routes/checklist';
 import itineraryRouter from './routes/itinerary';
 import locationsRouter from './routes/locations';
@@ -28,10 +29,11 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.get('/api', (_req: Request, res: Response) => {
   res.json({ 
     message: 'TravelWise API is running', 
-    endpoints: ['/itinerary', '/locations', '/warnings', '/places', '/webhooks'],
+    endpoints: ['/auth', '/itinerary', '/locations', '/warnings', '/places', '/webhooks'],
   });
 });
 
+app.use('/api/auth', authRouter);
 app.use('/api/itinerary', itineraryRouter);
 app.use('/api/itinerary', ragRouter); // RAG endpoints under /api/itinerary/:id/ask
 app.use('/api/locations', locationsRouter);

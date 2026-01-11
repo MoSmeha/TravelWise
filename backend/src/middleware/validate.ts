@@ -4,7 +4,7 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
-import { AnyZodObject, ZodError } from 'zod';
+import { ZodError, ZodTypeAny } from 'zod';
 
 /**
  * Validation target - which part of the request to validate
@@ -13,10 +13,10 @@ type ValidationTarget = 'body' | 'query' | 'params';
 
 /**
  * Create validation middleware for a Zod schema
- * @param schema - Zod schema to validate against
+ * @param schema - Zod schema to validate against (supports ZodObject and ZodEffects)
  * @param target - Which part of request to validate (default: 'body')
  */
-export function validate(schema: AnyZodObject, target: ValidationTarget = 'body') {
+export function validate(schema: ZodTypeAny, target: ValidationTarget = 'body') {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const data = req[target];
@@ -45,7 +45,7 @@ export function validate(schema: AnyZodObject, target: ValidationTarget = 'body'
  * Combine multiple validation middlewares
  */
 export function validateMultiple(
-  validations: Array<{ schema: AnyZodObject; target: ValidationTarget }>
+  validations: Array<{ schema: ZodTypeAny; target: ValidationTarget }>
 ) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
