@@ -37,8 +37,8 @@ export interface Location {
   description: string;
   costMinUSD?: number;
   costMaxUSD?: number;
-  crowdLevel: CrowdLevel | string;
-  bestTimeToVisit: string;
+  crowdLevel?: CrowdLevel | string;
+  bestTimeToVisit?: string;
   latitude: number;
   longitude: number;
   aiReasoning?: string;
@@ -92,11 +92,11 @@ export interface Country {
 }
 
 export interface Warning {
-  id: string;
+  id?: string;
   title: string;
   description: string;
-  severity: string;
-  category: string;
+  severity?: string;
+  category?: string;
 }
 
 // ============ API REQUEST/RESPONSE ============
@@ -113,7 +113,7 @@ export interface GenerateItineraryRequest {
 }
 
 export interface ItineraryResponse {
-  source: 'AI';
+  source: 'AI' | 'DATABASE';
   itinerary: {
     id: string;
     numberOfDays: number;
@@ -129,11 +129,11 @@ export interface ItineraryResponse {
   days: ItineraryDay[];
   hotels: Hotel[];
   airport: Airport;
-  country: Country;
+  country?: Country;
   warnings: Warning[];
   touristTraps: TouristTrap[];
   localTips: string[];
-  routeSummary: string;
+  routeSummary?: string;
 }
 
 // ============ NEW TYPES FOR ENHANCED FEATURES ============
@@ -161,7 +161,7 @@ export interface Place {
 
 export interface ChecklistItem {
   id: string;
-  category: 'ESSENTIALS' | 'WEATHER' | 'TERRAIN' | 'ACTIVITY' | 'SAFETY' | 'DOCUMENTATION';
+  category: 'ESSENTIALS' | 'WEATHER' | 'TERRAIN' | 'ACTIVITY' | 'SAFETY' | 'DOCUMENTATION' | string;
   item: string;
   reason?: string;
   source?: string;

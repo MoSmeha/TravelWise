@@ -3,7 +3,7 @@ import { z } from 'zod';
 // ============ ENUMS ============
 
 export const LocationClassificationSchema = z.enum(['HIDDEN_GEM', 'CONDITIONAL', 'TOURIST_TRAP']);
-export const CrowdLevelSchema = z.enum(['QUIET', 'MODERATE', 'BUSY']);
+export const CrowdLevelSchema = z.enum(['EMPTY', 'QUIET', 'MODERATE', 'BUSY', 'OVERCROWDED']);
 export const LocationCategorySchema = z.enum([
   'RESTAURANT', 'CAFE', 'BAR', 'NIGHTCLUB',
   'BEACH', 'HIKING', 'HISTORICAL_SITE', 'MUSEUM',
@@ -30,20 +30,23 @@ export const CountryConfigSchema = z.object({
   regions: z.array(z.string()).optional(),
 });
 
+// Helper to transform null to undefined (API returns null, TypeScript types use undefined)
+const nullToUndefined = <T,>(val: T | null): T | undefined => val ?? undefined;
+
 export const LocationSchema = z.object({
   id: z.string(),
   name: z.string(),
   classification: LocationClassificationSchema,
   category: LocationCategorySchema,
   description: z.string(),
-  costMinUSD: z.number().optional(),
-  costMaxUSD: z.number().optional(),
-  crowdLevel: CrowdLevelSchema.or(z.string()),
-  bestTimeToVisit: z.string(),
+  costMinUSD: z.number().nullable().optional().transform(nullToUndefined),
+  costMaxUSD: z.number().nullable().optional().transform(nullToUndefined),
+  crowdLevel: CrowdLevelSchema.or(z.string()).nullable().optional().transform(nullToUndefined),
+  bestTimeToVisit: z.string().nullable().optional().transform(nullToUndefined),
   latitude: z.number(),
   longitude: z.number(),
-  aiReasoning: z.string().optional(),
-  scamWarning: z.string().optional(),
+  aiReasoning: z.string().nullable().optional().transform(nullToUndefined),
+  scamWarning: z.string().nullable().optional().transform(nullToUndefined),
   travelTimeFromPrevious: z.string().optional(),
   imageUrl: z.string().optional(),
   imageUrls: z.array(z.string()).optional(),
@@ -87,15 +90,15 @@ export const CountrySchema = z.object({
 });
 
 export const WarningSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   title: z.string(),
   description: z.string(),
-  severity: z.string(),
-  category: z.string(),
+  severity: z.string().optional(),
+  category: z.string().optional(),
 });
 
 export const ItineraryResponseSchema = z.object({
-  source: z.literal('AI'),
+  source: z.enum(['AI', 'DATABASE']),
   itinerary: z.object({
     id: z.string(),
     numberOfDays: z.number(),
@@ -109,13 +112,13 @@ export const ItineraryResponseSchema = z.object({
     }).optional(),
   }),
   days: z.array(ItineraryDaySchema),
-  hotels: z.array(HotelSchema),
+  hotels: z.array(HotelSchema).optional().default([]),
   airport: AirportSchema,
-  country: CountrySchema,
-  warnings: z.array(WarningSchema),
-  touristTraps: z.array(TouristTrapSchema),
-  localTips: z.array(z.string()),
-  routeSummary: z.string(),
+  country: CountrySchema.optional(),
+  warnings: z.array(WarningSchema).optional().default([]),
+  touristTraps: z.array(TouristTrapSchema).optional().default([]),
+  localTips: z.array(z.string()).optional().default([]),
+  routeSummary: z.string().optional(),
 });
 
 // ============ NEW FEATURES ============
@@ -133,8 +136,8 @@ export const PlaceSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   activityTypes: z.array(z.string()),
-  costMinUSD: z.number().optional(),
-  costMaxUSD: z.number().optional(),
+  costMinUSD: z.number().nullable().optional(),
+  costMaxUSD: z.number().nullable().optional(),
   localTip: z.string().optional(),
   scamWarning: z.string().optional(),
   imageUrl: z.string().optional(),
@@ -143,10 +146,10 @@ export const PlaceSchema = z.object({
 
 export const ChecklistItemSchema = z.object({
   id: z.string(),
-  category: z.enum(['ESSENTIALS', 'WEATHER', 'TERRAIN', 'ACTIVITY', 'SAFETY', 'DOCUMENTATION']),
+  category: z.enum(['ESSENTIALS', 'WEATHER', 'TERRAIN', 'ACTIVITY', 'SAFETY', 'DOCUMENTATION']).or(z.string()),
   item: z.string(),
-  reason: z.string().optional(),
-  source: z.string().optional(),
+  reason: z.string().nullable().optional().transform(nullToUndefined),
+  source: z.string().nullable().optional().transform(nullToUndefined),
   isChecked: z.boolean(),
 });
 

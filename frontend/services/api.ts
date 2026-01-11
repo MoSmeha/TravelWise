@@ -144,11 +144,6 @@ export const checklistService = {
     return z.array(ChecklistItemSchema).parse(response.data.data || []);
   },
 
-  async toggleChecklistItem(itemId: string): Promise<import('../types/api').ChecklistItem> {
-
-    throw new Error("Method signature update needed");
-  },
-
   async updateChecklistItemStatus(itemId: string, isChecked: boolean): Promise<ChecklistItem> {
     const response = await api.patch<{ data: ChecklistItem }>(`/checklist/${itemId}`, { isChecked });
     return ChecklistItemSchema.parse(response.data.data);
