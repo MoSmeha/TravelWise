@@ -46,7 +46,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       });
       // Navigation should be handled by the component or a listener, but we can hint it here
     } catch (error) {
-      console.error('Login failed:', error);
+      console.log('Login failed (expected if credentials invalid):', error);
       throw error;
     } finally {
       set({ isLoading: false });
@@ -66,7 +66,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       });
       return response; // Return response so component can handle navigation
     } catch (error) {
-      console.error('Registration failed:', error);
+      console.log('Registration failed:', error);
       throw error;
     } finally {
       set({ isLoading: false });
@@ -109,7 +109,7 @@ export const useAuth = create<AuthState>((set, get) => ({
              const user = await authService.getMe();
              set({ user, isAuthenticated: true, accessToken, refreshToken });
          } catch (error) {
-             console.log("Token invalid, attempting refresh or logout");
+             console.log("Session invalid or expired during hydration");
              // If getMe fails, we might try to refresh or just logout
              // For now, let's assume if getMe fails, we are logged out.
              // But real app might try refresh here.

@@ -1,44 +1,82 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, SafeAreaView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { authService } from '../../services/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../store/authStore';
+import Toast from 'react-native-toast-message';
 
 export default function VerifyScreen() {
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [token, setToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { hydrate } = useAuth(); // To update user status after verification
+  const { hydrate } = useAuth();
 
   const handleVerify = async () => {
-    if (!token) return;
+    if (!token) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Code',
+        text2: 'Please enter the verification code',
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
       await authService.verifyEmail({ token });
-      Alert.alert('Success', 'Email verified successfully!');
+      
+      Toast.show({
+        type: 'success',
+        text1: 'Email Verified!',
+        text2: 'Welcome to TravelWise',
+      });
       
       // Refresh user data
       await hydrate();
       router.replace('/(tabs)');
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Verification failed.';
-      Alert.alert('Error', msg);
+      const errorData = error.response?.data;
+      const msg = errorData?.message || errorData?.error || 'Verification failed. Please try again.';
+      
+      Toast.show({
+        type: 'error',
+        text1: 'Verification Failed',
+        text2: msg,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleResend = async () => {
-      if(!email) return;
-      try {
-          await authService.resendVerification({ email });
-          Alert.alert('Sent', 'Verification code resent to your email.');
-      } catch (error: any) {
-          Alert.alert('Error', error.response?.data?.message || 'Failed to resend.');
-      }
+    if (!email) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Email',
+        text2: 'Cannot resend without an email address',
+      });
+      return;
+    }
+    
+    try {
+      await authService.resendVerification({ email });
+      Toast.show({
+        type: 'success',
+        text1: 'Code Sent!',
+        text2: 'Verification code resent to your email',
+      });
+    } catch (error: any) {
+      const errorData = error.response?.data;
+      const msg = errorData?.message || errorData?.error || 'Failed to resend code';
+      
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to Resend',
+        text2: msg,
+      });
+    }
   };
 
   return (

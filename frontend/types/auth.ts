@@ -1,26 +1,23 @@
 export interface User {
   id: string;
-  email?: string;
+  email: string;
   name: string;
   username: string;
-  phone?: string;
   avatarUrl?: string;
-  emailVerified: boolean;  // Backend uses emailVerified, not isVerified
+  emailVerified: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface RegisterInput {
-  email?: string;
-  phone?: string;
+  email: string;
   password: string;
   name: string;
   username: string;
 }
 
 export interface LoginInput {
-  email?: string;
-  phone?: string;
+  email: string;
   password: string;
 }
 

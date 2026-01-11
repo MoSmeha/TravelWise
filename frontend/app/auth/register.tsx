@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, SafeAreaView } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useAuth } from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import { z } from 'zod';
+import Toast from 'react-native-toast-message';
 
-// Matching backend validation broadly
+// Matching backend validation
 const registerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  username: z.string().min(3, 'Username must be at least 3 chars'),
-  email: z.string().email('Invalid email').optional(),
-  phone: z.string().min(8, 'Invalid phone number').optional(),
-  password: z.string().min(8, 'Password must be at least 8 characters').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, 'Password must contain uppercase, lowercase and number'),
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, 'Password must contain uppercase, lowercase and number'),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
-}).refine((data) => data.email || data.phone, {
-  message: "Either email or phone is required",
-  path: ["email"],
 });
 
 export default function RegisterScreen() {
@@ -29,7 +28,6 @@ export default function RegisterScreen() {
     name: '',
     username: '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: ''
   });
@@ -51,6 +49,14 @@ export default function RegisterScreen() {
           }
         });
         setErrors(newErrors);
+        
+        // Show first error as toast
+        const firstError = error.issues[0];
+        Toast.show({
+          type: 'error',
+          text1: 'Validation Error',
+          text2: firstError.message,
+        });
       }
       return false;
     }
@@ -63,25 +69,33 @@ export default function RegisterScreen() {
       await register({
         name: formData.name,
         username: formData.username,
-        email: formData.email || undefined,
-        phone: formData.phone || undefined,
+        email: formData.email,
         password: formData.password
       });
-      // Navigate to verification or home
-      // If backend sends verification email but allows login, we check `user.isVerified`.
-      // For now, assume we go to verify screen if not verified, or tabs.
-      // But typically register -> auto-login -> check status.
       
+      Toast.show({
+        type: 'success',
+        text1: 'Account Created!',
+        text2: 'Please check your email to verify your account',
+      });
+      
+      // Navigate to verification screen
       const user = useAuth.getState().user;
       if (user && !user.emailVerified) {
-          router.replace({ pathname: '/auth/verify', params: { email: formData.email } } as any);
+        router.replace({ pathname: '/auth/verify', params: { email: formData.email } } as any);
       } else {
-          router.replace('/(tabs)' as any);
+        router.replace('/(tabs)' as any);
       }
 
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Registration failed.';
-      Alert.alert('Error', msg);
+      const errorData = error.response?.data;
+      const msg = errorData?.message || errorData?.error || 'Registration failed. Please try again.';
+      
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: msg,
+      });
     }
   };
 
@@ -139,18 +153,6 @@ export default function RegisterScreen() {
                   keyboardType="email-address"
                 />
                  {errors.email && <Text className="text-red-500 text-xs mt-1">{errors.email}</Text>}
-             </View>
-
-            {/* Phone (Optional) */}
-             <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">Phone (Optional)</Text>
-                <TextInput
-                  className={`w-full h-12 bg-gray-50 border rounded-xl px-4 text-gray-900 ${errors.phone ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'}`}
-                  placeholder="+1234567890"
-                  value={formData.phone}
-                  onChangeText={(text) => setFormData({...formData, phone: text})}
-                  keyboardType="phone-pad"
-                />
              </View>
 
             {/* Password */}

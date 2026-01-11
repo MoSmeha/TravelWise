@@ -34,24 +34,12 @@ export async function register(req: Request, res: Response): Promise<void> {
     const input = req.body as RegisterInput;
     
     // Check if email or username already exists
-    if (input.email) {
-      const existingEmail = await prisma.user.findUnique({
-        where: { email: input.email },
-      });
-      if (existingEmail) {
-        res.status(409).json({ error: 'Email already registered' });
-        return;
-      }
-    }
-    
-    if (input.phone) {
-      const existingPhone = await prisma.user.findUnique({
-        where: { phone: input.phone },
-      });
-      if (existingPhone) {
-        res.status(409).json({ error: 'Phone number already registered' });
-        return;
-      }
+    const existingEmail = await prisma.user.findUnique({
+      where: { email: input.email },
+    });
+    if (existingEmail) {
+      res.status(409).json({ error: 'Email already registered' });
+      return;
     }
     
     const existingUsername = await prisma.user.findUnique({
@@ -72,7 +60,6 @@ export async function register(req: Request, res: Response): Promise<void> {
     const user = await prisma.user.create({
       data: {
         email: input.email,
-        phone: input.phone,
         passwordHash,
         name: input.name,
         username: input.username.toLowerCase(),
@@ -82,7 +69,6 @@ export async function register(req: Request, res: Response): Promise<void> {
       select: {
         id: true,
         email: true,
-        phone: true,
         name: true,
         username: true,
         avatarUrl: true,
@@ -91,7 +77,7 @@ export async function register(req: Request, res: Response): Promise<void> {
       },
     });
     
-    console.log(`✅ User registered: ${user.username} (${user.email || user.phone})`);
+    console.log(`✅ User registered: ${user.username} (${user.email})`);
     
     // Send verification email if email provided
     if (user.email) {
@@ -100,9 +86,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     }
     
     res.status(201).json({
-      message: user.email 
-        ? 'Registration successful. Please check your email to verify your account.'
-        : 'Registration successful.',
+      message: 'Registration successful. Please check your email to verify your account.',
       user,
     });
   } catch (error: any) {
@@ -113,23 +97,16 @@ export async function register(req: Request, res: Response): Promise<void> {
 
 /**
  * POST /api/auth/login
- * Login with email/phone and password
+ * Login with email and password
  */
 export async function login(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as LoginInput;
     
-    // Find user by email or phone
-    let user;
-    if (input.email) {
-      user = await prisma.user.findUnique({
-        where: { email: input.email },
-      });
-    } else if (input.phone) {
-      user = await prisma.user.findUnique({
-        where: { phone: input.phone },
-      });
-    }
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email: input.email },
+    });
     
     if (!user) {
       res.status(401).json({ error: 'Invalid credentials' });
@@ -143,8 +120,8 @@ export async function login(req: Request, res: Response): Promise<void> {
       return;
     }
     
-    // Check email verification (only if user has email)
-    if (user.email && !user.emailVerified) {
+    // Check email verification
+    if (!user.emailVerified) {
       res.status(403).json({
         error: 'Email not verified',
         message: 'Please verify your email address before logging in',
@@ -166,7 +143,6 @@ export async function login(req: Request, res: Response): Promise<void> {
       user: {
         id: user.id,
         email: user.email,
-        phone: user.phone,
         name: user.name,
         username: user.username,
         avatarUrl: user.avatarUrl,

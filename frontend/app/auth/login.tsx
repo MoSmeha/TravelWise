@@ -1,37 +1,55 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, SafeAreaView } from 'react-native';
 import { useRouter, Link } from 'expo-router';
 import { useAuth } from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login, isLoading } = useAuth();
   
-  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
-    if (!emailOrPhone || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+    if (!email || !password) {
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Fields',
+        text2: 'Please fill in all fields',
+      });
+      return;
+    }
+
+    // Basic email validation
+    if (!email.includes('@')) {
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Email',
+        text2: 'Please enter a valid email address',
+      });
       return;
     }
 
     try {
-      const isEmail = emailOrPhone.includes('@');
-      await login({
-        email: isEmail ? emailOrPhone : undefined,
-        phone: !isEmail ? emailOrPhone : undefined,
-        password
+      await login({ email, password });
+      Toast.show({
+        type: 'success',
+        text1: 'Welcome back!',
+        text2: 'Login successful',
       });
-      // Navigation is handled by root layout or manual redirect if needed
-      // but usually root layout listener detects auth state change.
-      // For safety/UX, we can also push.
       router.replace('/(tabs)');
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'Login failed. Please try again.';
-      Alert.alert('Error', msg);
+      const errorData = error.response?.data;
+      const msg = errorData?.message || errorData?.error || 'Login failed. Please try again.';
+      
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: msg,
+      });
     }
   };
 
@@ -43,7 +61,6 @@ export default function LoginScreen() {
     >
       <ScrollView contentContainerClassName="flex-grow justify-center px-6">
         <View className="items-center mb-10">
-            {/* Enhance: Add Logo Here */}
             <View className="w-20 h-20 bg-blue-500 rounded-2xl items-center justify-center mb-4 shadow-lg shadow-blue-500/30">
                 <Ionicons name="airplane" size={40} color="white" />
             </View>
@@ -53,12 +70,12 @@ export default function LoginScreen() {
 
         <View className="space-y-4">
           <View>
-            <Text className="text-sm font-medium text-gray-700 mb-1">Email or Phone</Text>
+            <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
             <TextInput
               className="w-full h-12 bg-gray-50 border border-gray-200 rounded-xl px-4 text-gray-900 focus:border-blue-500"
-              placeholder="Enter your email or phone"
-              value={emailOrPhone}
-              onChangeText={setEmailOrPhone}
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
             />
