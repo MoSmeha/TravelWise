@@ -295,7 +295,6 @@ export async function me(req: AuthenticatedRequest, res: Response): Promise<void
       select: {
         id: true,
         email: true,
-        phone: true,
         name: true,
         username: true,
         avatarUrl: true,

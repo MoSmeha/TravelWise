@@ -1,6 +1,7 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express, NextFunction, Request, Response } from 'express';
+import { authenticate } from './middleware/auth.middleware';
 import authRouter from './routes/auth';
 import checklistRouter from './routes/checklist';
 import itineraryRouter from './routes/itinerary';
@@ -34,13 +35,13 @@ app.get('/api', (_req: Request, res: Response) => {
 });
 
 app.use('/api/auth', authRouter);
-app.use('/api/itinerary', itineraryRouter);
-app.use('/api/itinerary', ragRouter); // RAG endpoints under /api/itinerary/:id/ask
-app.use('/api/locations', locationsRouter);
-app.use('/api/warnings', warningsRouter);
-app.use('/api/places', placesRouter);
-app.use('/api/checklist', checklistRouter);
-app.use('/api/webhooks', webhooksRouter);
+app.use('/api/itinerary', authenticate, itineraryRouter);
+app.use('/api/itinerary', authenticate, ragRouter); // RAG endpoints under /api/itinerary/:id/ask
+app.use('/api/locations', authenticate, locationsRouter);
+app.use('/api/warnings', authenticate, warningsRouter);
+app.use('/api/places', authenticate, placesRouter);
+app.use('/api/checklist', authenticate, checklistRouter);
+app.use('/api/webhooks', authenticate, webhooksRouter);
 
 // Health check
 app.get('/', (_req: Request, res: Response) => {
