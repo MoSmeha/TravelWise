@@ -14,9 +14,9 @@ import {
     UIManager,
     View
 } from 'react-native';
-import { useChecklist } from '../hooks/queries/useChecklist';
-import { useAddChecklistItem, useToggleChecklistItem } from '../hooks/mutations/useChecklist';
-import type { ChecklistItem } from '../types/api';
+import { useChecklist } from '../../hooks/queries/useChecklist';
+import { useAddChecklistItem, useToggleChecklistItem } from '../../hooks/mutations/useChecklist';
+import type { ChecklistItem } from '../../types/api';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android') {
