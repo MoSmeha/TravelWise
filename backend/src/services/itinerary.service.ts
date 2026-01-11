@@ -1,4 +1,5 @@
 import { BudgetLevel, LocationClassification, TravelStyle } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 import prisma from '../lib/prisma';
 import * as googlePlacesService from './google-places.service';
 import { haversineDistance } from '../utils/geo.utils';
@@ -36,6 +37,7 @@ interface GenerateItineraryParams {
 }
 
 interface ItineraryDayResult {
+  id: string;
   dayNumber: number;
   description: string;
   routeDescription: string;
@@ -254,6 +256,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     ).pop();
 
     return {
+      id: uuidv4(),
       dayNumber: i + 1,
       description: `Exploring ${cluster[0].city}: ${cluster.map(p => p.category).join(', ')}`,
       routeDescription: locations,
@@ -343,7 +346,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
 
 // Function to save the generated itinerary to the database
 export async function saveItineraryToDb(
-  userId: string | undefined,
+  userId: string,
   input: any,
   generated: ItineraryResult,
   countryName: string,

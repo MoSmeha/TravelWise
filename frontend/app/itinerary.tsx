@@ -13,12 +13,16 @@ import {
 } from 'react-native';
 import { LocationItem } from '../components/itinerary/LocationItem';
 import { useAskQuestion } from '../hooks/mutations/useItinerary';
+import { useItineraryStore } from '../store/itineraryStore';
 import type { Hotel, ItineraryResponse, RAGResponse } from '../types/api';
 
 export default function ItineraryScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const [data, setData] = useState<ItineraryResponse | null>(null);
+  
+  // Itinerary store for persisting active itinerary
+  const setActiveItinerary = useItineraryStore((state) => state.setActiveItinerary);
   
   // RAG Chatbot state
   const [chatQuestion, setChatQuestion] = useState('');
@@ -34,12 +38,17 @@ export default function ItineraryScreen() {
       try {
         const parsed = JSON.parse(params.data as string);
         setData(parsed);
+        
+        // Set active itinerary in store for checklist tab access
+        if (parsed.itinerary?.id) {
+          setActiveItinerary(parsed.itinerary.id);
+        }
       } catch (error) {
         console.error('Error parsing data:', error);
         Alert.alert('Error', 'Failed to load itinerary data');
       }
     }
-  }, [params.data]);
+  }, [params.data, setActiveItinerary]);
   
   // Ask question using RAG
   const askQuestion = async () => {
@@ -80,7 +89,7 @@ export default function ItineraryScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerRow}>
-            <Text style={styles.title}>{data.country.name} Trip</Text>
+            <Text style={styles.title}>{data.country?.name || 'Your'} Trip</Text>
             <View style={styles.aiBadge}>
               <Text style={styles.aiBadgeText}>🤖 AI</Text>
             </View>
