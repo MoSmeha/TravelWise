@@ -1,5 +1,4 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -33,7 +32,7 @@ function RootLayoutNav() {
         // Allow access to auth screens
         router.replace('/auth/login' as any);
     }
-  }, [isAuthenticated, segments, isRestoring]);
+  }, [isAuthenticated, segments, isRestoring, router]);
 
   return (
     <Stack>
@@ -47,13 +46,12 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const isDarkColorScheme = colorScheme === 'dark';
   
   const { hydrate } = useAuth();
 
   useEffect(() => {
     hydrate();
-  }, []);
+  }, [hydrate]);
 
   useEffect(() => {
       SplashScreen.hideAsync();
