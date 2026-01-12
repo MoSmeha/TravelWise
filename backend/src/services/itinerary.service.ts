@@ -5,6 +5,8 @@ import prisma from '../lib/prisma';
 import * as googlePlacesService from './google-places.service';
 import { haversineDistance } from '../utils/geo.utils';
 import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Place type for itinerary locations
 type Place = {
@@ -31,7 +33,7 @@ interface GenerateItineraryParams {
   cityId: string; // Treated as city name or ID
   numberOfDays: number;
   budgetLevel: BudgetLevel;
-  travelStyle: TravelStyle;
+  travelStyles: TravelStyle[]; // Array of styles (max 3)
   budgetUSD: number;
   userId?: string;
   countryId?: string;
@@ -51,7 +53,7 @@ export interface ItineraryResult {
     numberOfDays: number;
     budgetUSD: number;
     budgetLevel?: BudgetLevel;
-    travelStyle?: TravelStyle;
+    travelStyles?: TravelStyle[];
   };
   days: ItineraryDayResult[];
   totalEstimatedCostUSD: number;
@@ -159,7 +161,7 @@ Format as JSON:
 }
 
 export async function generateItinerary(params: GenerateItineraryParams): Promise<ItineraryResult> {
-  const { cityId, numberOfDays, budgetLevel, travelStyle, budgetUSD } = params;
+  const { cityId, numberOfDays, budgetLevel, travelStyles, budgetUSD } = params;
   
   // cityId is treated as the city name string (e.g., "Beirut")
   const cityName = cityId;
@@ -167,16 +169,26 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   // Fetch places
   // We use classification filters to ensure quality
   const categoryMap: Record<TravelStyle, string[]> = {
-    NATURE: ['BEACH', 'HIKING', 'PARK', 'VIEWPOINT', 'OTHER'],
-    FOOD: ['RESTAURANT', 'CAFE', 'MARKET', 'BAR'],
-    CULTURE: ['HISTORICAL_SITE', 'MUSEUM', 'RELIGIOUS_SITE', 'MARKET'],
-    NIGHTLIFE: ['BAR', 'NIGHTCLUB', 'CAFE'],
-    MIXED: [], 
+    ADVENTURE: ['HIKING', 'ACTIVITY', 'BEACH', 'PARK', 'VIEWPOINT'],
+    CULTURAL: ['HISTORICAL_SITE', 'MUSEUM', 'RELIGIOUS_SITE', 'MARKET'],
+    NATURE_ECO: ['PARK', 'HIKING', 'BEACH', 'VIEWPOINT', 'OTHER'],
+    BEACH_RELAXATION: ['BEACH', 'CAFE', 'VIEWPOINT', 'PARK'],
+    URBAN_CITY: ['RESTAURANT', 'BAR', 'NIGHTCLUB', 'SHOPPING', 'CAFE'],
+    FAMILY_GROUP: ['MUSEUM', 'PARK', 'RESTAURANT', 'ACTIVITY', 'SHOPPING'],
   };
   
-  const relevantCategories = travelStyle !== 'MIXED' ? (categoryMap[travelStyle] || []) : [];
+  // Collect categories from all selected travel styles
+  const relevantCategories: string[] = [];
+  for (const style of travelStyles) {
+    const cats = categoryMap[style] || [];
+    for (const cat of cats) {
+      if (!relevantCategories.includes(cat)) {
+        relevantCategories.push(cat);
+      }
+    }
+  }
   
-  // 1. Try to fetch places matching the specific travel style first
+  // 1. Try to fetch places matching the specific travel styles first
   let places = await prisma.place.findMany({
     where: {
       classification: {
@@ -191,10 +203,18 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     take: 100,
   });
   
+  // Log missing data if no places found for the selected styles
+  if (places.length === 0 && relevantCategories.length > 0) {
+    const logPath = path.join(__dirname, '../../logs/missing-data.log');
+    const logEntry = `[${new Date().toISOString()}] No places found for styles: ${travelStyles.join(', ')} (categories: ${relevantCategories.join(', ')})\n`;
+    fs.appendFileSync(logPath, logEntry);
+    console.warn(`⚠️ Logged missing data for styles: ${travelStyles.join(', ')}`);
+  }
+  
   // 2. Fallback: If not enough places found for the style, fetch generic valid places
   if (places.length < numberOfDays * 2) {
     if (relevantCategories.length > 0) {
-      console.log(`[ItineraryService] Not enough places for style ${travelStyle} (${places.length} found). Fetching mixed fallback.`);
+      console.log(`[ItineraryService] Not enough places for styles ${travelStyles.join(', ')} (${places.length} found). Fetching mixed fallback.`);
     }
     
     const fallbackPlaces = await prisma.place.findMany({
@@ -330,7 +350,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       numberOfDays,
       budgetUSD,
       budgetLevel,
-      travelStyle,
+      travelStyles,
     },
     days,
     totalEstimatedCostUSD,
@@ -357,7 +377,7 @@ export async function saveItineraryToDb(
       airportCode,
       numberOfDays: input.numberOfDays,
       budgetUSD: input.budgetUSD,
-      travelStyles: input.travelStyle ? [input.travelStyle] : [],
+      travelStyles: input.travelStyles || generated.itinerary.travelStyles || [],
       flightDate: input.flightDate ? new Date(input.flightDate) : null,
       totalEstimatedCostUSD: generated.totalEstimatedCostUSD,
       routeSummary: generated.routeSummary,

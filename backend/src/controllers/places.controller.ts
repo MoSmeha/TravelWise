@@ -7,6 +7,7 @@ import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { GetPhotosInput, ListPlacesInput, SearchPlaceInput } from '../schemas/places.schema';
 import { extractCityFromAddress } from '../utils/enum-mappers';
+import { mapGooglePriceLevel } from '../utils/prisma-helpers';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';
@@ -147,7 +148,7 @@ export async function searchPlace(req: Request, res: Response) {
         address: candidate.formatted_address,
         rating: candidate.rating,
         totalRatings: candidate.user_ratings_total,
-        priceLevel: candidate.price_level,
+        priceLevel: mapGooglePriceLevel(candidate.price_level),
         openingHours: candidate.opening_hours || undefined,
         topReviews: details.reviews ? details.reviews.slice(0, 3) : [],
         city,

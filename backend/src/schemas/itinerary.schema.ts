@@ -13,7 +13,15 @@ export const generateItinerarySchema = z.object({
   airportCode: z.string().optional(),
   numberOfDays: z.number().min(1).max(30),
   budgetLevel: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
-  travelStyle: z.enum(['NATURE', 'FOOD', 'CULTURE', 'NIGHTLIFE', 'MIXED']).optional(),
+  travelStyles: z.array(z.enum([
+    'ADVENTURE', 'CULTURAL', 'NATURE_ECO', 
+    'BEACH_RELAXATION', 'URBAN_CITY', 'FAMILY_GROUP'
+  ])).max(3).optional(),
+  // Legacy single style support (deprecated)
+  travelStyle: z.enum([
+    'ADVENTURE', 'CULTURAL', 'NATURE_ECO', 
+    'BEACH_RELAXATION', 'URBAN_CITY', 'FAMILY_GROUP'
+  ]).optional(),
   budgetUSD: z.number().positive().optional().default(1000),
   startDate: z.string().optional(),
 });

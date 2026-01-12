@@ -69,11 +69,11 @@ api.interceptors.response.use(
         // Actually authService uses api... so allow authService.refreshToken to bypass interceptors?
         // Or manually call axios here.
         const response = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken: rToken });
-        const { token, refreshToken: newRefreshToken } = response.data.data;
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
         
-        setTokens(token, newRefreshToken);
+        setTokens(accessToken, newRefreshToken);
         
-        originalRequest.headers.Authorization = `Bearer ${token}`;
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
         
       } catch (refreshError) {

@@ -7,9 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==========================================
 // AUTHENTICATION MODELS
-// ==========================================
+
 
 model User {
   id            String    @id @default(cuid())
@@ -24,6 +23,7 @@ model User {
 
   refreshTokens           RefreshToken[]
   emailVerificationTokens EmailVerificationToken[]
+  itineraries             UserItinerary[]
 
   @@index([email])
   @@index([username])
@@ -79,21 +79,14 @@ enum LocationCategory {
   OTHER
 }
 
-// ==========================================
-// LEGACY MODELS REMOVED - The following models were unused:
-// - Country (superseded by CountryConfig in countries.config.ts)
-// - City (Place model has city as string field)
-// - Location (replaced by Place model)
-// - Warning (warnings generated dynamically by AI)
-// - Itinerary (replaced by UserItinerary)
-// - ItineraryDay (replaced by ItineraryItem)
-// ==========================================
+enum PriceLevel {
+  INEXPENSIVE
+  MODERATE
+  EXPENSIVE
+}
 
-// ==========================================
-// NEW MODELS FOR ENHANCED TRAVELWISE
-// ==========================================
 
-// Enhanced Place model to store scraped + enriched data
+
 model Place {
   id                  String   @id @default(cuid())
   name                String
@@ -110,7 +103,7 @@ model Place {
   googlePlaceId       String?   @unique
   rating              Float?
   totalRatings        Int?
-  priceLevel          Int?      // 1-4 scale
+  priceLevel          PriceLevel?
   openingHours        Json?     // Stored as JSON
   topReviews          Json?     // Top 3 reviews as JSON array
   
@@ -149,12 +142,15 @@ model Place {
   @@index([city])
   @@index([googlePlaceId])
   @@index([country])
+  @@index([city, classification])
+  @@index([country, category])
 }
 
 // Structured Itinerary for RAG and versioning
 model UserItinerary {
   id                  String   @id @default(cuid())
-  userId              String?  // Optional for anonymous users
+  userId              String?
+  user                User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Trip details
   country             String
@@ -204,13 +200,15 @@ model ItineraryItem {
   itinerary           UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   
   placeId             String
-  place               Place    @relation(fields: [placeId], references: [id])
+  place               Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
   
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   
+  @@unique([itineraryId, dayNumber, orderInDay])
   @@index([itineraryId])
   @@index([placeId])
+  @@index([itineraryId, dayNumber, orderInDay])
 }
 
 model ChecklistItem {
@@ -259,9 +257,8 @@ model ItineraryEmbedding {
   dayNumbers      Int[]      // Days covered
   activityTypes   String[]   // Activity types in chunk
   
-  // Vector stored as JSON array (will migrate to pgvector later)
-  // For pgvector: embedding Unsupported("vector(1536)")
-  embeddingJson   Json?      // Temporary: store as JSON until pgvector setup
+
+  embeddingJson   Json?      
   
   createdAt       DateTime @default(now())
   
@@ -283,6 +280,7 @@ model KnowledgeEmbedding {
   embeddingJson   Json?
   
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   
   @@index([countryCode])
   @@index([source])

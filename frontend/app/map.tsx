@@ -3,19 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { API_BASE_URL } from '../config/api';
+import { CLASSIFICATION_COLORS } from '../constants/theme';
+import { useItineraryDetails } from '../hooks/queries/useItineraries';
 import { useItineraryStore } from '../store/itineraryStore';
 import type { Hotel, ItineraryResponse, Location } from '../types/api';
 
-const PIN_COLORS = {
-  HIDDEN_GEM: '#22c55e',
-  CONDITIONAL: '#f97316',
-  TOURIST_TRAP: '#ef4444',
-};
-
 const HOTEL_COLOR = '#8b5cf6';
 const AIRPORT_COLOR = '#0ea5e9';
-
-import { useItineraryDetails } from '../hooks/queries/useItineraries';
 
 export default function MapScreen() {
   const params = useLocalSearchParams();
@@ -178,7 +172,7 @@ export default function MapScreen() {
               latitude: location.latitude,
               longitude: location.longitude,
             }}
-            pinColor={PIN_COLORS[location.classification]}
+            pinColor={CLASSIFICATION_COLORS[location.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF'}
             title={location.name}
             description={location.category}
             onPress={() => {
@@ -222,7 +216,7 @@ export default function MapScreen() {
             <View
               style={[
                 styles.badge,
-                { backgroundColor: PIN_COLORS[selectedLocation.classification] },
+                { backgroundColor: CLASSIFICATION_COLORS[selectedLocation.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF' },
               ]}
             >
               <Text style={styles.badgeText}>

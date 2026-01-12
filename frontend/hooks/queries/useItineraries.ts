@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
-import { API_BASE_URL } from '../../config/api';
+import api from '../../services/api';
 import { useAuth } from '../../store/authStore';
 
 export const useUserItineraries = () => {
@@ -9,9 +8,8 @@ export const useUserItineraries = () => {
   return useQuery({
     queryKey: ['user-itineraries'],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/itinerary/user`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
+      // Using the api instance which has the 401 interceptor for token refresh
+      const response = await api.get('/itinerary/user');
       return response.data;
     },
     enabled: !!accessToken,
@@ -19,13 +17,13 @@ export const useUserItineraries = () => {
 };
 
 export const useItineraryDetails = (id: string) => {
-  const { accessToken } = useAuth(); // Optional auth
+  const { accessToken } = useAuth(); // Used only for enabling the query
   
   return useQuery({
     queryKey: ['itinerary', id],
     queryFn: async () => {
-      const headers = accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
-      const response = await axios.get(`${API_BASE_URL}/itinerary/${id}`, { headers });
+      // Using the api instance which has the 401 interceptor for token refresh
+      const response = await api.get(`/itinerary/${id}`);
       return response.data;
     },
     enabled: !!id,

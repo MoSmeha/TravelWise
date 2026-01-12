@@ -1,12 +1,19 @@
 // ============ ENUMS & TYPES ============
 
-export type LocationClassification = 'HIDDEN_GEM' | 'CONDITIONAL' | 'TOURIST_TRAP';
+export type LocationClassification = 'HIDDEN_GEM' | 'CONDITIONAL' | 'TOURIST_TRAP' | 'MUST_SEE';
 export type CrowdLevel = 'QUIET' | 'MODERATE' | 'BUSY';
+export type PriceLevel = 'INEXPENSIVE' | 'MODERATE' | 'EXPENSIVE';
 export type LocationCategory =
   | 'RESTAURANT' | 'CAFE' | 'BAR' | 'NIGHTCLUB'
   | 'BEACH' | 'HIKING' | 'HISTORICAL_SITE' | 'MUSEUM'
   | 'MARKET' | 'VIEWPOINT' | 'PARK' | 'RELIGIOUS_SITE'
   | 'TEMPLE' | 'SHOPPING' | 'ACTIVITY' | 'OTHER';
+
+export type BudgetLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export type TravelStyle = 
+  | 'ADVENTURE' | 'CULTURAL' | 'NATURE_ECO' 
+  | 'BEACH_RELAXATION' | 'URBAN_CITY' | 'FAMILY_GROUP';
 
 // ============ COUNTRY & AIRPORT ============
 
@@ -46,6 +53,11 @@ export interface Location {
   travelTimeFromPrevious?: string;
   imageUrl?: string;
   imageUrls?: string[];
+  // Enriched data
+  rating?: number;
+  totalRatings?: number;
+  topReviews?: any[];
+  priceLevel?: PriceLevel;
 }
 
 // ============ HOTEL ============
@@ -101,15 +113,14 @@ export interface Warning {
 
 // ============ API REQUEST/RESPONSE ============
 
-export type TravelStyle = 'food' | 'culture' | 'nature' | 'nightlife' | 'adventure';
-
 export interface GenerateItineraryRequest {
   country: string;
   airportCode: string;
   numberOfDays: number;
   budgetUSD: number;
-  travelStyles?: TravelStyle[];  // NEW: optional travel styles
-  flightDate?: string;           // NEW: ISO date string for notifications
+  travelStyles?: TravelStyle[];
+  budgetLevel?: BudgetLevel;
+  flightDate?: string;
 }
 
 export interface ItineraryResponse {
@@ -147,6 +158,8 @@ export interface Place {
   sources: string[];
   popularity: number;
   rating?: number;
+  totalRatings?: number;
+  priceLevel?: PriceLevel;
   city: string;
   latitude: number;
   longitude: number;

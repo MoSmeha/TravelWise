@@ -2,8 +2,9 @@ import { z } from 'zod';
 
 // ============ ENUMS ============
 
-export const LocationClassificationSchema = z.enum(['HIDDEN_GEM', 'CONDITIONAL', 'TOURIST_TRAP']);
+export const LocationClassificationSchema = z.enum(['HIDDEN_GEM', 'CONDITIONAL', 'TOURIST_TRAP', 'MUST_SEE']);
 export const CrowdLevelSchema = z.enum(['EMPTY', 'QUIET', 'MODERATE', 'BUSY', 'OVERCROWDED']);
+export const PriceLevelSchema = z.enum(['INEXPENSIVE', 'MODERATE', 'EXPENSIVE']);
 export const LocationCategorySchema = z.enum([
   'RESTAURANT', 'CAFE', 'BAR', 'NIGHTCLUB',
   'BEACH', 'HIKING', 'HISTORICAL_SITE', 'MUSEUM',
@@ -50,6 +51,10 @@ export const LocationSchema = z.object({
   travelTimeFromPrevious: z.string().optional(),
   imageUrl: z.string().optional(),
   imageUrls: z.array(z.string()).optional(),
+  rating: z.number().optional(),
+  totalRatings: z.number().optional(),
+  topReviews: z.array(z.any()).optional(),
+  priceLevel: PriceLevelSchema.optional(),
 });
 
 export const HotelSchema = z.object({
@@ -132,6 +137,8 @@ export const PlaceSchema = z.object({
   sources: z.array(z.string()),
   popularity: z.number(),
   rating: z.number().optional(),
+  totalRatings: z.number().optional(),
+  priceLevel: PriceLevelSchema.optional(),
   city: z.string(),
   latitude: z.number(),
   longitude: z.number(),

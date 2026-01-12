@@ -1,9 +1,43 @@
-import { View, Text, FlatList, TouchableOpacity, ImageBackground, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { useUserItineraries } from '../../hooks/queries/useItineraries';
 import { useAuth } from '../../store/authStore';
 import { Calendar, Wallet } from 'lucide-react-native';
+
+const COUNTRY_IMAGES: Record<string, string> = {
+  'Lebanon': 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=1000&auto=format&fit=crop',
+  'France': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1000&auto=format&fit=crop',
+  'Italy': 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=1000&auto=format&fit=crop',
+  'Japan': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1000&auto=format&fit=crop',
+  'default': 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1000&auto=format&fit=crop',
+};
+
+const COUNTRY_CODES: Record<string, string> = {
+  'Lebanon': 'lb',
+  'France': 'fr',
+  'Italy': 'it',
+  'Japan': 'jp',
+  'United States': 'us',
+  'United Kingdom': 'gb',
+  'Spain': 'es',
+};
+
+const getTagTailwindClasses = (tag: string) => {
+  const styles = [
+    { bg: 'bg-sky-100', text: 'text-sky-700' },
+    { bg: 'bg-green-100', text: 'text-green-700' },
+    { bg: 'bg-amber-100', text: 'text-amber-700' },
+    { bg: 'bg-purple-100', text: 'text-purple-700' },
+    { bg: 'bg-pink-100', text: 'text-pink-700' },
+    { bg: 'bg-orange-100', text: 'text-orange-700' },
+  ];
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) {
+    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return styles[Math.abs(hash) % styles.length];
+};
 
 export default function TripsScreen() {
   const router = useRouter();
@@ -11,9 +45,6 @@ export default function TripsScreen() {
   const { data: itineraries, isLoading, refetch, isRefetching } = useUserItineraries();
 
   const handlePress = (id: string, data: any) => {
-    // Navigate to map with data, similar to how it was done before
-    // If the data is fully available here, we pass it, or just ID.
-    // The previous implementation passed ID.
     router.push({
       pathname: '/map',
       params: { itineraryId: id }
@@ -21,75 +52,84 @@ export default function TripsScreen() {
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    // Mock image for now or use one based on country name partial match if possible
-    // Using a reliable Unsplash ID for a travel vibe
-    const imageUri = 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=1000&auto=format&fit=crop';
-
-    // Format Date: "Created 2h ago" is complex to calc exactly without library like date-fns
-    // Simple fallback: Locale Date
+    const countryName = item.country || 'Unknown';
+    const imageUri = COUNTRY_IMAGES[countryName] || COUNTRY_IMAGES['default'];
+    const countryCode = COUNTRY_CODES[countryName] || 'un'; 
+    const flagUrl = `https://flagcdn.com/w40/${countryCode}.png`;
     const dateString = new Date(item.createdAt).toLocaleDateString();
 
     return (
-      <View style={{ marginBottom: 24, marginHorizontal: 4, borderRadius: 32, backgroundColor: 'white', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3 }}>
-        
+      <View className="mb-5 mx-1 rounded-2xl bg-white overflow-hidden shadow-sm elevation-2"> 
         {/* Image Section */}
-        <View style={{ height: 250, width: '100%', position: 'relative' }}>
-          <ImageBackground 
+        <View className="h-[180px] w-full relative">
+          <Image 
             source={{ uri: imageUri }} 
-            style={{ width: '100%', height: '100%', justifyContent: 'flex-end', padding: 16 }}
+            className="w-full h-full"
             resizeMode="cover"
-          >
-            {/* Overlay Gradient equivalent (darken bottom) */}
-            <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.3)' }} />
+          />
+          <View className="absolute inset-0 bg-black/20" />
+          
+          <View className="absolute bottom-4 left-4 z-10">
+            <View className="flex-row items-center mb-2">
+               {countryCode !== 'un' && (
+                 <Image source={{ uri: flagUrl }} className="w-6 h-4 rounded-sm mr-2" />
+               )}
+               <Text className="text-white text-2xl font-bold">{item.country}</Text>
+            </View>
             
-            <View style={{ zIndex: 10 }}>
-              <Text style={{ color: 'white', fontSize: 32, fontWeight: 'bold', marginBottom: 12 }}>{item.country}</Text>
+            <View className="flex-row gap-2">
+              <View className="flex-row items-center bg-white/20 px-2 py-1 rounded-lg">
+                 <Calendar size={12} color="white" />
+                 <Text className="text-white text-xs ml-1 font-semibold">{item.numberOfDays} days</Text>
+              </View>
               
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 9999 }}>
-                   <Calendar size={14} color="white" />
-                   <Text style={{ color: 'white', fontSize: 14, marginLeft: 8, fontWeight: '500' }}>{item.numberOfDays} days</Text>
-                </View>
-                
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 9999 }}>
-                   <Wallet size={14} color="white" />
-                   <Text style={{ color: 'white', fontSize: 14, marginLeft: 8, fontWeight: '500' }}>${item.budgetUSD}</Text>
-                </View>
+              <View className="flex-row items-center bg-white/20 px-2 py-1 rounded-lg">
+                 <Wallet size={12} color="white" />
+                 <Text className="text-white text-xs ml-1 font-semibold">${item.budgetUSD}</Text>
               </View>
             </View>
-          </ImageBackground>
+          </View>
 
           {/* User Profile Badge (Absolute positioned) */}
-          <View style={{ position: 'absolute', bottom: -24, right: 32, zIndex: 20 }}>
-             <View style={{ backgroundColor: 'white', padding: 4, borderRadius: 9999 }}>
-                <View style={{ backgroundColor: '#A855F7', width: 48, height: 48, borderRadius: 9999, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'white' }}>
-                    <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
-                        {user?.email ? user.email[0].toUpperCase() : 'N'}
-                    </Text>
-                </View>
+          <View className="absolute top-4 right-4 z-20">
+             <View className="bg-white/90 p-0.5 rounded-full">
+                {user?.avatarUrl ? (
+                    <Image source={{ uri: user.avatarUrl }} className="w-8 h-8 rounded-full" />
+                ) : (
+                    <View className="bg-purple-600 w-8 h-8 rounded-full items-center justify-center">
+                        <Text className="text-white text-sm font-bold">
+                            {user?.email ? user.email[0].toUpperCase() : 'U'}
+                        </Text>
+                    </View>
+                )}
              </View>
           </View>
         </View>
 
         {/* Content Section */}
-        <View className="px-5 pt-8 pb-5">
+        <View className="px-4 py-4">
            {/* Tags */}
-           <View className="flex-row flex-wrap gap-2 mb-6">
-              {item.travelStyles?.map((style: string, index: number) => (
-                  <View key={index} className="bg-gray-100 px-4 py-2 rounded-full">
-                      <Text className="text-[#4B5563] font-semibold capitalize">{style}</Text>
-                  </View>
-              ))}
+           <View className="flex-row flex-wrap gap-2 mb-4">
+              {item.travelStyles?.map((style: string, index: number) => {
+                  const { bg, text } = getTagTailwindClasses(style);
+                  return (
+                      <View key={index} className={`${bg} px-2.5 py-1 rounded-lg`}>
+                          <Text className={`${text} text-[11px] font-bold capitalize`}>
+                            {style.replace(/_/g, ' ')}
+                          </Text>
+                      </View>
+                  );
+              })}
            </View>
            
            {/* Footer */}
            <View className="flex-row justify-between items-center">
-               <Text className="text-gray-400">Created {dateString}</Text>
+               <Text className="text-gray-400 text-xs">Created {dateString}</Text>
                <TouchableOpacity 
                   onPress={() => handlePress(item.id, item)}
-                  className="border border-gray-200 px-6 py-3 rounded-2xl"
+                  className="bg-[#0f172a] px-4 py-2 rounded-xl"
                >
-                   <Text className="text-[#0f172a] font-bold text-base">View Details</Text>
+                   <Text className="text-white font-bold text-xs">View Details</Text>
                </TouchableOpacity>
            </View>
         </View>
@@ -102,15 +142,15 @@ export default function TripsScreen() {
     <View className="flex-1 bg-[#F3F0E9] px-5 pt-16">
       <View className="flex-row justify-between items-start mb-6">
         <View>
-          <Text className="text-[#0f172a] text-4xl font-extrabold tracking-tight">My Trips</Text>
-          <Text className="text-gray-500 text-lg mt-1">{itineraries ? itineraries.length : 0} saved itineraries</Text>
+          <Text className="text-[#0f172a] text-3xl font-extrabold tracking-tight">My Trips</Text>
+          <Text className="text-gray-500 text-base mt-0.5">{itineraries ? itineraries.length : 0} saved itineraries</Text>
         </View>
         
         <TouchableOpacity 
             onPress={() => router.push('/new-trip')}
-            className="bg-[#0f172a] px-5 py-2.5 rounded-full"
+            className="bg-[#0f172a] w-10 h-10 rounded-full items-center justify-center shadow-sm"
         >
-            <Text className="text-white font-bold">New Trip</Text>
+            <Text className="text-white font-bold text-xl leading-none pb-0.5">+</Text>
         </TouchableOpacity>
       </View>
 

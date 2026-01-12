@@ -10,6 +10,7 @@ import {
     View,
 } from 'react-native';
 import MapView, { Callout, Marker } from 'react-native-maps';
+import { CLASSIFICATION_COLORS, getClassificationLabel } from '../constants/theme';
 import { usePlaces, usePlacePhotos } from '../hooks/queries/usePlaces';
 import type { Place } from '../types/api';
 
@@ -17,11 +18,6 @@ import type { Place } from '../types/api';
 // PLACES PAGE - Map View
 // ==========================================
 
-const PIN_COLORS: Record<string, string> = {
-  HIDDEN_GEM: '#22c55e',
-  CONDITIONAL: '#f97316',
-  TOURIST_TRAP: '#ef4444',
-};
 
 export default function PlacesScreen() {
   // Places state
@@ -163,7 +159,7 @@ export default function PlacesScreen() {
               latitude: place.latitude,
               longitude: place.longitude,
             }}
-            pinColor={PIN_COLORS[place.classification] || '#007AFF'}
+            pinColor={CLASSIFICATION_COLORS[place.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF'}
             onPress={() => openPlaceModal(place)}
           >
             <Callout tooltip>
@@ -240,14 +236,13 @@ export default function PlacesScreen() {
                     <Text style={styles.modalTitle}>{selectedPlace.name}</Text>
                     <View style={[
                       styles.classificationBadge,
-                      { backgroundColor: PIN_COLORS[selectedPlace.classification] + '20' }
+                      { backgroundColor: (CLASSIFICATION_COLORS[selectedPlace.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF') + '20' }
                     ]}>
                       <Text style={[
                         styles.classificationText,
-                        { color: PIN_COLORS[selectedPlace.classification] }
+                        { color: CLASSIFICATION_COLORS[selectedPlace.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF' }
                       ]}>
-                        {selectedPlace.classification === 'HIDDEN_GEM' ? '💎 Hidden Gem' :
-                         selectedPlace.classification === 'CONDITIONAL' ? '⚠️ Conditional' : '🚫 Tourist Trap'}
+                        {getClassificationLabel(selectedPlace.classification as keyof typeof CLASSIFICATION_COLORS)}
                       </Text>
                     </View>
                   </View>

@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -16,13 +15,14 @@ import { useGenerateItinerary } from '../hooks/mutations/useItinerary';
 import { useItineraryStore } from '../store/itineraryStore';
 import type { Airport, TravelStyle } from '../types/api';
 
-// Available travel styles
+// Available travel styles (6 new categories, max 3 selections)
 const TRAVEL_STYLES: { key: TravelStyle; label: string; emoji: string }[] = [
-  { key: 'food', label: 'Food', emoji: '🍽️' },
-  { key: 'culture', label: 'Culture', emoji: '🏛️' },
-  { key: 'nature', label: 'Nature', emoji: '🌿' },
-  { key: 'nightlife', label: 'Nightlife', emoji: '🌙' },
-  { key: 'adventure', label: 'Adventure', emoji: '🏔️' },
+  { key: 'ADVENTURE', label: 'Adventure Travel', emoji: '🏔️' },
+  { key: 'CULTURAL', label: 'Cultural & Historical', emoji: '🏛️' },
+  { key: 'NATURE_ECO', label: 'Nature & Eco', emoji: '🌿' },
+  { key: 'BEACH_RELAXATION', label: 'Beach & Relaxation', emoji: '🏖️' },
+  { key: 'URBAN_CITY', label: 'Urban Exploration', emoji: '🌃' },
+  { key: 'FAMILY_GROUP', label: 'Family & Group', emoji: '👨‍👩‍👧‍👦' },
 ];
 
 export default function NewTripScreen() {
@@ -40,7 +40,7 @@ export default function NewTripScreen() {
   const [selectedAirportCode, setSelectedAirportCode] = useState<string>('');
   const [numberOfDays, setNumberOfDays] = useState('5');
   const [budgetUSD, setBudgetUSD] = useState('');
-  const [selectedStyles, setSelectedStyles] = useState<TravelStyle[]>(['food', 'culture']);
+  const [selectedStyles, setSelectedStyles] = useState<TravelStyle[]>(['CULTURAL', 'ADVENTURE']);
   const [travelDate, setTravelDate] = useState(''); // Format: YYYY-MM-DD
   // const [loading, setLoading] = useState(false); // Handled by mutation status
 
@@ -68,7 +68,7 @@ export default function NewTripScreen() {
   const days = parseInt(numberOfDays) || 1;
   const minBudget = (selectedCountry?.minBudgetPerDay || 50) * days;
 
-  // Toggle travel style
+  // Toggle travel style (max 3 selections)
   const toggleStyle = (style: TravelStyle) => {
     setSelectedStyles(prev => {
       if (prev.includes(style)) {
@@ -76,6 +76,11 @@ export default function NewTripScreen() {
         if (prev.length === 1) return prev;
         return prev.filter(s => s !== style);
       } else {
+        // Don't add if already at max 3
+        if (prev.length >= 3) {
+          Alert.alert('Maximum 3 Styles', 'You can select up to 3 travel styles. Deselect one to add another.');
+          return prev;
+        }
         return [...prev, style];
       }
     });
@@ -135,15 +140,15 @@ export default function NewTripScreen() {
 
     // setLoading(true);
     try {
-      // Backend expects: cityId, budgetLevel, travelStyle (singular)
+      // Backend expects: cityId, budgetLevel, travelStyles (array)
       // We map country -> cityId (MVP behavior)
       const payload: any = {
         cityId: selectedCountryKey, // e.g., 'lebanon'
-        airportCode: selectedAirportCode, // passed but might be ignored by backend schema if not in z.object
+        airportCode: selectedAirportCode,
         numberOfDays: daysNum,
         budgetUSD: budgetNum,
         budgetLevel: budgetLevel,
-        travelStyle: selectedStyles[0] ? selectedStyles[0].toUpperCase() : 'MIXED',
+        travelStyles: selectedStyles, // Send all selected styles as array
         startDate: travelDate || undefined,
       };
 
@@ -178,26 +183,26 @@ export default function NewTripScreen() {
 
   if (loadingCountries) {
     return (
-      <View style={styles.loadingContainer}>
+      <View className="flex-1 justify-center items-center bg-gray-100">
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading destinations...</Text>
+        <Text className="mt-3 text-lg text-gray-600">Loading destinations...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>TravelWise</Text>
-      <Text style={styles.subtitle}>AI-Powered Travel Planning</Text>
+    <ScrollView className="flex-1 bg-gray-100 p-5">
+      <Text className="text-4xl font-bold mt-12 mb-1 text-gray-900">TravelWise</Text>
+      <Text className="text-lg text-gray-600 mb-8">AI-Powered Travel Planning</Text>
 
-      <View style={styles.form}>
+      <View className="gap-4 pb-10">
         {/* Country Selector */}
-        <Text style={styles.label}>Select Country</Text>
-        <View style={styles.pickerContainer}>
+        <Text className="text-base font-semibold mb-1 text-gray-800">Select Country</Text>
+        <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <Picker
             selectedValue={selectedCountryKey}
             onValueChange={handleCountryChange}
-            style={styles.picker}
+            style={{ height: 50 }}
           >
             {countries.map((country) => (
               <Picker.Item
@@ -210,12 +215,12 @@ export default function NewTripScreen() {
         </View>
 
         {/* Airport Selector */}
-        <Text style={styles.label}>Landing Airport</Text>
-        <View style={styles.pickerContainer}>
+        <Text className="text-base font-semibold mb-1 text-gray-800">Landing Airport</Text>
+        <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <Picker
             selectedValue={selectedAirportCode}
             onValueChange={setSelectedAirportCode}
-            style={styles.picker}
+            style={{ height: 50 }}
           >
             {availableAirports.map((airport) => (
               <Picker.Item
@@ -228,9 +233,9 @@ export default function NewTripScreen() {
         </View>
 
         {/* Number of Days */}
-        <Text style={styles.label}>Number of Days</Text>
+        <Text className="text-base font-semibold mb-1 text-gray-800">Number of Days</Text>
         <TextInput
-          style={styles.input}
+          className="bg-white border border-gray-200 rounded-xl p-3.5 text-base"
           value={numberOfDays}
           onChangeText={handleDaysChange}
           keyboardType="numeric"
@@ -238,35 +243,29 @@ export default function NewTripScreen() {
         />
 
         {/* Budget */}
-        <Text style={styles.label}>Total Budget (USD)</Text>
+        <Text className="text-base font-semibold mb-1 text-gray-800">Total Budget (USD)</Text>
         <TextInput
-          style={styles.input}
+          className="bg-white border border-gray-200 rounded-xl p-3.5 text-base"
           value={budgetUSD}
           onChangeText={setBudgetUSD}
           keyboardType="numeric"
           placeholder={`Minimum: $${minBudget}`}
         />
-        <Text style={styles.helperText}>
+        <Text className="text-xs text-gray-500 -mt-2">
           Minimum for {selectedCountry?.name}: ${selectedCountry?.minBudgetPerDay}/day × {days} days = ${minBudget}
         </Text>
 
         {/* Travel Styles */}
-        <Text style={styles.label}>Travel Style</Text>
-        <Text style={styles.helperText}>Select what you want to experience (tap to toggle)</Text>
-        <View style={styles.chipsContainer}>
+        <Text className="text-base font-semibold mb-1 text-gray-800">Travel Style</Text>
+        <Text className="text-xs text-gray-500 -mt-2">Select what you want to experience (tap to toggle)</Text>
+        <View className="flex-row flex-wrap gap-2 mt-2">
           {TRAVEL_STYLES.map((style) => (
             <TouchableOpacity
               key={style.key}
-              style={[
-                styles.chip,
-                selectedStyles.includes(style.key) && styles.chipSelected,
-              ]}
+              className={`px-3.5 py-2.5 rounded-full border ${selectedStyles.includes(style.key) ? 'bg-blue-500 border-blue-500' : 'bg-gray-100 border-gray-200'}`}
               onPress={() => toggleStyle(style.key)}
             >
-              <Text style={[
-                styles.chipText,
-                selectedStyles.includes(style.key) && styles.chipTextSelected,
-              ]}>
+              <Text className={`text-sm ${selectedStyles.includes(style.key) ? 'text-white font-semibold' : 'text-gray-800'}`}>
                 {style.emoji} {style.label}
               </Text>
             </TouchableOpacity>
@@ -274,197 +273,54 @@ export default function NewTripScreen() {
         </View>
 
         {/* Travel Date */}
-        <Text style={styles.label}>Travel Date (Optional)</Text>
+        <Text className="text-base font-semibold mb-1 text-gray-800">Travel Date (Optional)</Text>
         <TextInput
-          style={styles.input}
+          className="bg-white border border-gray-200 rounded-xl p-3.5 text-base"
           value={travelDate}
           onChangeText={setTravelDate}
           placeholder="YYYY-MM-DD (e.g. 2026-02-15)"
           keyboardType="default"
         />
-        <Text style={styles.helperText}>
+        <Text className="text-xs text-gray-500 -mt-2">
           Set your flight date for weather-based checklist and notifications
         </Text>
 
         <TouchableOpacity
-          style={[styles.generateButton, generateItineraryMutation.isPending && styles.generateButtonDisabled]}
+          className={`bg-blue-500 p-4.5 rounded-xl items-center mt-3 shadow-lg shadow-blue-500/30 ${generateItineraryMutation.isPending ? 'opacity-70' : ''}`}
           onPress={handleGenerate}
           disabled={generateItineraryMutation.isPending}
         >
           {generateItineraryMutation.isPending ? (
-            <View style={styles.loadingButton}>
+            <View className="flex-row items-center">
               <ActivityIndicator color="#fff" />
-              <Text style={styles.generateButtonText}> Generating with AI...</Text>
+              <Text className="text-white text-lg font-semibold ml-2"> Generating with AI...</Text>
             </View>
           ) : (
-            <Text style={styles.generateButtonText}>🤖 Generate Itinerary</Text>
+            <Text className="text-white text-lg font-semibold">🤖 Generate Itinerary</Text>
           )}
         </TouchableOpacity>
 
         {/* Info Box */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>What you&apos;ll get:</Text>
-          <Text style={styles.infoItem}>✨ Hidden gems locals love</Text>
-          <Text style={styles.infoItem}>🏨 Hotel recommendations with booking links</Text>
-          <Text style={styles.infoItem}>⚠️ Tourist traps to avoid</Text>
-          <Text style={styles.infoItem}>🗺️ Optimized route from your airport</Text>
-          <Text style={styles.infoItem}>🚨 Scam & safety warnings</Text>
+        <View className="bg-blue-50 p-4 rounded-xl mt-2">
+          <Text className="text-sm font-semibold mb-2 text-blue-700">What you&apos;ll get:</Text>
+          <Text className="text-sm text-gray-800 mb-1">✨ Hidden gems locals love</Text>
+          <Text className="text-sm text-gray-800 mb-1">🏨 Hotel recommendations with booking links</Text>
+          <Text className="text-sm text-gray-800 mb-1">⚠️ Tourist traps to avoid</Text>
+          <Text className="text-sm text-gray-800 mb-1">🗺️ Optimized route from your airport</Text>
+          <Text className="text-sm text-gray-800 mb-1">🚨 Scam & safety warnings</Text>
         </View>
 
         {/* Explore Places Button */}
         <TouchableOpacity
-          style={styles.explorePlacesButton}
+          className="bg-green-500 p-4 rounded-xl items-center mt-4"
           onPress={() => router.push('/places')}
         >
-          <Text style={styles.explorePlacesButtonText}>📍 Explore Places from Database</Text>
+          <Text className="text-white text-base font-semibold">📍 Explore Places from Database</Text>
         </TouchableOpacity>
-        <Text style={styles.helperText}>
+        <Text className="text-xs text-gray-500 -mt-2 text-center">
           View pre-loaded places, checklist, and ask questions about your trip
         </Text>
       </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    marginTop: 50,
-    marginBottom: 4,
-    color: '#1a1a1a',
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 30,
-  },
-  form: {
-    gap: 16,
-    paddingBottom: 40,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-    color: '#333',
-  },
-  pickerContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-  },
-  helperText: {
-    fontSize: 13,
-    color: '#888',
-    marginTop: -8,
-  },
-  generateButton: {
-    backgroundColor: '#007AFF',
-    padding: 18,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 12,
-    shadowColor: '#007AFF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  generateButtonDisabled: {
-    opacity: 0.7,
-  },
-  loadingButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  generateButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  infoBox: {
-    backgroundColor: '#e8f4ff',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  infoTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#0066cc',
-  },
-  infoItem: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 4,
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  chipSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  chipText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  chipTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  explorePlacesButton: {
-    backgroundColor: '#34C759',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  explorePlacesButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

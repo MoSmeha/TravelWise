@@ -11,7 +11,7 @@ import { GenerateItineraryInput } from '../schemas/itinerary.schema';
 import { enrichPlaceWithGoogleData } from '../services/google-places.service';
 import { generateItinerary, saveItineraryToDb } from '../services/itinerary.service';
 import { storeItineraryEmbeddings } from '../services/rag-retrieval.service';
-import { parseBudgetLevel, parseTravelStyle } from '../utils/enum-mappers';
+import { parseBudgetLevel, parseTravelStyles } from '../utils/enum-mappers';
 
 /**
  * GET /api/itinerary/countries
@@ -43,16 +43,17 @@ export async function generate(req: Request, res: Response) {
     
     // Parse enums from validated input
     const budgetLevel = parseBudgetLevel(input.budgetLevel);
-    const travelStyle = parseTravelStyle(input.travelStyle);
+    // Support both new array format (travelStyles) and legacy single value (travelStyle)
+    const travelStyles = parseTravelStyles(input.travelStyles || (input.travelStyle ? [input.travelStyle] : undefined));
     
-    console.log(`🗺️ Generating DB-driven itinerary: ${input.cityId}, ${input.numberOfDays} days, ${travelStyle} style...`);
+    console.log(`🗺️ Generating DB-driven itinerary: ${input.cityId}, ${input.numberOfDays} days, styles: ${travelStyles.join(', ')}...`);
     
     // 1. Generate itinerary from database places
     const result = await generateItinerary({
       cityId: input.cityId,
       numberOfDays: input.numberOfDays,
       budgetLevel,
-      travelStyle,
+      travelStyles,
       budgetUSD: input.budgetUSD,
       userId: userId,
     });
@@ -76,7 +77,7 @@ export async function generate(req: Request, res: Response) {
     console.log(`Saved itinerary to DB with ID: ${savedItinerary.id}`);
     
     // 5. Generate embeddings for RAG (non-blocking)
-    generateEmbeddingsAsync(savedItinerary.id, countryName, input, travelStyle, result);
+    generateEmbeddingsAsync(savedItinerary.id, countryName, input, travelStyles.join(', '), result);
     
     // 6. Build and return response
     const response = buildItineraryResponse(savedItinerary.id, input, result);
