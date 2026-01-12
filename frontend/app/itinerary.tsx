@@ -210,8 +210,8 @@ export default function ItineraryScreen() {
         )}
 
         {/* Daily Itinerary */}
-        {data.days.map((day) => (
-          <View key={day.id} style={styles.daySection}>
+        {data.days.map((day, index) => (
+          <View key={day.id || `day-${index}`} style={styles.daySection}>
             <Text style={styles.dayTitle}>Day {day.dayNumber}</Text>
             {day.description && (
               <Text style={styles.dayDescription}>{day.description}</Text>

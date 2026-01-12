@@ -246,10 +246,19 @@ async function enrichLocations(days: any[]) {
         );
         
         if (googleData.data) {
+          // Check if another place already has this googlePlaceId to avoid unique constraint violations
+          const existingPlace = await prisma.place.findUnique({
+            where: { googlePlaceId: googleData.data.googlePlaceId },
+            select: { id: true }
+          });
+
+          // Only update googlePlaceId if it doesn't exist or belongs to this place
+          const shouldUpdateId = !existingPlace || existingPlace.id === location.id;
+
           await prisma.place.update({
             where: { id: location.id },
             data: {
-              googlePlaceId: googleData.data.googlePlaceId,
+              ...(shouldUpdateId ? { googlePlaceId: googleData.data.googlePlaceId } : {}),
               rating: googleData.data.rating,
               totalRatings: googleData.data.totalRatings,
               topReviews: googleData.data.topReviews as any,
