@@ -1,12 +1,12 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express, NextFunction, Request, Response } from 'express';
+import { authenticate } from './middleware/auth.middleware';
+import authRouter from './routes/auth';
 import checklistRouter from './routes/checklist';
 import itineraryRouter from './routes/itinerary';
-import locationsRouter from './routes/locations';
 import placesRouter from './routes/places';
 import ragRouter from './routes/rag';
-import warningsRouter from './routes/warnings';
 import webhooksRouter from './routes/webhooks';
 
 dotenv.config();
@@ -28,17 +28,16 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.get('/api', (_req: Request, res: Response) => {
   res.json({ 
     message: 'TravelWise API is running', 
-    endpoints: ['/itinerary', '/locations', '/warnings', '/places', '/webhooks'],
+    endpoints: ['/auth', '/itinerary', '/places', '/checklist', '/webhooks'],
   });
 });
 
-app.use('/api/itinerary', itineraryRouter);
-app.use('/api/itinerary', ragRouter); // RAG endpoints under /api/itinerary/:id/ask
-app.use('/api/locations', locationsRouter);
-app.use('/api/warnings', warningsRouter);
-app.use('/api/places', placesRouter);
-app.use('/api/checklist', checklistRouter);
-app.use('/api/webhooks', webhooksRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/itinerary', authenticate, itineraryRouter);
+app.use('/api/itinerary', authenticate, ragRouter); // RAG endpoints under /api/itinerary/:id/ask
+app.use('/api/places', authenticate, placesRouter);
+app.use('/api/checklist', authenticate, checklistRouter);
+app.use('/api/webhooks', authenticate, webhooksRouter);
 
 // Health check
 app.get('/', (_req: Request, res: Response) => {
@@ -63,9 +62,9 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 const portToListen = Number(PORT);
 
 const server = app.listen(portToListen, '0.0.0.0', () => {
-  console.log(`🚀 TravelWise Backend running on port ${portToListen}`);
-  console.log(`📍 Listening on all network interfaces (0.0.0.0)`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`TravelWise Backend running on port ${portToListen}`);
+  console.log(`Listening on all network interfaces (0.0.0.0)`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 // Set timeout to 5 minutes for long AI generations

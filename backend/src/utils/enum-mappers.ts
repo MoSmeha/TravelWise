@@ -1,9 +1,23 @@
 /**
  * Enum mapping utilities
- * Convert string values to Prisma enums for type safety
+ * Convert string values to type-safe enums
  */
 
-import { BudgetLevel, TravelStyle } from '@prisma/client';
+// TypeScript enums (not from Prisma as no model uses them)
+export enum BudgetLevel {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+}
+
+export enum TravelStyle {
+  ADVENTURE = 'ADVENTURE',           // hiking, trekking, diving, safaris, extreme sports
+  CULTURAL = 'CULTURAL',             // museums, UNESCO sites, local traditions, food tours
+  NATURE_ECO = 'NATURE_ECO',         // national parks, wildlife viewing, sustainable trips
+  BEACH_RELAXATION = 'BEACH_RELAXATION', // resorts, islands, spas, tropical getaways
+  URBAN_CITY = 'URBAN_CITY',         // architecture, nightlife, shopping, entertainment
+  FAMILY_GROUP = 'FAMILY_GROUP',     // multi-generational trips, theme parks, easy hotels
+}
 
 /**
  * Map budget level string to enum
@@ -22,13 +36,24 @@ export function parseBudgetLevel(value: string | undefined): BudgetLevel {
  */
 export function parseTravelStyle(value: string | undefined): TravelStyle {
   const map: Record<string, TravelStyle> = {
-    'NATURE': TravelStyle.NATURE,
-    'FOOD': TravelStyle.FOOD,
-    'CULTURE': TravelStyle.CULTURE,
-    'NIGHTLIFE': TravelStyle.NIGHTLIFE,
-    'MIXED': TravelStyle.MIXED,
+    'ADVENTURE': TravelStyle.ADVENTURE,
+    'CULTURAL': TravelStyle.CULTURAL,
+    'NATURE_ECO': TravelStyle.NATURE_ECO,
+    'BEACH_RELAXATION': TravelStyle.BEACH_RELAXATION,
+    'URBAN_CITY': TravelStyle.URBAN_CITY,
+    'FAMILY_GROUP': TravelStyle.FAMILY_GROUP,
   };
-  return map[value || 'MIXED'] || TravelStyle.MIXED;
+  return map[value || 'CULTURAL'] || TravelStyle.CULTURAL;
+}
+
+/**
+ * Parse array of travel styles (max 3)
+ */
+export function parseTravelStyles(values: string[] | undefined): TravelStyle[] {
+  if (!values || values.length === 0) {
+    return [TravelStyle.CULTURAL];
+  }
+  return values.slice(0, 3).map(v => parseTravelStyle(v));
 }
 
 /**

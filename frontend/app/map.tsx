@@ -3,13 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { API_BASE_URL } from '../config/api';
+import { CLASSIFICATION_COLORS } from '../constants/theme';
+import { useItineraryDetails } from '../hooks/queries/useItineraries';
+import { useItineraryStore } from '../store/itineraryStore';
 import type { Hotel, ItineraryResponse, Location } from '../types/api';
-
-const PIN_COLORS = {
-  HIDDEN_GEM: '#22c55e',
-  CONDITIONAL: '#f97316',
-  TOURIST_TRAP: '#ef4444',
-};
 
 const HOTEL_COLOR = '#8b5cf6';
 const AIRPORT_COLOR = '#0ea5e9';
@@ -17,10 +14,23 @@ const AIRPORT_COLOR = '#0ea5e9';
 export default function MapScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
-  const [data, setData] = useState<ItineraryResponse | null>(null);
+  
+  // Itinerary store for persisting active itinerary
+  const setActiveItinerary = useItineraryStore((state) => state.setActiveItinerary);
+  
+  // State for data passed directly (e.g. from generation)
+  const [passedData, setPassedData] = useState<ItineraryResponse | null>(null);
+  
+  // If ID provided, fetch from backend
+  const itineraryId = typeof params.itineraryId === 'string' ? params.itineraryId : null;
+  const { data: fetchedData, isLoading: loadingItinerary } = useItineraryDetails(itineraryId || '');
+
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [locationPhotos, setLocationPhotos] = useState<Record<string, { photos: string[], reviews: any[], loading: boolean }>>({});
+
+  // Combine data sources: prefer passed, then fetched
+  const data = passedData || (fetchedData as ItineraryResponse | undefined) || null;
 
   // Fetch photos for a location
   const fetchPhotosForLocation = async (locationId: string, locationName: string, lat?: number, lng?: number) => {
@@ -57,18 +67,32 @@ export default function MapScreen() {
     if (params.data) {
       try {
         const parsed = JSON.parse(params.data as string);
-        setData(parsed);
+        setPassedData(parsed);
+        
+        // Set active itinerary in store for checklist tab access
+        if (parsed.itinerary?.id) {
+          setActiveItinerary(parsed.itinerary.id);
+        }
       } catch (error) {
         console.error('Error parsing data:', error);
         Alert.alert('Error', 'Failed to load itinerary data');
       }
     }
-  }, [params.data]);
+  }, [params.data, setActiveItinerary]);
+
+  if (loadingItinerary && !passedData && itineraryId) {
+      return (
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={{textAlign: 'center', marginTop: 10}}>Loading itinerary...</Text>
+        </View>
+      );
+  }
 
   if (!data) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <Text style={{textAlign: 'center', marginTop: 20}}>No itinerary data found.</Text>
       </View>
     );
   }
@@ -148,7 +172,7 @@ export default function MapScreen() {
               latitude: location.latitude,
               longitude: location.longitude,
             }}
-            pinColor={PIN_COLORS[location.classification]}
+            pinColor={CLASSIFICATION_COLORS[location.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF'}
             title={location.name}
             description={location.category}
             onPress={() => {
@@ -192,7 +216,7 @@ export default function MapScreen() {
             <View
               style={[
                 styles.badge,
-                { backgroundColor: PIN_COLORS[selectedLocation.classification] },
+                { backgroundColor: CLASSIFICATION_COLORS[selectedLocation.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF' },
               ]}
             >
               <Text style={styles.badgeText}>

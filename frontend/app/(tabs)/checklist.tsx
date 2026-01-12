@@ -14,9 +14,10 @@ import {
     UIManager,
     View
 } from 'react-native';
-import { useChecklist } from '../hooks/queries/useChecklist';
-import { useAddChecklistItem, useToggleChecklistItem } from '../hooks/mutations/useChecklist';
-import type { ChecklistItem } from '../types/api';
+import { useChecklist } from '../../hooks/queries/useChecklist';
+import { useAddChecklistItem, useToggleChecklistItem } from '../../hooks/mutations/useChecklist';
+import { useItineraryStore } from '../../store/itineraryStore';
+import type { ChecklistItem } from '../../types/api';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android') {
@@ -28,20 +29,29 @@ if (Platform.OS === 'android') {
 export default function ChecklistScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
-  const itineraryId = params.itineraryId as string;
   
-  if (!itineraryId) {
-    Alert.alert('Error', 'No itinerary ID provided');
-    router.back();
-    // Return early to avoid hook errors if itineraryId is missing (though hooks run anyway)
-  }
-
+  // Get itineraryId from params OR from the store (fallback for tab navigation)
+  const storeItineraryId = useItineraryStore((state) => state.activeItineraryId);
+  const itineraryId = (params.itineraryId as string) || storeItineraryId;
+  
   // React Query Hooks
-  const { data: items = [], isLoading, refetch, isRefetching } = useChecklist(itineraryId);
+  const { data: items = [], isLoading, refetch, isRefetching } = useChecklist(itineraryId || '');
   const toggleMutation = useToggleChecklistItem();
   const addMutation = useAddChecklistItem();
 
   const [newItemText, setNewItemText] = useState('');
+
+  if (!itineraryId) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.emptyText}>No itinerary selected.</Text>
+        <Text style={styles.emptySubtext}>Generate an itinerary first to see your checklist.</Text>
+        <TouchableOpacity onPress={() => router.push('/(tabs)')} style={styles.goHomeButton}>
+          <Text style={styles.goHomeButtonText}>Go to Home</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
   
   const handleRefresh = () => {
     refetch();
@@ -194,6 +204,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   progressSection: {
     backgroundColor: '#fff',
     padding: 16,
@@ -342,4 +357,23 @@ const styles = StyleSheet.create({
     marginTop: -2,
     fontWeight: '300',
   },
+  emptySubtext: {
+    color: '#bbb',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  goHomeButton: {
+    marginTop: 20,
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  goHomeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
+

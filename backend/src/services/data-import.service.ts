@@ -388,7 +388,7 @@ function mergePlaces(allPlaces: ExtractedPlace[]): ExtractedPlace[] {
 
 // Main import function
 export async function importScrapedData(): Promise<{ imported: number; skipped: number }> {
-  const dataDir = path.join(__dirname, '../../../data');
+  const dataDir = path.join(__dirname, '../../../frontend/data');
   
   console.log('📁 Reading scraped data files...');
   

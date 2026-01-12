@@ -7,25 +7,59 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// AUTHENTICATION MODELS
+
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  username      String    @unique
+  avatarUrl     String
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  refreshTokens           RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  itineraries             UserItinerary[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 enum LocationClassification {
   HIDDEN_GEM
   CONDITIONAL
   TOURIST_TRAP
+  MUST_SEE
 }
 
-enum BudgetLevel {
-  LOW
-  MEDIUM
-  HIGH
-}
-
-enum TravelStyle {
-  NATURE
-  FOOD
-  CULTURE
-  NIGHTLIFE
-  MIXED
-}
 
 enum LocationCategory {
   RESTAURANT
@@ -45,146 +79,14 @@ enum LocationCategory {
   OTHER
 }
 
-enum CrowdLevel {
-  EMPTY
-  QUIET
+enum PriceLevel {
+  INEXPENSIVE
   MODERATE
-  BUSY
-  OVERCROWDED
+  EXPENSIVE
 }
 
-model Country {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  code      String   @unique // ISO 3166-1 alpha-2
-  currency  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
-  cities   City[]
-  warnings Warning[]
-}
 
-model City {
-  id        String   @id @default(cuid())
-  name      String
-  latitude  Float
-  longitude Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  countryId String
-  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
-
-  locations    Location[]
-  itineraries  Itinerary[]
-
-  @@unique([name, countryId])
-}
-
-model Location {
-  id             String                   @id @default(cuid())
-  name           String
-  classification LocationClassification
-  category       LocationCategory
-  description    String
-  
-  // Cost information
-  costMinLBP     Int?
-  costMaxLBP     Int?
-  costMinUSD     Float?
-  costMaxUSD     Float?
-  
-  // Visit information
-  crowdLevel     CrowdLevel
-  bestTimeToVisit String // e.g., "Early morning", "Weekdays", "Sunset"
-  
-  // Location data
-  latitude       Float
-  longitude      Float
-  address        String?
-  
-  // Alternative recommendation
-  localAlternative String? // If this is a tourist trap, what's the local alternative?
-  
-  // AI and data quality
-  confidenceScore Float // 0.0 to 1.0
-  dataSources     String[] // Array of sources used
-  aiReasoning     String? // Why AI classified it this way
-  
-  // Metadata
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  cityId         String
-  city           City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  
-  itineraryDays  ItineraryDay[]
-  
-  @@index([classification])
-  @@index([category])
-  @@index([cityId])
-}
-
-model Warning {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  severity    String   // LOW, MEDIUM, HIGH, CRITICAL
-  category    String   // SCAM, SAFETY, PRICING, TRANSPORT, etc.
-  location    String?  // Specific location or area
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  countryId   String
-  country     Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  
-  @@index([countryId])
-  @@index([severity])
-}
-
-model Itinerary {
-  id            String      @id @default(cuid())
-  numberOfDays  Int
-  budgetLevel   BudgetLevel
-  travelStyle   TravelStyle
-  
-  // Generated output
-  totalEstimatedCostLBP Int?
-  totalEstimatedCostUSD Float?
-  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  
-  cityId        String
-  city          City        @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  
-  days          ItineraryDay[]
-}
-
-model ItineraryDay {
-  id          String   @id @default(cuid())
-  dayNumber   Int
-  description String?
-  notes       String?  // Special instructions, warnings for this day
-  
-  itineraryId String
-  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
-  
-  locations   Location[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@unique([itineraryId, dayNumber])
-}
-
-// ==========================================
-// NEW MODELS FOR ENHANCED TRAVELWISE
-// ==========================================
-
-// Enhanced Place model to store scraped + enriched data
 model Place {
   id                  String   @id @default(cuid())
   name                String
@@ -201,7 +103,7 @@ model Place {
   googlePlaceId       String?   @unique
   rating              Float?
   totalRatings        Int?
-  priceLevel          Int?      // 1-4 scale
+  priceLevel          PriceLevel?
   openingHours        Json?     // Stored as JSON
   topReviews          Json?     // Top 3 reviews as JSON array
   
@@ -240,12 +142,15 @@ model Place {
   @@index([city])
   @@index([googlePlaceId])
   @@index([country])
+  @@index([city, classification])
+  @@index([country, category])
 }
 
 // Structured Itinerary for RAG and versioning
 model UserItinerary {
   id                  String   @id @default(cuid())
-  userId              String?  // Optional for anonymous users
+  userId              String?
+  user                User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Trip details
   country             String
@@ -295,13 +200,15 @@ model ItineraryItem {
   itinerary           UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   
   placeId             String
-  place               Place    @relation(fields: [placeId], references: [id])
+  place               Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
   
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   
+  @@unique([itineraryId, dayNumber, orderInDay])
   @@index([itineraryId])
   @@index([placeId])
+  @@index([itineraryId, dayNumber, orderInDay])
 }
 
 model ChecklistItem {
@@ -336,8 +243,7 @@ enum ChecklistCategory {
 // RAG Embeddings for itinerary Q&A
 model ItineraryEmbedding {
   id              String   @id @default(cuid())
-  
-  // Source tracking
+
   itineraryId     String
   itinerary       UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   
@@ -351,9 +257,8 @@ model ItineraryEmbedding {
   dayNumbers      Int[]      // Days covered
   activityTypes   String[]   // Activity types in chunk
   
-  // Vector stored as JSON array (will migrate to pgvector later)
-  // For pgvector: embedding Unsupported("vector(1536)")
-  embeddingJson   Json?      // Temporary: store as JSON until pgvector setup
+
+  embeddingJson   Json?      
   
   createdAt       DateTime @default(now())
   
@@ -375,6 +280,7 @@ model KnowledgeEmbedding {
   embeddingJson   Json?
   
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
   
   @@index([countryCode])
   @@index([source])

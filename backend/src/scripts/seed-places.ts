@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { generateEmbedding } from '../services/embedding.service';
+import { mapPriceLevel } from '../utils/prisma-helpers';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -24,21 +25,6 @@ function mapClassification(cls: string): LocationClassification {
     return normalized as LocationClassification;
   }
   return LocationClassification.CONDITIONAL;
-}
-
-function mapPriceLevel(pl: string | number | null): number | null {
-  if (pl === null) return null;
-  if (typeof pl === 'number') return pl;
-  
-  const normalized = String(pl).toUpperCase();
-  if (normalized === 'PRICE_LEVEL_INEXPENSIVE') return 1;
-  if (normalized === 'PRICE_LEVEL_MODERATE') return 2;
-  if (normalized === 'PRICE_LEVEL_EXPENSIVE') return 3;
-  if (normalized === 'PRICE_LEVEL_VERY_EXPENSIVE') return 4;
-  
-  // Try parsing int
-  const parsed = parseInt(String(pl));
-  return isNaN(parsed) ? null : parsed;
 }
 
 async function main() {

@@ -4,13 +4,14 @@
  */
 
 import { Request, Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { getCountriesList } from '../config/countries.config';
 import prisma from '../lib/prisma';
 import { GenerateItineraryInput } from '../schemas/itinerary.schema';
 import { enrichPlaceWithGoogleData } from '../services/google-places.service';
 import { generateItinerary, saveItineraryToDb } from '../services/itinerary.service';
 import { storeItineraryEmbeddings } from '../services/rag-retrieval.service';
-import { parseBudgetLevel, parseTravelStyle } from '../utils/enum-mappers';
+import { parseBudgetLevel, parseTravelStyles } from '../utils/enum-mappers';
 
 /**
  * GET /api/itinerary/countries
@@ -33,49 +34,55 @@ export async function getCountries(_req: Request, res: Response) {
 export async function generate(req: Request, res: Response) {
   try {
     const input = req.body as GenerateItineraryInput;
+    const userId = (req as AuthenticatedRequest).user?.userId;
+    
+    // Authentication is required for generating itineraries
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required to generate itinerary' });
+    }
     
     // Parse enums from validated input
     const budgetLevel = parseBudgetLevel(input.budgetLevel);
-    const travelStyle = parseTravelStyle(input.travelStyle);
+    // Support both new array format (travelStyles) and legacy single value (travelStyle)
+    const travelStyles = parseTravelStyles(input.travelStyles || (input.travelStyle ? [input.travelStyle] : undefined));
     
-    console.log(`🗺️ Generating DB-driven itinerary: ${input.cityId}, ${input.numberOfDays} days, ${travelStyle} style...`);
+    console.log(`🗺️ Generating DB-driven itinerary: ${input.cityId}, ${input.numberOfDays} days, styles: ${travelStyles.join(', ')}...`);
     
     // 1. Generate itinerary from database places
     const result = await generateItinerary({
       cityId: input.cityId,
       numberOfDays: input.numberOfDays,
       budgetLevel,
-      travelStyle,
+      travelStyles,
       budgetUSD: input.budgetUSD,
-      userId: undefined,
+      userId: userId,
     });
     
     // 2. Enrich locations with Google Places data
     await enrichLocations(result.days);
     
-    // 3. Get country info
-    const city = await prisma.city.findUnique({ where: { id: input.cityId } });
-    const countryName = city ? 'Lebanon' : 'Lebanon'; // MVP simplification
+    // 3. Get country info (MVP: Lebanon only)
+    const countryName = 'Lebanon';
     const airportCode = input.airportCode || 'BEY';
     
     // 4. Save to database for RAG
     const savedItinerary = await saveItineraryToDb(
-      undefined,
+      userId,
       input,
       result,
       countryName,
       airportCode
     );
     
-    console.log(`💾 Saved itinerary to DB with ID: ${savedItinerary.id}`);
+    console.log(`Saved itinerary to DB with ID: ${savedItinerary.id}`);
     
     // 5. Generate embeddings for RAG (non-blocking)
-    generateEmbeddingsAsync(savedItinerary.id, countryName, input, travelStyle, result);
+    generateEmbeddingsAsync(savedItinerary.id, countryName, input, travelStyles.join(', '), result);
     
     // 6. Build and return response
     const response = buildItineraryResponse(savedItinerary.id, input, result);
     
-    console.log(`✅ Itinerary generated: ${response.days.length} days, ${response.days.reduce((sum: number, d: any) => sum + d.locations.length, 0)} locations`);
+    console.log(` Itinerary generated: ${response.days.length} days, ${response.days.reduce((sum: number, d: any) => sum + d.locations.length, 0)} locations`);
     
     return res.json(response);
     
@@ -85,7 +92,143 @@ export async function generate(req: Request, res: Response) {
   }
 }
 
-// ============ Helper Functions ============
+/**
+ * GET /api/itinerary/user
+ * List authenticated user's itineraries
+ */
+export async function listUserItineraries(req: Request, res: Response) {
+  try {
+    const userId = (req as AuthenticatedRequest).user!.userId;
+    const itineraries = await prisma.userItinerary.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+          id: true,
+          country: true,
+          numberOfDays: true,
+          budgetUSD: true,
+          travelStyles: true,
+          totalEstimatedCostUSD: true,
+          createdAt: true,
+          updatedAt: true,
+          flightDate: true,
+      }
+    });
+
+    return res.json(itineraries);
+  } catch (error: any) {
+    console.error('List user itineraries error:', error);
+    return res.status(500).json({ error: 'Failed to list itineraries', message: error.message });
+  }
+}
+
+/**
+ * GET /api/itinerary/:id
+ * Get full details of an itinerary
+ */
+export async function getItineraryDetails(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    // Note: Ownership is verified by requireOwnership middleware before this function
+    
+    // Fetch full itinerary with relations
+    const itinerary = await prisma.userItinerary.findUnique({
+        where: { id },
+        include: {
+            items: {
+                include: {
+                    place: true
+                },
+                orderBy: [
+                    { dayNumber: 'asc' },
+                    { orderInDay: 'asc' }
+                ]
+            },
+            checklist: true
+        }
+    });
+
+    if (!itinerary) {
+        return res.status(404).json({ error: 'Itinerary not found' });
+    }
+
+    // Access control:
+    // If user is logged in, they can access their own itineraries
+    // If itinerary has no user (anonymous), anyone can access (for sharing)
+    // If itinerary belongs to another user... maybe restrict? For now allow if they have ID (sharing feature)
+    
+    // Reconstruct the response format expected by frontend
+    // We need to map DB structure back to 'ItineraryResult' shape roughly
+    // Or at least the shape frontend expects in map.tsx
+    
+    const daysMap = new Map<number, any>();
+    
+    for (const item of itinerary.items) {
+        if (!daysMap.has(item.dayNumber)) {
+            daysMap.set(item.dayNumber, {
+                dayNumber: item.dayNumber,
+                description: `Day ${item.dayNumber}`, // storing description on Day level would be better in DB model update, but we can infer
+                locations: []
+            });
+        }
+        
+        const day = daysMap.get(item.dayNumber);
+        
+        // Map DB Place to API Location
+        day.locations.push({
+            id: item.place.id,
+            name: item.place.name,
+            classification: item.place.classification,
+            category: item.place.category,
+            description: item.notes || item.place.description,
+            latitude: item.place.latitude,
+            longitude: item.place.longitude,
+            costMinUSD: item.place.costMinUSD,
+            costMaxUSD: item.place.costMaxUSD,
+            rating: item.place.rating,
+            totalRatings: item.place.totalRatings,
+            topReviews: item.place.topReviews,
+            imageUrls: item.place.imageUrls,
+            imageUrl: item.place.imageUrl,
+            scamWarning: item.place.scamWarning,
+            bestTimeToVisit: item.place.bestTimeToVisit,
+            crowdLevel: 'MODERATE' // default if missing
+        });
+    }
+    
+    const days = Array.from(daysMap.values());
+    
+    const response = {
+        source: 'DATABASE',
+        itinerary: {
+            id: itinerary.id,
+            numberOfDays: itinerary.numberOfDays,
+            budgetUSD: itinerary.budgetUSD,
+            totalEstimatedCostUSD: itinerary.totalEstimatedCostUSD,
+            travelStyles: itinerary.travelStyles,
+        },
+        days: days,
+        airport: { // Minimal airport info if not stored
+          name: `${itinerary.country} Airport`,
+          code: itinerary.airportCode,
+          latitude: 0, 
+          longitude: 0,
+        },
+        // We need to re-fetch/store warnings/tips or regenerate them. 
+        // For now return empty or store them in DB.
+        warnings: [], 
+        touristTraps: [],
+        localTips: [],
+        routeSummary: itinerary.routeSummary
+    };
+    
+    return res.json(response);
+
+  } catch (error: any) {
+    console.error('Get itinerary error:', error);
+    return res.status(500).json({ error: 'Failed to get itinerary', message: error.message });
+  }
+}
 
 /**
  * Enrich locations with Google Places data
@@ -103,10 +246,19 @@ async function enrichLocations(days: any[]) {
         );
         
         if (googleData.data) {
+          // Check if another place already has this googlePlaceId to avoid unique constraint violations
+          const existingPlace = await prisma.place.findUnique({
+            where: { googlePlaceId: googleData.data.googlePlaceId },
+            select: { id: true }
+          });
+
+          // Only update googlePlaceId if it doesn't exist or belongs to this place
+          const shouldUpdateId = !existingPlace || existingPlace.id === location.id;
+
           await prisma.place.update({
             where: { id: location.id },
             data: {
-              googlePlaceId: googleData.data.googlePlaceId,
+              ...(shouldUpdateId ? { googlePlaceId: googleData.data.googlePlaceId } : {}),
               rating: googleData.data.rating,
               totalRatings: googleData.data.totalRatings,
               topReviews: googleData.data.topReviews as any,
@@ -124,10 +276,10 @@ async function enrichLocations(days: any[]) {
         }
       } catch (error: any) {
         if (error.code === 'P2002') {
-          console.log(`ℹ️ Place "${location.name}" already has Google Place ID attached.`);
+          console.log(` Place "${location.name}" already has Google Place ID attached.`);
           continue;
         }
-        console.warn(`⚠️ Failed to enrich "${location.name}":`, error.message);
+        console.warn(` Failed to enrich "${location.name}":`, error.message);
       }
     }
   }
@@ -173,7 +325,7 @@ async function generateEmbeddingsAsync(
     };
     
     await storeItineraryEmbeddings(itineraryData as any);
-    console.log(`✅ Embeddings generated for RAG`);
+    console.log(` Embeddings generated for RAG`);
   } catch (embeddingError: any) {
     console.error('Failed to generate embeddings (non-critical):', embeddingError.message);
   }
