@@ -1,3 +1,3 @@
-export interface UserProviderContract {
-  createUser(firstName: string, lastName: string): void;
-}
+// export interface UserProviderContract {
+//   createUser(firstName: string, lastName: string): void;
+// }
