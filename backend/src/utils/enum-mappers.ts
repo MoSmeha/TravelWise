@@ -1,9 +1,22 @@
 /**
  * Enum mapping utilities
- * Convert string values to Prisma enums for type safety
+ * Convert string values to type-safe enums
  */
 
-import { BudgetLevel, TravelStyle } from '@prisma/client';
+// TypeScript enums (not from Prisma as no model uses them)
+export enum BudgetLevel {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+}
+
+export enum TravelStyle {
+  NATURE = 'NATURE',
+  FOOD = 'FOOD',
+  CULTURE = 'CULTURE',
+  NIGHTLIFE = 'NIGHTLIFE',
+  MIXED = 'MIXED',
+}
 
 /**
  * Map budget level string to enum

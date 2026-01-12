@@ -1,4 +1,5 @@
-import { BudgetLevel, LocationClassification, TravelStyle } from '@prisma/client';
+import { LocationClassification } from '@prisma/client';
+import { BudgetLevel, TravelStyle } from '../utils/enum-mappers';
 import { v4 as uuidv4 } from 'uuid';
 import prisma from '../lib/prisma';
 import * as googlePlacesService from './google-places.service';
@@ -160,12 +161,8 @@ Format as JSON:
 export async function generateItinerary(params: GenerateItineraryParams): Promise<ItineraryResult> {
   const { cityId, numberOfDays, budgetLevel, travelStyle, budgetUSD } = params;
   
-  // Resolve city name
-  let cityName = cityId;
-  const cityObj = await prisma.city.findUnique({ where: { id: cityId } });
-  if (cityObj) {
-    cityName = cityObj.name;
-  }
+  // cityId is treated as the city name string (e.g., "Beirut")
+  const cityName = cityId;
   
   // Fetch places
   // We use classification filters to ensure quality

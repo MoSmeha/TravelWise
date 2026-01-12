@@ -1,8 +1,3 @@
-/**
- * Auth Controller
- * Handles HTTP concerns for authentication endpoints
- */
-
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
@@ -32,8 +27,7 @@ import { sendVerificationEmail, sendWelcomeEmail } from '../services/email.servi
 export async function register(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as RegisterInput;
-    
-    // Check if email or username already exists
+
     const existingEmail = await prisma.user.findUnique({
       where: { email: input.email },
     });

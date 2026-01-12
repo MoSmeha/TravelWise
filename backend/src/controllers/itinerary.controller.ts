@@ -60,9 +60,8 @@ export async function generate(req: Request, res: Response) {
     // 2. Enrich locations with Google Places data
     await enrichLocations(result.days);
     
-    // 3. Get country info
-    const city = await prisma.city.findUnique({ where: { id: input.cityId } });
-    const countryName = city ? 'Lebanon' : 'Lebanon'; // MVP simplification
+    // 3. Get country info (MVP: Lebanon only)
+    const countryName = 'Lebanon';
     const airportCode = input.airportCode || 'BEY';
     
     // 4. Save to database for RAG
@@ -74,7 +73,7 @@ export async function generate(req: Request, res: Response) {
       airportCode
     );
     
-    console.log(`💾 Saved itinerary to DB with ID: ${savedItinerary.id}`);
+    console.log(`Saved itinerary to DB with ID: ${savedItinerary.id}`);
     
     // 5. Generate embeddings for RAG (non-blocking)
     generateEmbeddingsAsync(savedItinerary.id, countryName, input, travelStyle, result);
@@ -82,7 +81,7 @@ export async function generate(req: Request, res: Response) {
     // 6. Build and return response
     const response = buildItineraryResponse(savedItinerary.id, input, result);
     
-    console.log(`✅ Itinerary generated: ${response.days.length} days, ${response.days.reduce((sum: number, d: any) => sum + d.locations.length, 0)} locations`);
+    console.log(` Itinerary generated: ${response.days.length} days, ${response.days.reduce((sum: number, d: any) => sum + d.locations.length, 0)} locations`);
     
     return res.json(response);
     
@@ -276,10 +275,10 @@ async function enrichLocations(days: any[]) {
         }
       } catch (error: any) {
         if (error.code === 'P2002') {
-          console.log(`ℹ️ Place "${location.name}" already has Google Place ID attached.`);
+          console.log(` Place "${location.name}" already has Google Place ID attached.`);
           continue;
         }
-        console.warn(`⚠️ Failed to enrich "${location.name}":`, error.message);
+        console.warn(` Failed to enrich "${location.name}":`, error.message);
       }
     }
   }
@@ -325,7 +324,7 @@ async function generateEmbeddingsAsync(
     };
     
     await storeItineraryEmbeddings(itineraryData as any);
-    console.log(`✅ Embeddings generated for RAG`);
+    console.log(` Embeddings generated for RAG`);
   } catch (embeddingError: any) {
     console.error('Failed to generate embeddings (non-critical):', embeddingError.message);
   }

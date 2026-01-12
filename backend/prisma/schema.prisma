@@ -57,21 +57,9 @@ enum LocationClassification {
   HIDDEN_GEM
   CONDITIONAL
   TOURIST_TRAP
+  MUST_SEE
 }
 
-enum BudgetLevel {
-  LOW
-  MEDIUM
-  HIGH
-}
-
-enum TravelStyle {
-  NATURE
-  FOOD
-  CULTURE
-  NIGHTLIFE
-  MIXED
-}
 
 enum LocationCategory {
   RESTAURANT
@@ -91,140 +79,15 @@ enum LocationCategory {
   OTHER
 }
 
-enum CrowdLevel {
-  EMPTY
-  QUIET
-  MODERATE
-  BUSY
-  OVERCROWDED
-}
-
-model Country {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  code      String   @unique // ISO 3166-1 alpha-2
-  currency  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  cities   City[]
-  warnings Warning[]
-}
-
-model City {
-  id        String   @id @default(cuid())
-  name      String
-  latitude  Float
-  longitude Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  countryId String
-  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
-
-  locations    Location[]
-  itineraries  Itinerary[]
-
-  @@unique([name, countryId])
-}
-
-model Location {
-  id             String                   @id @default(cuid())
-  name           String
-  classification LocationClassification
-  category       LocationCategory
-  description    String
-  
-  // Cost information
-  costMinLBP     Int?
-  costMaxLBP     Int?
-  costMinUSD     Float?
-  costMaxUSD     Float?
-  
-  // Visit information
-  crowdLevel     CrowdLevel
-  bestTimeToVisit String // e.g., "Early morning", "Weekdays", "Sunset"
-  
-  // Location data
-  latitude       Float
-  longitude      Float
-  address        String?
-  
-  // Alternative recommendation
-  localAlternative String? // If this is a tourist trap, what's the local alternative?
-  
-  // AI and data quality
-  confidenceScore Float // 0.0 to 1.0
-  dataSources     String[] // Array of sources used
-  aiReasoning     String? // Why AI classified it this way
-  
-  // Metadata
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  cityId         String
-  city           City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  
-  itineraryDays  ItineraryDay[]
-  
-  @@index([classification])
-  @@index([category])
-  @@index([cityId])
-}
-
-model Warning {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  severity    String   // LOW, MEDIUM, HIGH, CRITICAL
-  category    String   // SCAM, SAFETY, PRICING, TRANSPORT, etc.
-  location    String?  // Specific location or area
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  countryId   String
-  country     Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
-  
-  @@index([countryId])
-  @@index([severity])
-}
-
-model Itinerary {
-  id            String      @id @default(cuid())
-  numberOfDays  Int
-  budgetLevel   BudgetLevel
-  travelStyle   TravelStyle
-  
-  // Generated output
-  totalEstimatedCostLBP Int?
-  totalEstimatedCostUSD Float?
-  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  
-  cityId        String
-  city          City        @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  
-  days          ItineraryDay[]
-}
-
-model ItineraryDay {
-  id          String   @id @default(cuid())
-  dayNumber   Int
-  description String?
-  notes       String?  // Special instructions, warnings for this day
-  
-  itineraryId String
-  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
-  
-  locations   Location[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@unique([itineraryId, dayNumber])
-}
+// ==========================================
+// LEGACY MODELS REMOVED - The following models were unused:
+// - Country (superseded by CountryConfig in countries.config.ts)
+// - City (Place model has city as string field)
+// - Location (replaced by Place model)
+// - Warning (warnings generated dynamically by AI)
+// - Itinerary (replaced by UserItinerary)
+// - ItineraryDay (replaced by ItineraryItem)
+// ==========================================
 
 // ==========================================
 // NEW MODELS FOR ENHANCED TRAVELWISE
@@ -382,8 +245,7 @@ enum ChecklistCategory {
 // RAG Embeddings for itinerary Q&A
 model ItineraryEmbedding {
   id              String   @id @default(cuid())
-  
-  // Source tracking
+
   itineraryId     String
   itinerary       UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   
