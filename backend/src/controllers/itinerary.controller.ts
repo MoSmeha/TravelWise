@@ -154,19 +154,20 @@ export async function getItineraryDetails(req: Request, res: Response) {
             name: item.place.name,
             classification: item.place.classification,
             category: item.place.category,
-            description: item.notes || item.place.description,
+            description: item.place.description || item.notes,
             latitude: item.place.latitude,
             longitude: item.place.longitude,
-            costMinUSD: item.place.costMinUSD,
-            costMaxUSD: item.place.costMaxUSD,
-            rating: item.place.rating,
-            totalRatings: item.place.totalRatings,
-            topReviews: item.place.topReviews,
-            imageUrls: item.place.imageUrls,
-            imageUrl: item.place.imageUrl,
-            scamWarning: item.place.scamWarning,
-            bestTimeToVisit: item.place.bestTimeToVisit,
-            crowdLevel: 'MODERATE'
+                costMinUSD: item.place.costMinUSD,
+                costMaxUSD: item.place.costMaxUSD,
+                rating: item.place.rating,
+                totalRatings: item.place.totalRatings,
+                topReviews: item.place.topReviews,
+                imageUrls: item.place.imageUrls,
+                imageUrl: item.place.imageUrl,
+                scamWarning: item.place.scamWarning,
+                bestTimeToVisit: item.place.bestTimeToVisit,
+            crowdLevel: 'MODERATE',
+            openingHours: item.place.openingHours
         }));
         
         return {
@@ -249,6 +250,12 @@ async function enrichLocations(days: DayWithLocations[]) {
   for (const day of days) {
     for (const location of day.locations) {
       try {
+        // Check if we already have detailed data to avoid overwriting/unncessary API calls
+        if (location.openingHours && (location.imageUrl || (location.imageUrls && location.imageUrls.length > 0))) {
+          console.log(`✨ Skipping enrichment for "${location.name}" - already has data`);
+          continue;
+        }
+
         const googleData = await enrichPlaceWithGoogleData(
           location.name,
           location.latitude,
@@ -273,11 +280,13 @@ async function enrichLocations(days: DayWithLocations[]) {
             lastEnrichedAt: new Date(),
           });
           
-          // Attach to location object for embedding generation
+          // Attach to location object for embedding generation and response
           location.rating = googleData.data.rating;
           location.totalRatings = googleData.data.totalRatings;
           location.topReviews = googleData.data.topReviews;
           location.openingHours = googleData.data.openingHours;
+          location.imageUrls = googleData.data.photos;
+          location.imageUrl = googleData.data.photos[0]; // Primary image
         }
       } catch (error: any) {
         if (error.code === 'P2002') {

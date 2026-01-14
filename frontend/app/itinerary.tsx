@@ -146,7 +146,7 @@ export default function ItineraryScreen() {
               <View key={hotel.id} className="bg-white p-4 rounded-xl mb-3 border-l-4 border-l-purple-500">
                 <Text className="text-lg font-bold text-gray-900">{hotel.name}</Text>
                 <Text className="text-xs text-gray-600 mt-0.5">{hotel.neighborhood}</Text>
-                <Text className="text-sm text-gray-800 mt-2">{hotel.description}</Text>
+
                 <Text className="text-base font-semibold text-green-500 mt-2">
                   ${hotel.pricePerNightUSD.min}-${hotel.pricePerNightUSD.max}/night
                 </Text>

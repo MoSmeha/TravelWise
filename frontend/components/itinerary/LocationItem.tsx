@@ -45,9 +45,7 @@ export const LocationItem: React.FC<LocationItemProps> = ({ location, index }) =
       )}
 
       <Text className="text-sm text-gray-500 mb-1.5">{location.category}</Text>
-      <Text className="text-sm text-gray-800 mb-3 leading-5">
-        {location.description}
-      </Text>
+
 
       <View className="gap-1">
         {(location.costMinUSD || location.costMaxUSD) && (

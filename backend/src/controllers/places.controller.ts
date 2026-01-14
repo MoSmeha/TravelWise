@@ -18,17 +18,25 @@ const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';
  */
 export async function getPhotos(req: Request, res: Response) {
   try {
-    const { name, lat, lng } = req.query as unknown as GetPhotosInput;
+    const { name, lat, lng, id } = req.query as unknown as GetPhotosInput & { id?: string };
     
     // 1. Check DB first for valid cache (fresh < 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const existingPlace = await prisma.place.findFirst({
-      where: {
-        name: { equals: name, mode: 'insensitive' },
-      }
-    });
+    let existingPlace = null;
+    
+    if (id) {
+       existingPlace = await prisma.place.findUnique({ where: { id } });
+    }
+    
+    if (!existingPlace) {
+        existingPlace = await prisma.place.findFirst({
+        where: {
+            name: { equals: name, mode: 'insensitive' },
+        }
+        });
+    }
 
     if (existingPlace && existingPlace.lastEnrichedAt && existingPlace.lastEnrichedAt > sevenDaysAgo) {
       // Return cached data
@@ -46,7 +54,7 @@ export async function getPhotos(req: Request, res: Response) {
 
       // If we have images and reviews, return them
       if (existingPlace.imageUrls && existingPlace.imageUrls.length > 0) {
-        console.log(`Returning cached data for: ${name}`);
+        console.log(`Returning cached data for: ${name} (ID: ${existingPlace.id})`);
         return res.json({ 
           photos: existingPlace.imageUrls, 
           reviews: cachedReviews 

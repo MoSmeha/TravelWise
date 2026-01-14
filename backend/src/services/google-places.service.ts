@@ -28,6 +28,7 @@ export interface PlaceEnrichment {
 
 export interface WeeklyHours {
   weekdayText: string[];
+  weekdayDescriptions?: string[];
   isOpen: boolean;
   periods: Array<{
     open: { day: number; time: string };
@@ -208,6 +209,7 @@ export async function getPlaceDetails(googlePlaceId: string): Promise<PlaceEnric
         priceLevel: place.price_level ?? null,
         openingHours: place.opening_hours ? {
           weekdayText: place.opening_hours.weekday_text || [],
+          weekdayDescriptions: place.opening_hours.weekday_text || [], // Google often executes this as weekday_text
           isOpen: place.opening_hours.open_now || false,
           periods: place.opening_hours.periods || [],
         } : null,

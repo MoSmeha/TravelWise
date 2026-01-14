@@ -54,6 +54,7 @@ export const LocationSchema = z.object({
   rating: z.number().optional(),
   totalRatings: z.number().optional(),
   topReviews: z.array(z.any()).optional(),
+  openingHours: z.any().optional(),
   priceLevel: PriceLevelSchema.optional(),
 });
 
@@ -181,6 +182,7 @@ export const PlaceSchema = z.object({
   scamWarning: z.string().optional(),
   imageUrl: z.string().optional(),
   imageUrls: z.array(z.string()).optional(),
+  openingHours: z.any().optional(),
 });
 
 export const ChecklistItemSchema = z.object({

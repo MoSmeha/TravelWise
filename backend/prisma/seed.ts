@@ -1,12 +1,16 @@
-import { LocationCategory, LocationClassification, PrismaClient } from "@prisma/client";
+import { LocationCategory, LocationClassification, PriceLevel, PrismaClient } from "@prisma/client";
 import fs from "fs";
 import path from "path";
 
 const prisma = new PrismaClient();
 
 // Helper to map string to LocationCategory enum
+// Helper to map string to LocationCategory enum
 function mapCategory(cat: string): LocationCategory {
-  const normalized = cat.toUpperCase();
+  if (!cat) return LocationCategory.OTHER;
+  
+  const normalized = cat.toUpperCase().trim();
+  
   if (normalized in LocationCategory) {
     return normalized as LocationCategory;
   }
@@ -20,6 +24,16 @@ function mapClassification(cls: string): LocationClassification {
     return normalized as LocationClassification;
   }
   return LocationClassification.CONDITIONAL;
+}
+
+// Helper to map string to PriceLevel enum
+function mapPriceLevel(level: string | null): PriceLevel | null {
+  if (!level) return null;
+  const normalized = level.toUpperCase();
+  if (normalized in PriceLevel) {
+    return normalized as PriceLevel;
+  }
+  return null;
 }
 
 async function main() {
@@ -87,6 +101,12 @@ async function main() {
           bestTimeToVisit: place.bestTimeToVisit || null,
           localTip: place.localTip || null,
           scamWarning: place.scamWarning || null,
+          // New fields
+          topReviews: place.topReviews || [],
+          openingHours: place.openingHours || null,
+          priceLevel: mapPriceLevel(place.priceLevel),
+          costMinUSD: place.costMinUSD || null,
+          costMaxUSD: place.costMaxUSD || null,
         },
       });
 

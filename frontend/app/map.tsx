@@ -40,8 +40,8 @@ export default function MapScreen() {
     setLocationPhotos(prev => ({ ...prev, [locationId]: { photos: [], reviews: [], loading: true } }));
     
     try {
-      const data = await placesService.getPlacePhotos(locationName, lat, lng);
-      console.log('Fetched photos/reviews:', data);
+      const data = await placesService.getPlacePhotos(locationName, lat, lng, locationId);
+
       
       setLocationPhotos(prev => ({
         ...prev,
@@ -200,35 +200,62 @@ export default function MapScreen() {
 
           {/* Content Section */}
           <View>
-             {/* Info Grid */}
-            <View className="flex-row flex-wrap gap-2 mb-4">
-              {(selectedLocation.costMinUSD || selectedLocation.costMaxUSD) && (
-                <View className="bg-green-50 px-3 py-2 rounded-xl flex-row items-center gap-1.5 border border-green-100">
-                  <DollarSign size={14} color="#15803d" />
-                  <Text className="text-green-700 text-xs font-semibold">{formatCost(selectedLocation)}</Text>
-                </View>
-              )}
-              
-              {selectedLocation.bestTimeToVisit && (
-                <View className="bg-blue-50 px-3 py-2 rounded-xl flex-row items-center gap-1.5 border border-blue-100">
-                  <Clock size={14} color="#1d4ed8" />
-                  <Text className="text-blue-700 text-xs font-semibold">{selectedLocation.bestTimeToVisit}</Text>
-                </View>
-              )}
-              
-              {selectedLocation.crowdLevel && (
-                <View className="bg-purple-50 px-3 py-2 rounded-xl flex-row items-center gap-1.5 border border-purple-100">
-                  <Users size={14} color="#7e22ce" />
-                  <Text className="text-purple-700 text-xs font-semibold uppercase">{selectedLocation.crowdLevel}</Text>
-                </View>
-              )}
-            </View>
+              {/* Info Grid */}
+              <View className="flex-row flex-wrap gap-2 mb-4">
+                  {/* Price Level */}
+                  {selectedLocation.priceLevel && (
+                    <View className="bg-green-50 px-3 py-2 rounded-xl flex-row items-center gap-1.5 border border-green-100">
+                      <DollarSign size={14} color="#15803d" />
+                      <Text className="text-green-700 text-xs font-semibold">
+                        {selectedLocation.priceLevel === 'INEXPENSIVE' ? '$' : 
+                        selectedLocation.priceLevel === 'MODERATE' ? '$$' : 
+                        selectedLocation.priceLevel === 'EXPENSIVE' ? '$$$' : '$'}
+                      </Text>
+                    </View>
+                  )}
 
-             {selectedLocation.description && (
+                  {(selectedLocation.costMinUSD || selectedLocation.costMaxUSD) && (
+                    <View className="bg-emerald-50 px-3 py-2 rounded-xl flex-row items-center gap-1.5 border border-emerald-100">
+                      <Text className="text-emerald-700 text-xs font-semibold">{formatCost(selectedLocation)}</Text>
+                    </View>
+                  )}
+                  
+                  {selectedLocation.bestTimeToVisit && (
+                    <View className="bg-blue-50 px-3 py-2 rounded-xl flex-row items-center gap-1.5 border border-blue-100">
+                      <Clock size={14} color="#1d4ed8" />
+                      <Text className="text-blue-700 text-xs font-semibold">{selectedLocation.bestTimeToVisit}</Text>
+                    </View>
+                  )}
+                  
+
+              </View>
+
+            {selectedLocation.description && (
                 <Text className="text-base text-gray-600 mb-6 leading-6">
                   {selectedLocation.description}
                 </Text>
              )}
+
+             {/* Opening Hours Detail - Always Visible */}
+             <View className="mb-6 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                <View className="p-4 bg-gray-50 border-b border-gray-100 flex-row items-center gap-2">
+                  <Clock size={16} color="#374151" />
+                  <Text className="text-sm font-bold text-gray-900">Opening Hours</Text>
+                </View>
+                
+                <View className="p-4 pt-3">
+                  {(selectedLocation.openingHours?.weekdayText || selectedLocation.openingHours?.weekday_text || selectedLocation.openingHours?.weekdayDescriptions) ? (
+                    ((selectedLocation.openingHours.weekdayText || selectedLocation.openingHours.weekday_text || selectedLocation.openingHours.weekdayDescriptions) as string[]).map((day, idx) => (
+                      <View key={idx} className="flex-row justify-between py-1 border-b border-gray-100 last:border-0">
+                        <Text className="text-xs text-gray-600 font-medium">{day.split(': ')[0]}</Text>
+                        <Text className="text-xs text-gray-800">{day.split(': ')[1] || 'Closed'}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <Text className="text-xs text-gray-500 italic">Not provided</Text>
+                  )}
+                </View>
+             </View>
 
              {/* Full Gallery */}
              <Text className="text-lg font-bold text-gray-900 mb-3">Photos</Text>
@@ -387,7 +414,7 @@ export default function MapScreen() {
           <Text className="text-sm text-gray-500 mb-2">{selectedHotel.neighborhood}</Text>
           
           {selectedHotel.description && (
-            <Text className="text-sm text-gray-600 mb-3" numberOfLines={2}>
+            <Text className="text-sm text-gray-600 mb-3">
               {selectedHotel.description}
             </Text>
           )}

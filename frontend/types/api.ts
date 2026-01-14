@@ -58,6 +58,7 @@ export interface Location {
   totalRatings?: number;
   topReviews?: any[];
   priceLevel?: PriceLevel;
+  openingHours?: any;
 }
 
 // ============ HOTEL ============
@@ -202,6 +203,7 @@ export interface Place {
   scamWarning?: string;
   imageUrl?: string;
   imageUrls?: string[];
+  openingHours?: any;
 }
 
 export interface ChecklistItem {
