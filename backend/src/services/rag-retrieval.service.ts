@@ -1,7 +1,7 @@
 import { ChunkType as PrismaChunkType } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { chunkItinerary, ItineraryData } from './chunking.service';
-import { batchGenerateEmbeddings, cosineSimilarity, generateEmbedding } from './embedding.service';
+import { batchGenerateEmbeddings, generateEmbedding } from './embedding.service';
 import { getOpenAIClient } from '../utils/openai.utils';
 
 // ==========================================
@@ -79,7 +79,7 @@ interface RAGResponse {
   actions: RAGAction[];
 }
 
-// Store embeddings for an itinerary
+// Store embeddings for an itinerary using native pgvector
 export async function storeItineraryEmbeddings(itinerary: ItineraryData): Promise<number> {
   // Generate chunks
   const chunks = chunkItinerary(itinerary);
@@ -88,28 +88,33 @@ export async function storeItineraryEmbeddings(itinerary: ItineraryData): Promis
   const texts = chunks.map(c => c.text);
   const embeddings = await batchGenerateEmbeddings(texts);
   
-  // Store in database
+  // Store in database using raw SQL for vector type
   let stored = 0;
   
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
     const embedding = embeddings[i];
+    const vectorStr = `[${embedding.join(',')}]`;
     
     try {
-      await prisma.itineraryEmbedding.create({
-        data: {
-          itinerary: {
-             connect: { id: chunk.metadata.itineraryId }
-          },
-          chunkIndex: chunk.chunkIndex,
-          chunkType: chunk.type as PrismaChunkType,
-          chunkText: chunk.text,
-          placeIds: chunk.metadata.placeIds,
-          dayNumbers: chunk.metadata.dayNumbers,
-          activityTypes: chunk.metadata.activityTypes,
-          embeddingJson: embedding,
-        },
-      });
+      // Use raw SQL to insert with native vector type
+      await prisma.$executeRaw`
+        INSERT INTO "ItineraryEmbedding" (
+          "id", "itineraryId", "chunkIndex", "chunkType", "chunkText",
+          "placeIds", "dayNumbers", "activityTypes", "embedding", "createdAt"
+        ) VALUES (
+          ${`cuid_${Date.now()}_${i}`},
+          ${chunk.metadata.itineraryId},
+          ${chunk.chunkIndex},
+          ${chunk.type}::"ChunkType",
+          ${chunk.text},
+          ${chunk.metadata.placeIds},
+          ${chunk.metadata.dayNumbers},
+          ${chunk.metadata.activityTypes},
+          ${vectorStr}::vector,
+          NOW()
+        )
+      `;
       stored++;
     } catch (error: any) {
       // Sanitize error message to avoid logging massive vectors
@@ -122,7 +127,7 @@ export async function storeItineraryEmbeddings(itinerary: ItineraryData): Promis
   return stored;
 }
 
-// Retrieve relevant chunks for a query
+// Retrieve relevant chunks for a query using native pgvector
 export async function retrieveContext(
   query: string,
   itineraryId: string,
@@ -137,22 +142,72 @@ export async function retrieveContext(
   }
   
   const queryEmbedding = await generateEmbedding(enhancedQuery);
+  const queryVectorStr = `[${queryEmbedding.join(',')}]`;
   
-  // 1. Fetch Itinerary Embeddings
-  const itineraryChunks = await prisma.itineraryEmbedding.findMany({
-    where: { itineraryId },
-    orderBy: { chunkIndex: 'asc' },
+  // Fetch itinerary to get country for knowledge base filtering
+  const itinerary = await prisma.userItinerary.findUnique({
+    where: { id: itineraryId },
+    select: { country: true }
   });
+  const countryCode = itinerary?.country === 'Lebanon' ? 'LB' : 
+                      itinerary?.country?.substring(0, 2).toUpperCase() || 'LB';
   
-  // 2. Fetch Global Knowledge Embeddings (Reddit)
-  // For now, assume LB. Ideally fetch itinerary countryCode.
-  const knowledgeChunks = await prisma.knowledgeEmbedding.findMany({
-    where: { countryCode: 'LB' }
-  });
+  // 1. Fetch Itinerary Embeddings with native pgvector similarity
+  const itineraryChunks = await prisma.$queryRaw<Array<{
+    id: string;
+    chunkType: string;
+    chunkText: string;
+    placeIds: string[];
+    dayNumbers: number[];
+    similarity: number;
+  }>>`
+    SELECT 
+      id,
+      "chunkType"::text as "chunkType",
+      "chunkText",
+      "placeIds",
+      "dayNumbers",
+      1 - (embedding <=> ${queryVectorStr}::vector) as similarity
+    FROM "ItineraryEmbedding"
+    WHERE "itineraryId" = ${itineraryId}
+      AND embedding IS NOT NULL
+    ORDER BY embedding <=> ${queryVectorStr}::vector
+    LIMIT ${config.topK}
+  `;
+  
+  // 2. Fetch Global Knowledge Embeddings with dynamic country filtering
+  const knowledgeChunks = await prisma.$queryRaw<Array<{
+    id: string;
+    content: string;
+    similarity: number;
+  }>>`
+    SELECT 
+      id,
+      content,
+      1 - (embedding <=> ${queryVectorStr}::vector) as similarity
+    FROM "KnowledgeEmbedding"
+    WHERE "countryCode" = ${countryCode}
+      AND embedding IS NOT NULL
+    ORDER BY embedding <=> ${queryVectorStr}::vector
+    LIMIT ${config.topK}
+  `;
 
   const allChunks = [
-    ...itineraryChunks.map(c => ({ ...c, source: 'ITINERARY', type: c.chunkType })),
-    ...knowledgeChunks.map(c => ({ ...c, source: 'KNOWLEDGE_BASE', type: 'KNOWLEDGE',  chunkText: c.content, chunkType: 'KNOWLEDGE' }))
+    ...itineraryChunks.map(c => ({ 
+      ...c, 
+      source: 'ITINERARY', 
+      type: c.chunkType,
+      chunkText: c.chunkText
+    })),
+    ...knowledgeChunks.map(c => ({ 
+      ...c, 
+      source: 'KNOWLEDGE_BASE', 
+      type: 'KNOWLEDGE',
+      chunkType: 'KNOWLEDGE',
+      chunkText: c.content,
+      placeIds: [] as string[],
+      dayNumbers: [] as number[]
+    }))
   ];
   
   if (allChunks.length === 0) {
@@ -166,21 +221,8 @@ export async function retrieveContext(
   
   console.log(`[RAG] Retrieved ${itineraryChunks.length} itinerary + ${knowledgeChunks.length} knowledge embeddings`);
   
-  // Calculate similarity for each chunk
-  const scoredChunks = allChunks.map(chunk => {
-    const storedEmbedding = chunk.embeddingJson as number[];
-    const similarity = storedEmbedding && storedEmbedding.length > 0
-      ? cosineSimilarity(queryEmbedding, storedEmbedding)
-      : 0;
-    
-    return {
-      ...chunk,
-      similarity,
-    };
-  });
-  
-  // Sort by similarity
-  scoredChunks.sort((a, b) => b.similarity - a.similarity);
+  // Sort combined results by similarity (already sorted per-source, need to merge)
+  const scoredChunks = allChunks.sort((a, b) => b.similarity - a.similarity);
   
   // Log top similarities
   console.log('[RAG] Top 3 similarities:', scoredChunks.slice(0, 3).map(c => ({
@@ -189,21 +231,17 @@ export async function retrieveContext(
     preview: c.chunkText.substring(0, 50)
   })));
   
-  // Filter candidates
-  // We want a mix of Itinerary and Knowledge if possible
+  // Filter candidates by similarity threshold
   let candidates = scoredChunks
     .filter(c => c.similarity >= config.similarityThreshold)
     .slice(0, config.topK);
   
-  // Fallback thresholds...
+  // Fallback thresholds if no results
   if (candidates.length === 0) {
     candidates = scoredChunks
       .filter(c => c.similarity >= FALLBACK_THRESHOLD)
       .slice(0, config.topK);
   }
-  
-  // Force include top knowledge if relevant and not present? 
-  // For now, simple similarity sort is fine.
 
   // Apply diversity penalty
   const diverseChunks = applyDiversityPenalty(candidates, config.diversityPenalty);
@@ -220,8 +258,8 @@ export async function retrieveContext(
     chunks: topChunks.map(c => ({
       type: c.type as PrismaChunkType | 'KNOWLEDGE',
       text: c.chunkText,
-      dayNumbers: (c as any).dayNumbers || [],
-      placeIds: (c as any).placeIds || [], // Extract placeIds from ItineraryEmbedding
+      dayNumbers: c.dayNumbers || [],
+      placeIds: c.placeIds || [],
       similarity: Math.round(c.similarity * 100) / 100,
       isStale: false,
     })),
@@ -263,11 +301,36 @@ export async function generateActionResponse(
 ): Promise<RAGResponse> {
   const openai = getOpenAIClient();
   
-  // Construct context with embedded Place IDs
-  const context = chunks.map(c => {
+  // Token limit configuration
+  const MAX_CONTEXT_TOKENS = 6000;
+  
+  // Build context strings for each chunk
+  const chunkStrings = chunks.map(c => {
     const placeInfo = c.placeIds && c.placeIds.length > 0 ? ` [PlaceIDs: ${c.placeIds.join(', ')}]` : '';
     return `[${c.type}]${placeInfo}\n${c.text}`;
-  }).join('\n\n---\n\n');
+  });
+  
+  // Token-aware truncation
+  let totalTokens = 0;
+  const safeChunkStrings: string[] = [];
+  
+  for (const chunkStr of chunkStrings) {
+    // Approximate token count (1 token ≈ 4 chars for English)
+    const approxTokens = Math.ceil(chunkStr.length / 4);
+    if (totalTokens + approxTokens > MAX_CONTEXT_TOKENS) {
+      console.warn(`[RAG] Truncated from ${chunkStrings.length} to ${safeChunkStrings.length} chunks due to token limit`);
+      break;
+    }
+    safeChunkStrings.push(chunkStr);
+    totalTokens += approxTokens;
+  }
+  
+  // If we had to truncate and have no chunks, include at least the first one
+  if (safeChunkStrings.length === 0 && chunkStrings.length > 0) {
+    safeChunkStrings.push(chunkStrings[0]);
+  }
+  
+  const context = safeChunkStrings.join('\n\n---\n\n');
 
   const systemPrompt = `You are a knowledgeable travel assistant for Lebanon.
 Answer the user's question completely.

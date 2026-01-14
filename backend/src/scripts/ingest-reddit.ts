@@ -49,19 +49,26 @@ async function main() {
       // Generate embedding
       try {
         const embedding = await generateEmbedding(content);
+        const vectorStr = `[${embedding.join(',')}]`;
         
-        await prisma.knowledgeEmbedding.create({
-          data: {
-            content: content,
-            countryCode: 'LB',
-            source: 'reddit',
-            metadata: {
+        // Use raw SQL to insert with native vector type
+        await prisma.$executeRaw`
+          INSERT INTO "KnowledgeEmbedding" (
+            "id", "content", "countryCode", "source", "metadata", "embedding", "createdAt", "updatedAt"
+          ) VALUES (
+            ${`reddit_${Date.now()}_${totalCount}`},
+            ${content},
+            'LB',
+            'reddit',
+            ${JSON.stringify({
               ...item,
               originalCategory: category
-            },
-            embeddingJson: embedding
-          }
-        });
+            })}::jsonb,
+            ${vectorStr}::vector,
+            NOW(),
+            NOW()
+          )
+        `;
         
         totalCount++;
         process.stdout.write('.');

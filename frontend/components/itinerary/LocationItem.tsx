@@ -42,9 +42,10 @@ export const LocationItem: React.FC<LocationItemProps> = ({ location, index }) =
         <Text className="text-lg font-bold flex-1 text-gray-900">{location.name}</Text>
       </View>
 
-      {location.imageUrl && (
+      {/* Primary image - use imageUrl or first of imageUrls */}
+      {(location.imageUrl || (location.imageUrls && location.imageUrls.length > 0)) && (
         <RNImage
-          source={{ uri: location.imageUrl }}
+          source={{ uri: location.imageUrl || location.imageUrls![0] }}
           className="w-full h-48 rounded-lg mb-3"
           resizeMode="cover"
         />
@@ -56,32 +57,42 @@ export const LocationItem: React.FC<LocationItemProps> = ({ location, index }) =
       </Text>
 
       <View className="gap-1">
-        <View className="flex-row">
-          <Text className="text-sm w-28">💰 Cost:</Text>
-          <Text className="text-sm text-gray-500 flex-1">{formatCost(location)}</Text>
-        </View>
-        <View className="flex-row">
-          <Text className="text-sm w-28">⏰ Best time:</Text>
-          <Text className="text-sm text-gray-500 flex-1">
-            {location.bestTimeToVisit}
-          </Text>
-        </View>
-        <View className="flex-row">
-          <Text className="text-sm w-28">👥 Crowd:</Text>
-          <Text className="text-sm text-gray-500 flex-1">{location.crowdLevel}</Text>
-        </View>
+        {(location.costMinUSD || location.costMaxUSD) && (
+          <View className="flex-row">
+            <Text className="text-sm w-28 font-medium text-gray-700">💰 Cost:</Text>
+            <Text className="text-sm text-gray-600 flex-1">{formatCost(location)}</Text>
+          </View>
+        )}
+        
+        {location.bestTimeToVisit && (
+          <View className="flex-row">
+            <Text className="text-sm w-28 font-medium text-gray-700">⏰ Best time:</Text>
+            <Text className="text-sm text-gray-600 flex-1">
+              {location.bestTimeToVisit}
+            </Text>
+          </View>
+        )}
+        
+        {location.crowdLevel && (
+          <View className="flex-row">
+            <Text className="text-sm w-28 font-medium text-gray-700">👥 Crowd:</Text>
+            <Text className="text-sm text-gray-600 flex-1">{location.crowdLevel.toLowerCase().replace('_', ' ')}</Text>
+          </View>
+        )}
+        
         {location.rating && (
           <View className="flex-row">
-            <Text className="text-sm w-28">⭐ Rating:</Text>
-            <Text className="text-sm text-gray-500 flex-1">
+            <Text className="text-sm w-28 font-medium text-gray-700">⭐ Rating:</Text>
+            <Text className="text-sm text-gray-600 flex-1">
               {location.rating} ({location.totalRatings || 0} reviews)
             </Text>
           </View>
         )}
+        
         {location.travelTimeFromPrevious && (
           <View className="flex-row">
-            <Text className="text-sm w-28">🚗 Travel:</Text>
-            <Text className="text-sm text-gray-500 flex-1">{location.travelTimeFromPrevious}</Text>
+            <Text className="text-sm w-28 font-medium text-gray-700">🚗 Travel:</Text>
+            <Text className="text-sm text-gray-600 flex-1">{location.travelTimeFromPrevious}</Text>
           </View>
         )}
       </View>

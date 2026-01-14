@@ -83,7 +83,7 @@ export async function batchGenerateEmbeddings(texts: string[]): Promise<number[]
   }
 }
 
-// Calculate cosine similarity between two vectors
+// Calculate cosine similarity between two vectors (kept for backward compatibility)
 export function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length) {
     throw new Error('Vectors must have the same length');
@@ -107,4 +107,12 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 // Get embedding dimensions for current config
 export function getEmbeddingDimensions(): number {
   return PRIMARY_CONFIG.dimensions;
+}
+
+// Vector dimension constant for pgvector
+export const VECTOR_DIMENSIONS = PRIMARY_CONFIG.dimensions;
+
+// Format embedding array as pgvector-compatible string
+export function formatVectorForPg(embedding: number[]): string {
+  return `[${embedding.join(',')}]`;
 }

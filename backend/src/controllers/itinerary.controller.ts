@@ -132,6 +132,12 @@ export async function getItineraryDetails(req: Request, res: Response) {
         return res.status(404).json({ error: 'Itinerary not found' });
     }
     
+    // Look up airport from config using saved airportCode
+    const countryKey = itinerary.country.toLowerCase();
+    const countryConfig = COUNTRIES[countryKey];
+    const airportConfig = countryConfig?.airports.find(a => a.code === itinerary.airportCode) 
+      || countryConfig?.airports[0];
+    
     // Build response from ItineraryDay structure
     const days = itinerary.days.map(day => {
         // Separate items by type
@@ -195,7 +201,12 @@ export async function getItineraryDetails(req: Request, res: Response) {
             travelStyles: itinerary.travelStyles,
         },
         days,
-        airport: {
+        airport: airportConfig ? {
+          name: airportConfig.name,
+          code: airportConfig.code,
+          latitude: airportConfig.latitude,
+          longitude: airportConfig.longitude,
+        } : {
           name: `${itinerary.country} Airport`,
           code: itinerary.airportCode,
           latitude: 0, 
@@ -257,6 +268,7 @@ async function enrichLocations(days: DayWithLocations[]) {
             totalRatings: googleData.data.totalRatings,
             topReviews: googleData.data.topReviews as any,
             imageUrls: googleData.data.photos,
+            imageUrl: googleData.data.photos[0] || undefined, // Set first photo as primary image
             openingHours: googleData.data.openingHours as any,
             lastEnrichedAt: new Date(),
           });

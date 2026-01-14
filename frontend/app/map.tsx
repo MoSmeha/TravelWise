@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { API_BASE_URL } from '../config/api';
 import { CLASSIFICATION_COLORS } from '../constants/theme';
@@ -82,7 +82,7 @@ export default function MapScreen() {
 
   if (loadingItinerary && !passedData && itineraryId) {
       return (
-        <View style={styles.container}>
+        <View className="flex-1">
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={{textAlign: 'center', marginTop: 10}}>Loading itinerary...</Text>
         </View>
@@ -91,7 +91,7 @@ export default function MapScreen() {
 
   if (!data) {
     return (
-      <View style={styles.container}>
+      <View className="flex-1 items-center justify-center">
         <Text style={{textAlign: 'center', marginTop: 20}}>No itinerary data found.</Text>
       </View>
     );
@@ -135,10 +135,10 @@ export default function MapScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1">
       <MapView
         provider={PROVIDER_GOOGLE}
-        style={styles.map}
+        style={{ flex: 1 }}
         initialRegion={initialRegion}
       >
         {/* Route polyline */}
@@ -203,86 +203,95 @@ export default function MapScreen() {
 
       {/* Location Info Card */}
       {selectedLocation && (
-        <View style={styles.infoCard}>
+        <View className="absolute bottom-32 left-4 right-4 bg-white rounded-2xl p-4 shadow-lg max-h-96">
           <TouchableOpacity
-            style={styles.closeButton}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-100 items-center justify-center z-10"
             onPress={() => setSelectedLocation(null)}
           >
-            <Text style={styles.closeButtonText}>✕</Text>
+            <Text className="text-gray-500 text-base">✕</Text>
           </TouchableOpacity>
 
+          <ScrollView className="max-h-80" showsVerticalScrollIndicator={false}>
+            {/* Image - show from location data or fetched */}
+            {(selectedLocation.imageUrl || selectedLocation.imageUrls?.[0] || locationPhotos[selectedLocation.id]?.photos?.[0]) && (
+              <Image 
+                source={{ uri: selectedLocation.imageUrl || selectedLocation.imageUrls?.[0] || locationPhotos[selectedLocation.id]?.photos?.[0] }} 
+                className="w-full h-32 rounded-xl mb-3"
+                resizeMode="cover"
+              />
+            )}
 
-          <ScrollView style={styles.cardScroll}>
+            {/* Classification Badge */}
             <View
-              style={[
-                styles.badge,
-                { backgroundColor: CLASSIFICATION_COLORS[selectedLocation.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF' },
-              ]}
+              className="self-start px-3 py-1 rounded-full mb-2"
+              style={{ backgroundColor: CLASSIFICATION_COLORS[selectedLocation.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF' }}
             >
-              <Text style={styles.badgeText}>
+              <Text className="text-white text-xs font-semibold">
                 {selectedLocation.classification.replace('_', ' ')}
               </Text>
             </View>
 
-            <Text style={styles.locationName}>{selectedLocation.name}</Text>
-            <Text style={styles.locationCategory}>{selectedLocation.category}</Text>
-            <Text style={styles.locationDescription}>
-              {selectedLocation.description}
+            {/* Name & Category */}
+            <Text className="text-xl font-bold text-gray-900 pr-8 mb-1">{selectedLocation.name}</Text>
+            <Text className="text-sm text-gray-500 mb-2 capitalize">
+              {selectedLocation.category.toString().toLowerCase().replace(/_/g, ' ')}
             </Text>
+            
+            {/* Rating */}
+            {selectedLocation.rating && (
+              <View className="flex-row items-center mb-2">
+                <Text className="text-amber-500 text-sm">⭐ {selectedLocation.rating}</Text>
+                {selectedLocation.totalRatings && (
+                  <Text className="text-gray-400 text-xs ml-1">({selectedLocation.totalRatings} reviews)</Text>
+                )}
+              </View>
+            )}
+            
+            {/* Description */}
+            {selectedLocation.description && (
+              <Text className="text-sm text-gray-600 mb-3 leading-5" numberOfLines={3}>
+                {selectedLocation.description}
+              </Text>
+            )}
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Cost:</Text>
-              <Text style={styles.infoValue}>{formatCost(selectedLocation)}</Text>
+            {/* Info Grid - only show if values exist */}
+            <View className="flex-row flex-wrap gap-2 mb-3">
+              {(selectedLocation.costMinUSD || selectedLocation.costMaxUSD) && (
+                <View className="bg-green-50 px-3 py-1.5 rounded-lg">
+                  <Text className="text-green-700 text-xs font-medium">💰 {formatCost(selectedLocation)}</Text>
+                </View>
+              )}
+              {selectedLocation.bestTimeToVisit && (
+                <View className="bg-blue-50 px-3 py-1.5 rounded-lg">
+                  <Text className="text-blue-700 text-xs font-medium">⏰ {selectedLocation.bestTimeToVisit}</Text>
+                </View>
+              )}
+              {selectedLocation.crowdLevel && (
+                <View className="bg-purple-50 px-3 py-1.5 rounded-lg">
+                  <Text className="text-purple-700 text-xs font-medium">👥 {selectedLocation.crowdLevel}</Text>
+                </View>
+              )}
             </View>
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Best time:</Text>
-              <Text style={styles.infoValue}>{selectedLocation.bestTimeToVisit}</Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Crowd level:</Text>
-              <Text style={styles.infoValue}>{selectedLocation.crowdLevel}</Text>
-            </View>
-
+            {/* Scam Warning */}
             {selectedLocation.scamWarning && (
-              <View style={styles.warningBox}>
-                <Text style={styles.warningText}>
-                  🚨 {selectedLocation.scamWarning}
-                </Text>
+              <View className="bg-red-50 p-3 rounded-xl mb-3">
+                <Text className="text-red-700 text-sm">🚨 {selectedLocation.scamWarning}</Text>
               </View>
             )}
 
-            {/* Photos & Reviews */}
-            {locationPhotos[selectedLocation.id]?.loading ? (
-              <View style={styles.photosLoading}>
+            {/* Photo Gallery - from DB or API */}
+            {(selectedLocation.imageUrls?.length || locationPhotos[selectedLocation.id]?.photos?.length) ? (
+              <ScrollView horizontal className="mt-1 -mx-1" showsHorizontalScrollIndicator={false}>
+                {(selectedLocation.imageUrls || locationPhotos[selectedLocation.id]?.photos || []).map((url, idx) => (
+                  <Image key={idx} source={{ uri: url }} className="w-28 h-20 rounded-lg mx-1" resizeMode="cover" />
+                ))}
+              </ScrollView>
+            ) : locationPhotos[selectedLocation.id]?.loading && (
+              <View className="flex-row items-center mt-2 gap-2">
                 <ActivityIndicator size="small" color="#007AFF" />
-                <Text style={styles.photosLoadingText}>Loading photos & reviews...</Text>
+                <Text className="text-gray-500 text-xs">Loading photos...</Text>
               </View>
-            ) : (
-              <>
-                {locationPhotos[selectedLocation.id]?.photos.length > 0 && (
-                  <ScrollView horizontal style={styles.miniGallery} showsHorizontalScrollIndicator={false}>
-                    {locationPhotos[selectedLocation.id].photos.map((url, idx) => (
-                      <Image key={idx} source={{ uri: url }} style={styles.miniPhoto} resizeMode="cover" />
-                    ))}
-                  </ScrollView>
-                )}
-                
-                {locationPhotos[selectedLocation.id]?.reviews.length > 0 && (
-                  <View style={styles.miniReviews}>
-                    <Text style={styles.miniReviewsTitle}>Top Review:</Text>
-                    <View style={styles.miniReviewCard}>
-                      <Text style={styles.miniReviewAuthor}>
-                        {locationPhotos[selectedLocation.id].reviews[0].author} ⭐{locationPhotos[selectedLocation.id].reviews[0].rating}
-                      </Text>
-                      <Text style={styles.miniReviewText} numberOfLines={3}>
-                        &quot;{locationPhotos[selectedLocation.id].reviews[0].text}&quot;
-                      </Text>
-                    </View>
-                  </View>
-                )}
-              </>
             )}
           </ScrollView>
         </View>
@@ -290,91 +299,97 @@ export default function MapScreen() {
 
       {/* Hotel Info Card */}
       {selectedHotel && (
-        <View style={styles.infoCard}>
+        <View className="absolute bottom-32 left-4 right-4 bg-white rounded-2xl p-4 shadow-lg">
           <TouchableOpacity
-            style={styles.closeButton}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-gray-100 items-center justify-center z-10"
             onPress={() => setSelectedHotel(null)}
           >
-            <Text style={styles.closeButtonText}>✕</Text>
+            <Text className="text-gray-500 text-base">✕</Text>
           </TouchableOpacity>
 
-          <View style={[styles.badge, { backgroundColor: HOTEL_COLOR }]}>
-            <Text style={styles.badgeText}>🏨 HOTEL</Text>
+          <View className="self-start px-3 py-1 rounded-full mb-2 bg-violet-500">
+            <Text className="text-white text-xs font-semibold">🏨 HOTEL</Text>
           </View>
 
-          <Text style={styles.locationName}>{selectedHotel.name}</Text>
-          <Text style={styles.locationCategory}>{selectedHotel.neighborhood}</Text>
-          <Text style={styles.locationDescription}>
-            {selectedHotel.description}
-          </Text>
+          <Text className="text-xl font-bold text-gray-900 pr-8 mb-1">{selectedHotel.name}</Text>
+          <Text className="text-sm text-gray-500 mb-2">{selectedHotel.neighborhood}</Text>
+          
+          {selectedHotel.description && (
+            <Text className="text-sm text-gray-600 mb-3" numberOfLines={2}>
+              {selectedHotel.description}
+            </Text>
+          )}
 
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Price/night:</Text>
-            <Text style={styles.infoValue}>
-              ${selectedHotel.pricePerNightUSD.min}-${selectedHotel.pricePerNightUSD.max}
+          <View className="bg-green-50 px-3 py-2 rounded-lg self-start mb-3">
+            <Text className="text-green-700 text-sm font-semibold">
+              ${selectedHotel.pricePerNightUSD.min}-${selectedHotel.pricePerNightUSD.max}/night
             </Text>
           </View>
 
-          <View style={styles.amenitiesRow}>
+          <View className="flex-row flex-wrap gap-1.5 mb-3">
             {selectedHotel.amenities.slice(0, 4).map((amenity, idx) => (
-              <View key={idx} style={styles.amenityTag}>
-                <Text style={styles.amenityText}>{amenity}</Text>
+              <View key={idx} className="bg-indigo-50 px-2 py-1 rounded-md">
+                <Text className="text-indigo-700 text-xs">{amenity}</Text>
               </View>
             ))}
           </View>
 
           {selectedHotel.warnings && (
-            <View style={styles.warningBox}>
-              <Text style={styles.warningText}>⚠️ {selectedHotel.warnings}</Text>
+            <View className="bg-amber-50 p-3 rounded-xl mb-3">
+              <Text className="text-amber-700 text-sm">⚠️ {selectedHotel.warnings}</Text>
             </View>
           )}
 
           <TouchableOpacity
-            style={styles.bookButton}
+            className="bg-violet-500 p-3 rounded-xl items-center"
             onPress={() => handleHotelBook(selectedHotel.bookingUrl)}
           >
-            <Text style={styles.bookButtonText}>Book on Booking.com →</Text>
+            <Text className="text-white font-semibold">Book on Booking.com →</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* Legend */}
-      <View style={styles.legendBar}>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: AIRPORT_COLOR }]} />
-          <Text style={styles.legendText}>Airport</Text>
+      <View className="absolute top-12 left-4 right-4 bg-white/95 rounded-xl p-3 flex-row justify-around shadow-sm">
+        <View className="flex-row items-center">
+          <View className="w-2.5 h-2.5 rounded-full mr-1.5 bg-sky-500" />
+          <Text className="text-xs text-gray-600">Airport</Text>
         </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#22c55e' }]} />
-          <Text style={styles.legendText}>Gem</Text>
+        <View className="flex-row items-center">
+          <View className="w-2.5 h-2.5 rounded-full mr-1.5 bg-green-500" />
+          <Text className="text-xs text-gray-600">Gem</Text>
         </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: HOTEL_COLOR }]} />
-          <Text style={styles.legendText}>Hotel</Text>
+        <View className="flex-row items-center">
+          <View className="w-2.5 h-2.5 rounded-full mr-1.5 bg-orange-500" />
+          <Text className="text-xs text-gray-600">Conditional</Text>
+        </View>
+        <View className="flex-row items-center">
+          <View className="w-2.5 h-2.5 rounded-full mr-1.5 bg-violet-500" />
+          <Text className="text-xs text-gray-600">Hotel</Text>
         </View>
       </View>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomBar}>
+      <View className="absolute bottom-0 left-0 right-0 flex-row bg-white p-4 border-t border-gray-100 gap-3">
         <TouchableOpacity
-          style={styles.navButton}
+          className="flex-1 p-3.5 bg-blue-500 rounded-xl items-center"
           onPress={() => router.back()}
         >
-          <Text style={styles.navButtonText}>← Back</Text>
+          <Text className="text-white text-base font-semibold">← Back</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.navButton, { backgroundColor: '#8b5cf6' }]}
+          className="flex-1 p-3.5 bg-violet-500 rounded-xl items-center"
           onPress={() => router.push({
             pathname: '/checklist',
             params: { itineraryId: data.itinerary.id }
           })}
         >
-          <Text style={styles.navButtonText}>📋 List</Text>
+          <Text className="text-white text-base font-semibold">📋 List</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.navButton}
+          className="flex-1 p-3.5 bg-blue-500 rounded-xl items-center"
           onPress={() =>
             router.push({
               pathname: '/itinerary',
@@ -382,231 +397,11 @@ export default function MapScreen() {
             })
           }
         >
-          <Text style={styles.navButtonText}>View Details →</Text>
+          <Text className="text-white text-base font-semibold">Details →</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
-  infoCard: {
-    position: 'absolute',
-    bottom: 130,
-    left: 16,
-    right: 16,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-    maxHeight: 400,
-  },
-  cardScroll: {
-    maxHeight: 320,
-  },
-  miniGallery: {
-    marginTop: 12,
-    marginHorizontal: -4,
-  },
-  miniPhoto: {
-    width: 120,
-    height: 80,
-    borderRadius: 8,
-    marginHorizontal: 4,
-  },
-  miniReviews: {
-    marginTop: 12,
-  },
-  miniReviewsTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 4,
-  },
-  miniReviewCard: {
-    backgroundColor: '#f9f9f9',
-    padding: 8,
-    borderRadius: 8,
-  },
-  miniReviewAuthor: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
-  },
-  miniReviewText: {
-    fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
-  },
-  photosLoading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-    gap: 8,
-  },
-  photosLoadingText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  closeButtonText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  badge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  locationName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    paddingRight: 30,
-  },
-  locationCategory: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  locationDescription: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 12,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  infoLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    width: 100,
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#666',
-    flex: 1,
-  },
-  warningBox: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: '#fee2e2',
-    borderRadius: 8,
-  },
-  warningText: {
-    fontSize: 13,
-    color: '#991b1b',
-  },
-  amenitiesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 8,
-  },
-  amenityTag: {
-    backgroundColor: '#e0e7ff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  amenityText: {
-    fontSize: 12,
-    color: '#4338ca',
-  },
-  bookButton: {
-    backgroundColor: '#8b5cf6',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  bookButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  legendBar: {
-    position: 'absolute',
-    top: 50,
-    left: 16,
-    right: 16,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 12,
-    padding: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 6,
-  },
-  legendText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    gap: 12,
-  },
-  navButton: {
-    flex: 1,
-    padding: 14,
-    backgroundColor: '#007AFF',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  navButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+

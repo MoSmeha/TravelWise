@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 // AUTHENTICATION MODELS
@@ -294,8 +296,11 @@ model ItineraryEmbedding {
   dayNumbers      Int[]      // Days covered
   activityTypes   String[]   // Activity types in chunk
   
-
-  embeddingJson   Json?      
+  // Vector embedding (1536 dimensions for OpenAI ada-002)
+  embedding       Unsupported("vector(1536)")?
+  
+  // Legacy JSON field - will be removed after migration
+  embeddingJson   Json?      @ignore
   
   createdAt       DateTime @default(now())
   
@@ -313,8 +318,11 @@ model KnowledgeEmbedding {
   // Metadata like author, url, activityTypes, popularity
   metadata        Json?    
   
-  // Vector
-  embeddingJson   Json?
+  // Vector embedding (1536 dimensions for OpenAI ada-002)
+  embedding       Unsupported("vector(1536)")?
+  
+  // Legacy JSON field - will be removed after migration  
+  embeddingJson   Json?    @ignore
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
