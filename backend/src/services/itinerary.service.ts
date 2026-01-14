@@ -1,12 +1,13 @@
-import { LocationCategory, LocationClassification, Place } from '@prisma/client';
+import { ChecklistCategory, ItineraryItemType, LocationCategory, Place } from '@prisma/client';
 import { BudgetLevel, TravelStyle } from '../utils/enum-mappers';
 import { v4 as uuidv4 } from 'uuid';
-import prisma from '../lib/prisma';
 import * as googlePlacesService from './google-places.service';
 import * as routeOptimizer from './route-optimizer.service';
 import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils';
 import * as fs from 'fs';
 import * as path from 'path';
+import { itineraryProvider } from '../providers/itinerary.provider.pg';
+import { IItineraryProvider } from '../provider-contract/itinerary.provider-contract';
 
 // Local type extension if needed, but primarily use Prisma Place
 // We use intersection to add arbitrary keys if needed (for enrichments)
@@ -161,60 +162,25 @@ Format as JSON:
 
 /**
  * Fetch places from database with proper filtering
+ * Delegates to itinerary provider for database access
  */
 async function fetchPlaces(
   categories: LocationCategory[],
   country: string,
   city: string | null,
   limit: number,
-  excludeIds: string[] = []
+  excludeIds: string[] = [],
+  provider: IItineraryProvider = itineraryProvider
 ): Promise<PlaceExtended[]> {
-  const where: any = {
-    classification: { not: LocationClassification.TOURIST_TRAP },
-    category: { in: categories },
-    country: { equals: country, mode: 'insensitive' },
-  };
-  
-  // Add city filter if provided and we have enough places
-  if (city) {
-    where.city = { equals: city, mode: 'insensitive' };
-  }
-  
-  // Exclude already used places
-  if (excludeIds.length > 0) {
-    where.id = { notIn: excludeIds };
-  }
-  
-  let places = await prisma.place.findMany({
-    where,
-    orderBy: [
-      { classification: 'asc' }, // Hidden gems and must-see first
-      { rating: 'desc' },
-      { popularity: 'desc' },
-    ],
-    take: limit,
+  const places = await provider.fetchPlaces({
+    categories,
+    country,
+    city,
+    limit,
+    excludeIds,
   });
   
-  // Fallback to country-wide if not enough city-specific places
-  if (places.length < limit && city) {
-    const countryPlaces = await prisma.place.findMany({
-      where: {
-        classification: { not: LocationClassification.TOURIST_TRAP },
-        category: { in: categories },
-        country: { equals: country, mode: 'insensitive' },
-        id: { notIn: [...excludeIds, ...places.map(p => p.id)] },
-      },
-      orderBy: [
-        { classification: 'asc' },
-        { rating: 'desc' },
-        { popularity: 'desc' },
-      ],
-      take: limit - places.length,
-    });
-    places = [...places, ...countryPlaces];
-  }
-  
-  return places;
+  return places as PlaceExtended[];
 }
 
 /**
@@ -459,15 +425,12 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
             location.imageUrl = mainPhoto;
             location.imageUrls = allPhotos;
             
-            // Update database asynchronously
-            prisma.place.update({
-              where: { id: location.id },
-              data: {
-                imageUrl: mainPhoto,
-                imageUrls: allPhotos,
-                lastEnrichedAt: new Date()
-              }
-            }).catch(err => console.error(`❌ Failed to save images for ${location.name}:`, err));
+            // Update database asynchronously using provider
+            itineraryProvider.updatePlaceEnrichment(location.id, {
+              imageUrl: mainPhoto,
+              imageUrls: allPhotos,
+              lastEnrichedAt: new Date()
+            }).catch((err: Error) => console.error(`❌ Failed to save images for ${location.name}:`, err));
           }
         } catch (error) {
           console.error(`❌ Failed to fetch image for ${location.name}:`, error);
@@ -516,114 +479,101 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
 }
 
 // Function to save the generated itinerary to the database
+// Uses itinerary provider for database operations
 export async function saveItineraryToDb(
   userId: string,
   input: any,
   generated: ItineraryResult,
   countryName: string,
-  airportCode: string
+  airportCode: string,
+  provider: IItineraryProvider = itineraryProvider
 ) {
   // Create UserItinerary
-  const itinerary = await prisma.userItinerary.create({
-    data: {
-      userId,
-      country: countryName,
-      airportCode,
-      numberOfDays: input.numberOfDays,
-      budgetUSD: input.budgetUSD,
-      travelStyles: input.travelStyles || generated.itinerary.travelStyles || [],
-      flightDate: input.flightDate ? new Date(input.flightDate) : null,
-      totalEstimatedCostUSD: generated.totalEstimatedCostUSD,
-      routeSummary: generated.routeSummary,
-    },
+  const itinerary = await provider.createItinerary({
+    userId,
+    country: countryName,
+    airportCode,
+    numberOfDays: input.numberOfDays,
+    budgetUSD: input.budgetUSD,
+    travelStyles: input.travelStyles || generated.itinerary.travelStyles || [],
+    flightDate: input.flightDate ? new Date(input.flightDate) : null,
+    totalEstimatedCostUSD: generated.totalEstimatedCostUSD,
+    routeSummary: generated.routeSummary,
   });
   
   // Create ItineraryDays and ItineraryItems
   for (const day of generated.days) {
     // Create ItineraryDay with theme and hotel
-    const itineraryDay = await prisma.itineraryDay.create({
-      data: {
-        itineraryId: itinerary.id,
-        dayNumber: day.dayNumber,
-        theme: day.theme || 'Mixed',
-        description: day.description,
-        hotelId: day.hotel?.id || null,
-      },
+    const itineraryDay = await provider.createItineraryDay({
+      itineraryId: itinerary.id,
+      dayNumber: day.dayNumber,
+      theme: day.theme || 'Mixed',
+      description: day.description,
+      hotelId: day.hotel?.id || null,
     });
     
     let order = 1;
     
     // Add activity locations
     for (const location of day.locations) {
-      await prisma.itineraryItem.create({
-        data: {
-          dayId: itineraryDay.id,
-          orderInDay: order++,
-          placeId: location.id,
-          itemType: 'ACTIVITY',
-          notes: location.description ? location.description.substring(0, 100) : null,
-          suggestedDuration: 90,
-        },
+      await provider.createItineraryItem({
+        dayId: itineraryDay.id,
+        orderInDay: order++,
+        placeId: location.id,
+        itemType: ItineraryItemType.ACTIVITY,
+        notes: location.description ? location.description.substring(0, 100) : null,
+        suggestedDuration: 90,
       });
     }
     
     // Add meal items
     if (day.meals) {
       if (day.meals.breakfast) {
-        await prisma.itineraryItem.create({
-          data: {
-            dayId: itineraryDay.id,
-            orderInDay: order++,
-            placeId: day.meals.breakfast.id,
-            itemType: 'BREAKFAST',
-            suggestedDuration: 45,
-          },
+        await provider.createItineraryItem({
+          dayId: itineraryDay.id,
+          orderInDay: order++,
+          placeId: day.meals.breakfast.id,
+          itemType: ItineraryItemType.BREAKFAST,
+          suggestedDuration: 45,
         });
       }
       if (day.meals.lunch) {
-        await prisma.itineraryItem.create({
-          data: {
-            dayId: itineraryDay.id,
-            orderInDay: order++,
-            placeId: day.meals.lunch.id,
-            itemType: 'LUNCH',
-            suggestedDuration: 60,
-          },
+        await provider.createItineraryItem({
+          dayId: itineraryDay.id,
+          orderInDay: order++,
+          placeId: day.meals.lunch.id,
+          itemType: ItineraryItemType.LUNCH,
+          suggestedDuration: 60,
         });
       }
       if (day.meals.dinner) {
-        await prisma.itineraryItem.create({
-          data: {
-            dayId: itineraryDay.id,
-            orderInDay: order++,
-            placeId: day.meals.dinner.id,
-            itemType: 'DINNER',
-            suggestedDuration: 90,
-          },
+        await provider.createItineraryItem({
+          dayId: itineraryDay.id,
+          orderInDay: order++,
+          placeId: day.meals.dinner.id,
+          itemType: ItineraryItemType.DINNER,
+          suggestedDuration: 90,
         });
       }
     }
   }
   
   // Create mock checklist for RAG
-  const checklistItems = [
-    { category: 'ESSENTIALS', item: 'Passport', reason: 'Required for travel' },
-    { category: 'ESSENTIALS', item: 'Universal Adapter', reason: 'For charging devices' },
-    { category: 'WEATHER', item: 'Sunscreen', reason: 'Sunny weather expected' },
-    { category: 'ACTIVITY', item: 'Comfortable Shoes', reason: 'Walking tours' }
+  const checklistItems: Array<{ category: ChecklistCategory; item: string; reason: string }> = [
+    { category: ChecklistCategory.ESSENTIALS, item: 'Passport', reason: 'Required for travel' },
+    { category: ChecklistCategory.ESSENTIALS, item: 'Universal Adapter', reason: 'For charging devices' },
+    { category: ChecklistCategory.WEATHER, item: 'Sunscreen', reason: 'Sunny weather expected' },
+    { category: ChecklistCategory.ACTIVITY, item: 'Comfortable Shoes', reason: 'Walking tours' }
   ];
   
   for (const item of checklistItems) {
-    await prisma.checklistItem.create({
-      data: {
-        itineraryId: itinerary.id,
-        category: item.category as any,
-        item: item.item,
-        reason: item.reason,
-      }
+    await provider.createChecklistItem({
+      itineraryId: itinerary.id,
+      category: item.category,
+      item: item.item,
+      reason: item.reason,
     });
   }
   
   return itinerary;
 }
-

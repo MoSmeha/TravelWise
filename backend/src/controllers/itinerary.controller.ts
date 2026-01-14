@@ -6,12 +6,12 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { getCountriesList, COUNTRIES } from '../config/countries.config';
-import prisma from '../lib/prisma';
 import { GenerateItineraryInput } from '../schemas/itinerary.schema';
 import { enrichPlaceWithGoogleData } from '../services/google-places.service';
 import { generateItinerary, saveItineraryToDb } from '../services/itinerary.service';
 import { storeItineraryEmbeddings } from '../services/rag-retrieval.service';
 import { parseBudgetLevel, parseTravelStyles } from '../utils/enum-mappers';
+import { itineraryProvider } from '../providers/itinerary.provider.pg';
 
 /**
  * GET /api/itinerary/countries
@@ -107,21 +107,7 @@ export async function generate(req: Request, res: Response) {
 export async function listUserItineraries(req: Request, res: Response) {
   try {
     const userId = (req as AuthenticatedRequest).user!.userId;
-    const itineraries = await prisma.userItinerary.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      select: {
-          id: true,
-          country: true,
-          numberOfDays: true,
-          budgetUSD: true,
-          travelStyles: true,
-          totalEstimatedCostUSD: true,
-          createdAt: true,
-          updatedAt: true,
-          flightDate: true,
-      }
-    });
+    const itineraries = await itineraryProvider.findUserItineraries(userId);
 
     return res.json(itineraries);
   } catch (error: any) {
@@ -139,25 +125,8 @@ export async function getItineraryDetails(req: Request, res: Response) {
     const { id } = req.params;
     // Note: Ownership is verified by requireOwnership middleware before this function
     
-    // Fetch full itinerary with relations using new ItineraryDay model
-    const itinerary = await prisma.userItinerary.findUnique({
-        where: { id },
-        include: {
-            days: {
-                include: {
-                    hotel: true,
-                    items: {
-                        include: {
-                            place: true
-                        },
-                        orderBy: { orderInDay: 'asc' }
-                    }
-                },
-                orderBy: { dayNumber: 'asc' }
-            },
-            checklist: true
-        }
-    });
+    // Fetch full itinerary with relations using provider
+    const itinerary = await itineraryProvider.findItineraryById(id);
 
     if (!itinerary) {
         return res.status(404).json({ error: 'Itinerary not found' });
@@ -277,25 +246,19 @@ async function enrichLocations(days: DayWithLocations[]) {
         
         if (googleData.data) {
           // Check if another place already has this googlePlaceId to avoid unique constraint violations
-          const existingPlace = await prisma.place.findUnique({
-            where: { googlePlaceId: googleData.data.googlePlaceId },
-            select: { id: true }
-          });
+          const existingPlace = await itineraryProvider.findPlaceByGoogleId(googleData.data.googlePlaceId);
 
           // Only update googlePlaceId if it doesn't exist or belongs to this place
           const shouldUpdateId = !existingPlace || existingPlace.id === location.id;
 
-          await prisma.place.update({
-            where: { id: location.id },
-            data: {
-              ...(shouldUpdateId ? { googlePlaceId: googleData.data.googlePlaceId } : {}),
-              rating: googleData.data.rating,
-              totalRatings: googleData.data.totalRatings,
-              topReviews: googleData.data.topReviews as any,
-              imageUrls: googleData.data.photos,
-              openingHours: googleData.data.openingHours as any,
-              lastEnrichedAt: new Date(),
-            },
+          await itineraryProvider.updatePlaceEnrichment(location.id, {
+            ...(shouldUpdateId ? { googlePlaceId: googleData.data.googlePlaceId } : {}),
+            rating: googleData.data.rating,
+            totalRatings: googleData.data.totalRatings,
+            topReviews: googleData.data.topReviews as any,
+            imageUrls: googleData.data.photos,
+            openingHours: googleData.data.openingHours as any,
+            lastEnrichedAt: new Date(),
           });
           
           // Attach to location object for embedding generation
