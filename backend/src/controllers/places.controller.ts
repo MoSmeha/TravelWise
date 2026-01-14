@@ -20,6 +20,41 @@ export async function getPhotos(req: Request, res: Response) {
   try {
     const { name, lat, lng } = req.query as unknown as GetPhotosInput;
     
+    // 1. Check DB first for valid cache (fresh < 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const existingPlace = await prisma.place.findFirst({
+      where: {
+        name: { equals: name, mode: 'insensitive' },
+      }
+    });
+
+    if (existingPlace && existingPlace.lastEnrichedAt && existingPlace.lastEnrichedAt > sevenDaysAgo) {
+      // Return cached data
+      // Transform topReviews (stored as generic JSON) to expected format if needed
+      // but usually we store the raw Google Object or our mapped object.
+      // Let's assume we store the raw or compatible object. 
+      // Based on ingestion, we stored raw Google reviews. We need to map them.
+      
+      const cachedReviews = (existingPlace.topReviews as any[])?.map((r: any) => ({
+        author: r.author_name || r.author,
+        rating: r.rating,
+        text: r.text,
+        time: r.relative_time_description || r.time
+      })) || [];
+
+      // If we have images and reviews, return them
+      if (existingPlace.imageUrls && existingPlace.imageUrls.length > 0) {
+        console.log(`Returning cached data for: ${name}`);
+        return res.json({ 
+          photos: existingPlace.imageUrls, 
+          reviews: cachedReviews 
+        });
+      }
+    }
+
+    // 2. Not in DB or stale -> Fetch from Google
     if (!GOOGLE_PLACES_API_KEY) {
       return res.status(500).json({ error: 'Google Places API not configured' });
     }
@@ -40,21 +75,48 @@ export async function getPhotos(req: Request, res: Response) {
     const placeId = searchData.candidates[0].place_id;
     
     // Get details (photos and reviews)
-    const detailsUrl = `${GOOGLE_PLACES_BASE_URL}/details/json?place_id=${placeId}&fields=photos,reviews&key=${GOOGLE_PLACES_API_KEY}`;
+    const detailsUrl = `${GOOGLE_PLACES_BASE_URL}/details/json?place_id=${placeId}&fields=photos,reviews,rating,user_ratings_total,price_level,opening_hours&key=${GOOGLE_PLACES_API_KEY}`;
     const detailsResponse = await fetch(detailsUrl);
     const detailsData: any = await detailsResponse.json();
     
     if (detailsData.status === 'OK' && detailsData.result) {
-      const photos = (detailsData.result.photos || []).map((p: any) =>
+      const result = detailsData.result;
+      
+      const photos = (result.photos || []).map((p: any) =>
         `${GOOGLE_PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${p.photo_reference}&key=${GOOGLE_PLACES_API_KEY}`
       );
       
-      const reviews = (detailsData.result.reviews || []).slice(0, 5).map((r: any) => ({
+      const rawReviews = result.reviews || [];
+      const reviews = rawReviews.slice(0, 5).map((r: any) => ({
         author: r.author_name,
         rating: r.rating,
         text: r.text,
         time: r.relative_time_description
       }));
+
+      // 3. Update DB with new data
+      // We upsert based on name or googlePlaceId if we had it, but here we found by name primarily or we might have just discovered the ID.
+      // Let's try to update if we found the place earlier, or create if strictly new (though searchPlace handles creation usually).
+      // Here we just want to enrich `existingPlace` if it exists, or potentially ignore if it doesn't match a DB record?
+      // Actually, if we are calling getPhotos, the place implies it might be in our itinerary.
+      // BUT `getPhotos` is called with just a name.
+      
+      if (existingPlace) {
+         await prisma.place.update({
+           where: { id: existingPlace.id },
+           data: {
+             googlePlaceId: placeId,
+             imageUrls: photos,
+             topReviews: rawReviews.slice(0, 5), // Store raw for future flexibility
+             rating: result.rating,
+             totalRatings: result.user_ratings_total,
+             priceLevel: mapGooglePriceLevel(result.price_level),
+             openingHours: result.opening_hours || undefined,
+             lastEnrichedAt: new Date(),
+           }
+         });
+         console.log(`Refreshed cache for: ${name}`);
+      }
       
       return res.json({ photos, reviews });
     }
