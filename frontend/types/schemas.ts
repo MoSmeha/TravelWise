@@ -9,7 +9,7 @@ export const LocationCategorySchema = z.enum([
   'RESTAURANT', 'CAFE', 'BAR', 'NIGHTCLUB',
   'BEACH', 'HIKING', 'HISTORICAL_SITE', 'MUSEUM',
   'MARKET', 'VIEWPOINT', 'PARK', 'RELIGIOUS_SITE',
-  'TEMPLE', 'SHOPPING', 'ACTIVITY', 'OTHER'
+  'SHOPPING', 'ACTIVITY', 'HOTEL', 'ACCOMMODATION', 'OTHER'
 ]).or(z.string());
 
 // ============ SUB-SCHEMAS ============
@@ -49,8 +49,8 @@ export const LocationSchema = z.object({
   aiReasoning: z.string().nullable().optional().transform(nullToUndefined),
   scamWarning: z.string().nullable().optional().transform(nullToUndefined),
   travelTimeFromPrevious: z.string().optional(),
-  imageUrl: z.string().optional(),
-  imageUrls: z.array(z.string()).optional(),
+  imageUrl: z.string().nullable().optional().transform(nullToUndefined),
+  imageUrls: z.array(z.string()).nullable().optional().transform(nullToUndefined),
   rating: z.number().optional(),
   totalRatings: z.number().optional(),
   topReviews: z.array(z.any()).optional(),
@@ -78,13 +78,44 @@ export const TouristTrapSchema = z.object({
   longitude: z.number().optional(),
 });
 
+export const ItineraryItemTypeSchema = z.enum(['ACTIVITY', 'BREAKFAST', 'LUNCH', 'DINNER', 'SNACK', 'EVENING']);
+
+export const MealInfoSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: LocationCategorySchema,
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  imageUrl: z.string().optional(),
+}).nullable();
+
+export const HotelInfoSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: LocationCategorySchema,
+  latitude: z.number(),
+  longitude: z.number(),
+  imageUrl: z.string().optional(),
+  rating: z.number().optional(),
+  address: z.string().optional(),
+}).nullable();
+
+export const DayMealsSchema = z.object({
+  breakfast: MealInfoSchema,
+  lunch: MealInfoSchema,
+  dinner: MealInfoSchema,
+});
+
 export const ItineraryDaySchema = z.object({
   id: z.string(),
   dayNumber: z.number(),
+  theme: z.string().optional(),
   description: z.string().optional(),
   routeDescription: z.string().optional(),
   dailyBudgetUSD: z.number().optional(),
   locations: z.array(LocationSchema),
+  meals: DayMealsSchema.optional(),
+  hotel: HotelInfoSchema.optional(),
 });
 
 export const CountrySchema = z.object({
@@ -117,6 +148,7 @@ export const ItineraryResponseSchema = z.object({
     }).optional(),
   }),
   days: z.array(ItineraryDaySchema),
+  hotel: HotelInfoSchema.optional(),
   hotels: z.array(HotelSchema).optional().default([]),
   airport: AirportSchema,
   country: CountrySchema.optional(),

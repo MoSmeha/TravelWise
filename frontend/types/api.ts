@@ -7,7 +7,7 @@ export type LocationCategory =
   | 'RESTAURANT' | 'CAFE' | 'BAR' | 'NIGHTCLUB'
   | 'BEACH' | 'HIKING' | 'HISTORICAL_SITE' | 'MUSEUM'
   | 'MARKET' | 'VIEWPOINT' | 'PARK' | 'RELIGIOUS_SITE'
-  | 'TEMPLE' | 'SHOPPING' | 'ACTIVITY' | 'OTHER';
+  | 'SHOPPING' | 'ACTIVITY' | 'HOTEL' | 'ACCOMMODATION' | 'OTHER';
 
 export type BudgetLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -87,13 +87,44 @@ export interface TouristTrap {
 
 // ============ DAY & ITINERARY ============
 
+export type ItineraryItemType = 'ACTIVITY' | 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK' | 'EVENING';
+
+export interface MealInfo {
+  id: string;
+  name: string;
+  category: LocationCategory | string;
+  latitude?: number;
+  longitude?: number;
+  imageUrl?: string;
+}
+
+export interface HotelInfo {
+  id: string;
+  name: string;
+  category: LocationCategory | string;
+  latitude: number;
+  longitude: number;
+  imageUrl?: string;
+  rating?: number;
+  address?: string;
+}
+
+export interface DayMeals {
+  breakfast: MealInfo | null;
+  lunch: MealInfo | null;
+  dinner: MealInfo | null;
+}
+
 export interface ItineraryDay {
   id: string;
   dayNumber: number;
+  theme?: string;
   description?: string;
   routeDescription?: string;
   dailyBudgetUSD?: number;
   locations: Location[];
+  meals?: DayMeals;
+  hotel?: HotelInfo | null;
 }
 
 export interface Country {
@@ -138,7 +169,8 @@ export interface ItineraryResponse {
     };
   };
   days: ItineraryDay[];
-  hotels: Hotel[];
+  hotel?: HotelInfo | null;  // Primary hotel for the trip
+  hotels?: Hotel[];          // Legacy support
   airport: Airport;
   country?: Country;
   warnings: Warning[];

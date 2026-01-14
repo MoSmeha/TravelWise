@@ -52,14 +52,14 @@ const resourceLookups: Record<string, (id: string) => Promise<OwnershipResult | 
   },
 
   /**
-   * ItineraryItem ownership lookup (via parent itinerary)
+   * ItineraryItem ownership lookup (via parent day -> itinerary)
    */
   itineraryItem: async (id: string) => {
     const item = await prisma.itineraryItem.findUnique({
       where: { id },
-      include: { itinerary: { select: { userId: true } } },
+      include: { day: { include: { itinerary: { select: { userId: true } } } } },
     });
-    return item ? { ownerId: item.itinerary.userId } : null;
+    return item ? { ownerId: item.day.itinerary.userId } : null;
   },
 
   /**
