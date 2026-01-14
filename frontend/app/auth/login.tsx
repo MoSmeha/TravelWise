@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, SafeAreaView } from 'react-native';
 import { useRouter, Link } from 'expo-router';
-import { useAuth } from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
+import { useLoginMutation } from '../../hooks/mutations/useAuthMutations';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, isLoading } = useAuth();
+  const loginMutation = useLoginMutation();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,24 +33,7 @@ export default function LoginScreen() {
       return;
     }
 
-    try {
-      await login({ email, password });
-      Toast.show({
-        type: 'success',
-        text1: 'Welcome back!',
-        text2: 'Login successful',
-      });
-      router.replace('/(tabs)');
-    } catch (error: any) {
-      const errorData = error.response?.data;
-      const msg = errorData?.message || errorData?.error || 'Login failed. Please try again.';
-      
-      Toast.show({
-        type: 'error',
-        text1: 'Login Failed',
-        text2: msg,
-      });
-    }
+    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -104,11 +87,11 @@ export default function LoginScreen() {
           </View>
 
           <TouchableOpacity
-            className={`w-full h-14 bg-blue-600 rounded-xl items-center justify-center shadow-lg shadow-blue-600/30 mt-4 ${isLoading ? 'opacity-70' : ''}`}
+            className={`w-full h-14 bg-blue-600 rounded-xl items-center justify-center shadow-lg shadow-blue-600/30 mt-4 ${loginMutation.isPending ? 'opacity-70' : ''}`}
             onPress={handleLogin}
-            disabled={isLoading}
+            disabled={loginMutation.isPending}
           >
-            {isLoading ? (
+            {loginMutation.isPending ? (
                <Text className="text-white font-semibold text-lg">Logging in...</Text>
             ) : (
                <Text className="text-white font-semibold text-lg">Sign In</Text>

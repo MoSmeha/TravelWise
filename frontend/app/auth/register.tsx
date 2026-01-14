@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, SafeAreaView } from 'react-native';
 import { useRouter, Link } from 'expo-router';
-import { useAuth } from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import { z } from 'zod';
 import Toast from 'react-native-toast-message';
+import { useRegisterMutation } from '../../hooks/mutations/useAuthMutations';
 
 // Matching backend validation
 const registerSchema = z.object({
@@ -22,7 +22,7 @@ const registerSchema = z.object({
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register, isLoading } = useAuth();
+  const registerMutation = useRegisterMutation();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -64,39 +64,12 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!validate()) return;
-
-    try {
-      await register({
+    registerMutation.mutate({
         name: formData.name,
         username: formData.username,
         email: formData.email,
         password: formData.password
-      });
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Account Created!',
-        text2: 'Please check your email to verify your account',
-      });
-      
-      // Navigate to verification screen
-      const user = useAuth.getState().user;
-      if (user && !user.emailVerified) {
-        router.replace({ pathname: '/auth/verify', params: { email: formData.email } } as any);
-      } else {
-        router.replace('/(tabs)' as any);
-      }
-
-    } catch (error: any) {
-      const errorData = error.response?.data;
-      const msg = errorData?.message || errorData?.error || 'Registration failed. Please try again.';
-      
-      Toast.show({
-        type: 'error',
-        text1: 'Registration Failed',
-        text2: msg,
-      });
-    }
+    });
   };
 
   return (
@@ -190,11 +163,11 @@ export default function RegisterScreen() {
              </View>
 
           <TouchableOpacity
-            className={`w-full h-14 bg-blue-600 rounded-xl items-center justify-center shadow-lg shadow-blue-600/30 mt-6 ${isLoading ? 'opacity-70' : ''}`}
+            className={`w-full h-14 bg-blue-600 rounded-xl items-center justify-center shadow-lg shadow-blue-600/30 mt-6 ${registerMutation.isPending ? 'opacity-70' : ''}`}
             onPress={handleRegister}
-            disabled={isLoading}
+            disabled={registerMutation.isPending}
           >
-            {isLoading ? (
+            {registerMutation.isPending ? (
                <Text className="text-white font-semibold text-lg">Creating Account...</Text>
             ) : (
                <Text className="text-white font-semibold text-lg">Sign Up</Text>
