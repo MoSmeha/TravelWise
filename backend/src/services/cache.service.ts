@@ -1,9 +1,5 @@
 import NodeCache from 'node-cache';
 
-// ==========================================
-// CACHE SERVICE
-// In-memory caching with TTL for external API responses
-// ==========================================
 
 // Cache configuration from environment or defaults
 const CACHE_CONFIG = {

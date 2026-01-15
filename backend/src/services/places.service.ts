@@ -104,7 +104,6 @@ export class PlacesService {
     }
 
     // 2. If not in DB, search Google Places
-    // 2. If not in DB, search Google Places
     if (!isGooglePlacesConfigured()) {
       console.log('No GOOGLE_PLACES_API_KEY configured');
       return { place: null, source: 'db', message: 'Google Places API not configured' };
@@ -262,8 +261,5 @@ export class PlacesService {
   }
 }
 
-// ============================================================================
-// Singleton Instance
-// ============================================================================
 
 export const placesService = new PlacesService();

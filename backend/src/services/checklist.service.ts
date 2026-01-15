@@ -8,10 +8,6 @@ import {
 } from '../provider-contract/checklist.provider-contract';
 import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema';
 
-// ============================================================================
-// CHECKLIST SERVICE CLASS
-// Handles CRUD operations using the provider-contract pattern
-// ============================================================================
 
 export class ChecklistService {
   constructor(private provider: IChecklistProvider = checklistProvider) {}
@@ -61,11 +57,6 @@ export class ChecklistService {
 // Singleton instance for use throughout the app
 export const checklistService = new ChecklistService();
 
-// ==========================================
-// CHECKLIST GENERATION LOGIC
-// Generates personalized packing checklists based on
-// itinerary, weather, and activity types
-// ==========================================
 
 export interface ChecklistItemData {
   category: ChecklistCategory;

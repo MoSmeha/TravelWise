@@ -1,10 +1,6 @@
 import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/circuit-breaker';
 import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils';
 
-// ==========================================
-// EMBEDDING SERVICE
-// Generates embeddings for RAG using OpenAI with fallback
-// ==========================================
 
 // Configuration
 interface EmbeddingConfig {
@@ -19,8 +15,6 @@ const PRIMARY_CONFIG: EmbeddingConfig = {
   dimensions: 1536,
 };
 
-// isOpenAIConfigured is now imported from openai.utils.ts
-export { isOpenAIConfigured } from '../utils/openai.utils';
 
 // Generate a single embedding
 export async function generateEmbedding(text: string): Promise<number[]> {
@@ -83,26 +77,6 @@ export async function batchGenerateEmbeddings(texts: string[]): Promise<number[]
   }
 }
 
-// Calculate cosine similarity between two vectors (kept for backward compatibility)
-export function cosineSimilarity(a: number[], b: number[]): number {
-  if (a.length !== b.length) {
-    throw new Error('Vectors must have the same length');
-  }
-  
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-  
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-  
-  if (normA === 0 || normB === 0) return 0;
-  
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
 
 // Get embedding dimensions for current config
 export function getEmbeddingDimensions(): number {

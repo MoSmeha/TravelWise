@@ -1,7 +1,3 @@
-// ==========================================
-// ROUTE OPTIMIZER SERVICE
-// Optimizes itinerary routes using greedy heuristic and clustering
-// ==========================================
 
 import { haversineDistance } from '../utils/geo.utils';
 

@@ -1,11 +1,6 @@
 import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/circuit-breaker';
 import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from './cache.service';
 
-// ==========================================
-// GOOGLE PLACES SERVICE
-// Enriches places with data from Google Places API
-// Includes graceful degradation and caching
-// ==========================================
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';

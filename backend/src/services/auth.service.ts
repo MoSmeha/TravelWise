@@ -12,9 +12,6 @@ import { RegisterInput, LoginInput } from '../schemas/auth.schema';
 import { authProvider } from '../providers/auth.provider.pg';
 import { IAuthProvider, UserResponse, UserWithPassword } from '../provider-contract/auth.provider-contract';
 
-// ============================================================================
-// Configuration
-// ============================================================================
 
 const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-in-production';
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
@@ -25,9 +22,6 @@ const JWT_REFRESH_EXPIRY_SEC = 7 * 24 * 60 * 60; // 7 days
 const REFRESH_TOKEN_EXPIRY_MS = JWT_REFRESH_EXPIRY_SEC * 1000;
 const VERIFICATION_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-// ============================================================================
-// Types
-// ============================================================================
 
 export interface JwtPayload {
   userId: string;
@@ -51,16 +45,10 @@ export interface TokenPair {
   refreshToken: string;
 }
 
-// ============================================================================
-// Auth Service Class
-// ============================================================================
 
 export class AuthService {
   constructor(private provider: IAuthProvider = authProvider) {}
 
-  // -------------------------------------------------------------------------
-  // User Registration
-  // -------------------------------------------------------------------------
 
   /**
    * Register a new user
@@ -103,9 +91,6 @@ export class AuthService {
     return { user, verificationToken };
   }
 
-  // -------------------------------------------------------------------------
-  // User Login
-  // -------------------------------------------------------------------------
 
   /**
    * Authenticate a user with email and password
@@ -151,9 +136,6 @@ export class AuthService {
     };
   }
 
-  // -------------------------------------------------------------------------
-  // Token Operations
-  // -------------------------------------------------------------------------
 
   /**
    * Rotate refresh token - invalidate old one and generate new one
@@ -246,9 +228,6 @@ export class AuthService {
     }
   }
 
-  // -------------------------------------------------------------------------
-  // Email Verification
-  // -------------------------------------------------------------------------
 
   /**
    * Generate email verification token
@@ -314,9 +293,6 @@ export class AuthService {
     return `${APP_URL}/api/auth/verify-email?token=${token}`;
   }
 
-  // -------------------------------------------------------------------------
-  // Password Utilities
-  // -------------------------------------------------------------------------
 
   /**
    * Hash a password using Argon2
@@ -360,9 +336,6 @@ export class AuthService {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${bgColor}&color=fff&size=256&bold=true`;
   }
 
-  // -------------------------------------------------------------------------
-  // Cleanup
-  // -------------------------------------------------------------------------
 
   /**
    * Clean up expired tokens (can be called periodically)
@@ -374,23 +347,4 @@ export class AuthService {
   }
 }
 
-// ============================================================================
-// Default Instance & Legacy Exports
-// ============================================================================
-
-// Singleton instance for use throughout the app
 export const authService = new AuthService();
-
-// Legacy function exports for backward compatibility
-// These delegate to the singleton instance
-export const hashPassword = (password: string) => authService.hashPassword(password);
-export const verifyPassword = (password: string, hash: string) => authService.verifyPassword(password, hash);
-export const generateAvatarUrl = (name: string) => authService.generateAvatarUrl(name);
-export const generateAccessToken = (userId: string, email?: string) => authService.generateAccessToken(userId, email);
-export const generateRefreshToken = (userId: string) => authService.generateRefreshToken(userId);
-export const verifyAccessToken = (token: string) => authService.verifyAccessToken(token);
-export const rotateRefreshToken = (oldToken: string) => authService.rotateRefreshToken(oldToken);
-export const generateVerificationToken = (userId: string) => authService.generateVerificationToken(userId);
-export const verifyEmailToken = (token: string) => authService.verifyEmail(token);
-export const cleanupExpiredTokens = () => authService.cleanupExpiredTokens();
-export const getVerificationLink = (token: string) => authService.getVerificationLink(token);

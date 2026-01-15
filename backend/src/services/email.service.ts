@@ -4,9 +4,8 @@
  */
 
 import nodemailer from 'nodemailer';
-import { getVerificationLink } from './auth.service';
+import { authService } from './auth.service';
 
-// Environment variables
 const SMTP_HOST = process.env.SMTP_HOST;
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
 const SMTP_USER = process.env.SMTP_USER;
@@ -37,7 +36,7 @@ export async function sendVerificationEmail(
   name: string,
   token: string
 ): Promise<boolean> {
-  const verificationLink = getVerificationLink(token);
+  const verificationLink = authService.getVerificationLink(token);
   
   const htmlContent = `
     <!DOCTYPE html>

@@ -1,5 +1,5 @@
 
-import { LocationCategory, LocationClassification, ItineraryItemType, ChecklistCategory } from '@prisma/client';
+import { LocationCategory, LocationClassification, ItineraryItemType, ChecklistCategory, PriceLevel } from '@prisma/client';
 
 
 export interface FetchPlacesParams {
@@ -8,6 +8,7 @@ export interface FetchPlacesParams {
   city: string | null;
   limit: number;
   excludeIds?: string[];
+  priceLevel?: PriceLevel;
 }
 
 export interface CreateItineraryData {

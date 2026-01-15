@@ -4,10 +4,6 @@ import { chunkItinerary, ItineraryData } from './chunking.service';
 import { batchGenerateEmbeddings, generateEmbedding } from './embedding.service';
 import { getOpenAIClient } from '../utils/openai.utils';
 
-// ==========================================
-// RAG RETRIEVAL SERVICE
-// Retrieves and re-ranks chunks for Q&A
-// ==========================================
 
 // Configuration
 interface RetrievalConfig {

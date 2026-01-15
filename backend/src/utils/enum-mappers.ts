@@ -56,6 +56,20 @@ export function parseTravelStyles(values: string[] | undefined): TravelStyle[] {
   return values.slice(0, 3).map(v => parseTravelStyle(v));
 }
 
+import { PriceLevel } from '@prisma/client';
+
+/**
+ * Map BudgetLevel to PriceLevel for database filtering
+ */
+export function mapBudgetToPriceLevel(budget: BudgetLevel): PriceLevel | undefined {
+  switch (budget) {
+    case BudgetLevel.LOW: return PriceLevel.INEXPENSIVE;
+    case BudgetLevel.MEDIUM: return PriceLevel.MODERATE;
+    case BudgetLevel.HIGH: return PriceLevel.EXPENSIVE;
+    default: return undefined;
+  }
+}
+
 /**
  * List of known Lebanese cities for address parsing
  */

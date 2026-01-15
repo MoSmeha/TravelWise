@@ -1,9 +1,5 @@
 import { ChunkType } from '@prisma/client';
 
-// ==========================================
-// CHUNKING SERVICE
-// Chunks itinerary data for RAG embedding
-// ==========================================
 
 export interface ItineraryChunk {
   type: ChunkType;
@@ -63,15 +59,6 @@ interface ItineraryData {
   }>;
 }
 
-// Chunking configuration
-// Chunking configuration (Unused for now)
-// const CHUNK_CONFIG = {
-//   FULL_SUMMARY: { maxTokens: 500 },
-//   DAY_PLAN: { maxTokens: 300, overlapTokens: 50 },
-//   PLACE_DETAIL: { maxTokens: 200 },
-//   CHECKLIST: { maxTokens: 150 },
-//   ROUTE_OVERVIEW: { maxTokens: 250 },
-// };
 
 // Format a day into readable text
 function formatDayChunk(day: DayData): string {

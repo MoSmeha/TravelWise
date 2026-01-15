@@ -1,5 +1,5 @@
-import { ChecklistCategory, ItineraryItemType, LocationCategory, Place } from '@prisma/client';
-import { BudgetLevel, TravelStyle } from '../utils/enum-mappers';
+import { ChecklistCategory, ItineraryItemType, LocationCategory, Place, PriceLevel } from '@prisma/client';
+import { BudgetLevel, TravelStyle, mapBudgetToPriceLevel } from '../utils/enum-mappers';
 import { v4 as uuidv4 } from 'uuid';
 import * as googlePlacesService from './google-places.service';
 import * as routeOptimizer from './route-optimizer.service';
@@ -170,6 +170,7 @@ async function fetchPlaces(
   city: string | null,
   limit: number,
   excludeIds: string[] = [],
+  priceLevel?: PriceLevel,
   provider: IItineraryProvider = itineraryProvider
 ): Promise<PlaceExtended[]> {
   const places = await provider.fetchPlaces({
@@ -178,6 +179,7 @@ async function fetchPlaces(
     city,
     limit,
     excludeIds,
+    priceLevel,
   });
   
   return places as PlaceExtended[];
@@ -268,12 +270,17 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   // Fetch activities with proper filtering (limited to what we need + buffer)
   const usedIds: string[] = [];
   
-  console.log(`📍 Fetching ${totalActivitiesNeeded} activities for ${numberOfDays} days...`);
+  // Map budget level to price level for filtering
+  const priceLevel = mapBudgetToPriceLevel(budgetLevel);
+  console.log(`📍 Fetching ${totalActivitiesNeeded} activities for ${numberOfDays} days, budget: ${budgetLevel} -> ${priceLevel}...`);
+  
   const activities = await fetchPlaces(
     activityCategories.length > 0 ? activityCategories : [LocationCategory.OTHER],
     country,
     cityName,
-    Math.ceil(totalActivitiesNeeded * 1.5) // 50% buffer for variety
+    Math.ceil(totalActivitiesNeeded * 1.5), // 50% buffer for variety
+    [],
+    priceLevel
   );
   usedIds.push(...activities.map(a => a.id));
   
@@ -283,7 +290,8 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     country,
     cityName,
     Math.ceil(totalMealsNeeded * 1.2),
-    usedIds
+    usedIds,
+    priceLevel
   );
   usedIds.push(...restaurants.map(r => r.id));
   
@@ -293,7 +301,8 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     country,
     cityName,
     numberOfDays, // 1 per day max
-    usedIds
+    usedIds,
+    priceLevel
   );
   usedIds.push(...nightSpots.map(n => n.id));
   
@@ -578,9 +587,6 @@ export async function saveItineraryToDb(
   return itinerary;
 }
 
-// ============================================================================
-// Helper functions moved from controller
-// ============================================================================
 
 /**
  * Enrich locations with Google Places data

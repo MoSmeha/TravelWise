@@ -3,7 +3,6 @@ import 'dotenv/config';
 import { Airport, CountryConfig } from '../config/countries.config';
 import { getOpenAIClient } from '../utils/openai.utils';
 
-// ============ TYPES ============
 
 export interface AIHotel {
   name: string;
@@ -64,7 +63,6 @@ export interface AIItineraryResult {
   routeSummary: string;
 }
 
-// ============ MAIN FUNCTION ============
 
 export async function generateItineraryWithAI(
   country: CountryConfig,

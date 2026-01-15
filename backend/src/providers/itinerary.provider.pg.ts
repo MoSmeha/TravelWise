@@ -29,7 +29,7 @@ class ItineraryPgProvider implements IItineraryProvider {
   // -------------------------------------------------------------------------
 
   async fetchPlaces(params: FetchPlacesParams): Promise<PlaceRecord[]> {
-    const { categories, country, city, limit, excludeIds = [] } = params;
+    const { categories, country, city, limit, excludeIds = [], priceLevel } = params;
 
     const where: any = {
       classification: { not: LocationClassification.TOURIST_TRAP },
@@ -40,6 +40,11 @@ class ItineraryPgProvider implements IItineraryProvider {
     // Add city filter if provided
     if (city) {
       where.city = { equals: city, mode: 'insensitive' };
+    }
+
+    // Filter by price level if specified
+    if (priceLevel) {
+      where.priceLevel = priceLevel;
     }
 
     // Exclude already used places
@@ -59,13 +64,20 @@ class ItineraryPgProvider implements IItineraryProvider {
 
     // Fallback to country-wide if not enough city-specific places
     if (places.length < limit && city) {
+      const fallbackWhere: any = {
+        classification: { not: LocationClassification.TOURIST_TRAP },
+        category: { in: categories },
+        country: { equals: country, mode: 'insensitive' },
+        id: { notIn: [...excludeIds, ...places.map((p) => p.id)] },
+      };
+      
+      // Apply same price filter to fallback
+      if (priceLevel) {
+        fallbackWhere.priceLevel = priceLevel;
+      }
+      
       const countryPlaces = await prisma.place.findMany({
-        where: {
-          classification: { not: LocationClassification.TOURIST_TRAP },
-          category: { in: categories },
-          country: { equals: country, mode: 'insensitive' },
-          id: { notIn: [...excludeIds, ...places.map((p) => p.id)] },
-        },
+        where: fallbackWhere,
         orderBy: [{ classification: 'asc' }, { rating: 'desc' }, { popularity: 'desc' }],
         take: limit - places.length,
       });
