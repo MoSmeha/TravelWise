@@ -1,14 +1,6 @@
-/**
- * Places Provider Contract
- * Defines the interface for places-related data operations.
- * Controllers/services depend on this interface, not on concrete implementations.
- */
 
 import { LocationCategory, LocationClassification, PriceLevel } from '@prisma/client';
 
-// ============================================================================
-// Input Types (for creating/updating data)
-// ============================================================================
 
 export interface PlaceFilters {
   city?: string;
@@ -51,9 +43,6 @@ export interface PlaceEnrichmentData {
   lastEnrichedAt?: Date;
 }
 
-// ============================================================================
-// Output Types (what the provider returns)
-// ============================================================================
 
 export interface PlaceRecord {
   id: string;
@@ -97,56 +86,31 @@ export interface PaginatedPlaces {
   };
 }
 
-// ============================================================================
-// Provider Contract Interface
-// ============================================================================
 
 export interface IPlacesProvider {
-  // -------------------------------------------------------------------------
-  // Read Operations
-  // -------------------------------------------------------------------------
-
-  /**
-   * Find a place by name (case-insensitive)
-   */
+  
   findByName(name: string): Promise<PlaceRecord | null>;
 
-  /**
-   * Find a place by Google Place ID
-   */
+  
   findByGooglePlaceId(googlePlaceId: string): Promise<PlaceRecord | null>;
 
-  /**
-   * Find a place by ID
-   */
+  
   findById(id: string): Promise<PlaceRecord | null>;
 
-  /**
-   * List places with filters and pagination
-   */
+  
   findMany(filters: PlaceFilters): Promise<PaginatedPlaces>;
 
-  /**
-   * Get city grouping with place counts
-   */
+  
   groupByCity(): Promise<CityCount[]>;
 
-  /**
-   * Get category grouping with place counts
-   */
+  
   groupByCategory(): Promise<CategoryCount[]>;
 
-  // -------------------------------------------------------------------------
-  // Write Operations
-  // -------------------------------------------------------------------------
 
-  /**
-   * Create a new place
-   */
+
+  
   create(data: CreatePlaceData): Promise<PlaceRecord>;
 
-  /**
-   * Update place with enrichment data from Google
-   */
+  
   updateEnrichment(id: string, data: PlaceEnrichmentData): Promise<void>;
 }

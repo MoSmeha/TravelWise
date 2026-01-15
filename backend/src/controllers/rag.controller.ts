@@ -1,22 +1,10 @@
-/**
- * RAG Controller
- * Handles HTTP concerns for RAG Q&A endpoints
- * Business logic is delegated to ragService and ragProvider
- */
-
 import { Request, Response } from 'express';
 import { AskQuestionInput } from '../schemas/itinerary.schema';
 import { askAboutItinerary } from '../services/rag-retrieval.service';
 import { ragProvider } from '../providers/rag.provider.pg';
 
-// ============================================================================
-// RAG Q&A Endpoints
-// ============================================================================
-
-/**
- * POST /api/itinerary/:id/ask
- * Ask a question about an itinerary
- */
+//POST /api/itinerary/:id/ask
+//Ask a question about an itinerary
 export async function askQuestion(req: Request, res: Response) {
   try {
     const { id } = req.params;
@@ -58,10 +46,10 @@ export async function askQuestion(req: Request, res: Response) {
   }
 }
 
-/**
- * GET /api/itinerary/:id/embeddings/status
- * Check embedding status for an itinerary
- */
+
+//GET /api/itinerary/:id/embeddings/status
+//Check embedding status for an itinerary
+
 export async function getEmbeddingStatus(req: Request, res: Response) {
   try {
     const { id } = req.params;

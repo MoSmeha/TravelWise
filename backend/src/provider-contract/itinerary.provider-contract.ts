@@ -1,14 +1,6 @@
-/**
- * Itinerary Provider Contract
- * Defines the interface for itinerary-related data operations.
- * Controllers/services depend on this interface, not on concrete implementations.
- */
 
 import { LocationCategory, LocationClassification, ItineraryItemType, ChecklistCategory } from '@prisma/client';
 
-// ============================================================================
-// Input Types (for creating/updating data)
-// ============================================================================
 
 export interface FetchPlacesParams {
   categories: LocationCategory[];
@@ -65,13 +57,7 @@ export interface UpdatePlaceEnrichmentData {
   lastEnrichedAt?: Date;
 }
 
-// ============================================================================
-// Output Types (what the provider returns)
-// ============================================================================
 
-/**
- * Place record from database
- */
 export interface PlaceRecord {
   id: string;
   name: string;
@@ -97,13 +83,9 @@ export interface PlaceRecord {
   activityTypes: string[];
   address: string | null;
   localTip: string | null;
-  // Allow additional fields for flexibility
   [key: string]: any;
 }
 
-/**
- * User itinerary summary for listings
- */
 export interface UserItinerarySummary {
   id: string;
   country: string;
@@ -116,9 +98,6 @@ export interface UserItinerarySummary {
   flightDate: Date | null;
 }
 
-/**
- * Full itinerary with relations
- */
 export interface UserItineraryWithDays {
   id: string;
   country: string;
@@ -178,65 +157,26 @@ export interface CreatedItinerary {
   routeSummary: string | null;
 }
 
-// ============================================================================
-// Provider Contract Interface
-// ============================================================================
 
 export interface IItineraryProvider {
-  // -------------------------------------------------------------------------
-  // Place Operations
-  // -------------------------------------------------------------------------
   
-  /**
-   * Fetch places from database with filtering
-   */
   fetchPlaces(params: FetchPlacesParams): Promise<PlaceRecord[]>;
   
-  /**
-   * Find a place by its Google Place ID
-   */
   findPlaceByGoogleId(googlePlaceId: string): Promise<{ id: string } | null>;
   
-  /**
-   * Update place with Google enrichment data
-   */
   updatePlaceEnrichment(placeId: string, data: UpdatePlaceEnrichmentData): Promise<void>;
 
-  // -------------------------------------------------------------------------
-  // Itinerary Operations
-  // -------------------------------------------------------------------------
   
-  /**
-   * Create a new user itinerary
-   */
   createItinerary(data: CreateItineraryData): Promise<CreatedItinerary>;
   
-  /**
-   * Find itinerary by ID with full relations (days, items, checklist)
-   */
   findItineraryById(id: string): Promise<UserItineraryWithDays | null>;
   
-  /**
-   * Find all itineraries for a user (summary only)
-   */
   findUserItineraries(userId: string): Promise<UserItinerarySummary[]>;
 
-  // -------------------------------------------------------------------------
-  // Day & Item Operations
-  // -------------------------------------------------------------------------
   
-  /**
-   * Create an itinerary day
-   */
   createItineraryDay(data: CreateItineraryDayData): Promise<ItineraryDayRecord>;
   
-  /**
-   * Create an itinerary item
-   */
   createItineraryItem(data: CreateItineraryItemData): Promise<{ id: string }>;
   
-  /**
-   * Create a checklist item
-   */
   createChecklistItem(data: CreateChecklistItemData): Promise<{ id: string }>;
 }

@@ -1,21 +1,9 @@
-/**
- * Checklist Controller
- * Handles HTTP concerns for checklist endpoints
- * Business logic is delegated to checklistService
- */
-
 import { Request, Response } from 'express';
 import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema';
 import { checklistService } from '../services/checklist.service';
 
-// ============================================================================
-// Checklist CRUD Operations
-// ============================================================================
-
-/**
- * GET /api/checklist/:itineraryId
- * Get all checklist items for an itinerary
- */
+//GET /api/checklist/:itineraryId
+//Get all checklist items for an itinerary
 export async function getChecklist(req: Request, res: Response) {
   try {
     const { itineraryId } = req.params;
@@ -29,10 +17,8 @@ export async function getChecklist(req: Request, res: Response) {
   }
 }
 
-/**
- * PATCH /api/checklist/:itemId
- * Toggle checklist item checked status
- */
+//PATCH /api/checklist/:itemId
+//Toggle checklist item checked status
 export async function updateItem(req: Request, res: Response) {
   try {
     const { itemId } = req.params;
@@ -47,10 +33,8 @@ export async function updateItem(req: Request, res: Response) {
   }
 }
 
-/**
- * POST /api/checklist/:itineraryId
- * Add custom checklist item
- */
+//POST /api/checklist/:itineraryId
+//Add custom checklist item
 export async function createItem(req: Request, res: Response) {
   try {
     const { itineraryId } = req.params;

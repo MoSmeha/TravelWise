@@ -1,9 +1,3 @@
-/**
- * Auth Controller
- * Handles HTTP concerns for authentication endpoints
- * Business logic is delegated to authService
- */
-
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import {
@@ -20,14 +14,8 @@ import {
   getVerificationSuccessHtml,
 } from '../templates/verification-email.template';
 
-// ============================================================================
-// Registration & Login
-// ============================================================================
+//POST /api/auth/register
 
-/**
- * POST /api/auth/register
- * Register a new user
- */
 export async function register(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as RegisterInput;
@@ -57,10 +45,8 @@ export async function register(req: Request, res: Response): Promise<void> {
   }
 }
 
-/**
- * POST /api/auth/login
- * Login with email and password
- */
+//POST /api/auth/login
+
 export async function login(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as LoginInput;
@@ -97,14 +83,8 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
 }
 
-// ============================================================================
-// Token Management
-// ============================================================================
-
-/**
- * POST /api/auth/refresh
- * Refresh access token using refresh token
- */
+//POST /api/auth/refresh
+//Refresh access token using refresh token
 export async function refresh(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as RefreshTokenInput;
@@ -127,14 +107,8 @@ export async function refresh(req: Request, res: Response): Promise<void> {
   }
 }
 
-// ============================================================================
-// Email Verification
-// ============================================================================
-
-/**
- * POST /api/auth/verify-email (and GET for browser links)
- * Verify email using token
- */
+//POST /api/auth/verify-email (and GET for browser links)
+//Verify email using token
 export async function verifyEmail(req: Request, res: Response): Promise<void> {
   try {
     // Support both POST body and GET query param

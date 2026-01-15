@@ -1,9 +1,3 @@
-/**
- * Itinerary Controller
- * Handles HTTP concerns for itinerary endpoints
- * Business logic is delegated to itineraryService
- */
-
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { getCountriesList, COUNTRIES, getAirportConfig } from '../config/countries.config';
@@ -19,14 +13,8 @@ import { storeItineraryEmbeddings } from '../services/rag-retrieval.service';
 import { parseBudgetLevel, parseTravelStyles } from '../utils/enum-mappers';
 import { itineraryProvider } from '../providers/itinerary.provider.pg';
 
-// ============================================================================
-// Country & Configuration Endpoints
-// ============================================================================
-
-/**
- * GET /api/itinerary/countries
- * List all supported countries with airports
- */
+//GET /api/itinerary/countries
+//List all supported countries with airports
 export async function getCountries(_req: Request, res: Response) {
   try {
     const countries = getCountriesList();
@@ -37,14 +25,8 @@ export async function getCountries(_req: Request, res: Response) {
   }
 }
 
-// ============================================================================
-// Itinerary Generation
-// ============================================================================
-
-/**
- * POST /api/itinerary/generate
- * Generate a new itinerary based on parameters
- */
+//POST /api/itinerary/generate
+//Generate a new itinerary based on parameters
 export async function generate(req: Request, res: Response) {
   try {
     const input = req.body as GenerateItineraryInput;
@@ -58,9 +40,9 @@ export async function generate(req: Request, res: Response) {
     const budgetLevel = parseBudgetLevel(input.budgetLevel);
     const travelStyles = parseTravelStyles(input.travelStyles || (input.travelStyle ? [input.travelStyle] : undefined));
     
-    console.log(`🗺️ Generating DB-driven itinerary: ${input.cityId}, ${input.numberOfDays} days, styles: ${travelStyles.join(', ')}...`);
+    console.log(`Generating DB-driven itinerary: ${input.cityId}, ${input.numberOfDays} days, styles: ${travelStyles.join(', ')}...`);
     
-    // 1. Generate itinerary from database places
+    //Generate itinerary from database places
     const result = await generateItinerary({
       cityId: input.cityId,
       numberOfDays: input.numberOfDays,
@@ -70,15 +52,16 @@ export async function generate(req: Request, res: Response) {
       userId: userId,
     });
     
-    // 2. Enrich locations with Google Places data
+    //Enrich locations with Google Places data, skip if data is already enriched
     await enrichLocations(result.days);
     
-    // 3. Get country and airport config
-    const countryConfig = COUNTRIES['lebanon'];
+    //Get country and airport config
+    const countryKey = (input.cityId || 'lebanon').toLowerCase();
+    const countryConfig = COUNTRIES[countryKey] || COUNTRIES['lebanon'];
     const airportCode = input.airportCode || countryConfig.airports[0].code;
     const airportConfig = countryConfig.airports.find(a => a.code === airportCode) || countryConfig.airports[0];
     
-    // 4. Save to database for RAG
+    //Save to database for RAG
     const savedItinerary = await saveItineraryToDb(
       userId,
       input,
@@ -89,13 +72,13 @@ export async function generate(req: Request, res: Response) {
     
     console.log(`Saved itinerary to DB with ID: ${savedItinerary.id}`);
     
-    // 5. Generate embeddings for RAG (non-blocking)
+    //Generate embeddings for RAG (callback, 3mela bas ye5las l itinerary generations)
     setImmediate(() => {
         generateEmbeddingsAsync(savedItinerary.id, countryConfig.name, input, travelStyles.join(', '), result)
             .catch(err => console.error('Background embedding generation failed:', err));
     });
     
-    // 6. Build and return response using service helper
+    //Build and return response using service helper
     const response = buildItineraryResponse(savedItinerary.id, input, result, countryConfig, airportConfig);
     
     console.log(` Itinerary generated: ${response.days.length} days, ${response.days.reduce((sum: number, d: any) => sum + d.locations.length, 0)} locations`);
@@ -108,14 +91,8 @@ export async function generate(req: Request, res: Response) {
   }
 }
 
-// ============================================================================
-// User Itinerary Management
-// ============================================================================
-
-/**
- * GET /api/itinerary/user
- * List authenticated user's itineraries
- */
+//GET /api/itinerary/user
+//List authenticated user's itineraries
 export async function listUserItineraries(req: Request, res: Response) {
   try {
     const userId = (req as AuthenticatedRequest).user!.userId;
@@ -127,10 +104,8 @@ export async function listUserItineraries(req: Request, res: Response) {
   }
 }
 
-/**
- * GET /api/itinerary/:id
- * Get full details of an itinerary
- */
+//GET /api/itinerary/:id
+//Get full details of an itinerary
 export async function getItineraryDetails(req: Request, res: Response) {
   try {
     const { id } = req.params;
@@ -155,13 +130,7 @@ export async function getItineraryDetails(req: Request, res: Response) {
   }
 }
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
 
-/**
- * Generate embeddings asynchronously (non-blocking)
- */
 async function generateEmbeddingsAsync(
   itineraryId: string,
   countryName: string,
