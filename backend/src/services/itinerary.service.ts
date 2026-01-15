@@ -577,3 +577,237 @@ export async function saveItineraryToDb(
   
   return itinerary;
 }
+
+// ============================================================================
+// Helper functions moved from controller
+// ============================================================================
+
+/**
+ * Enrich locations with Google Places data
+ */
+export interface DayLocation {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  [key: string]: any;
+}
+
+export interface DayWithLocations {
+  locations: DayLocation[];
+  [key: string]: any;
+}
+
+export async function enrichLocations(days: DayWithLocations[]) {
+  console.log(`📸 Enriching ${days.reduce((sum: number, d) => sum + d.locations.length, 0)} locations with Google Places data...`);
+  
+  for (const day of days) {
+    for (const location of day.locations) {
+      try {
+        // Check if we already have detailed data OR if we checked recently (to avoid retrying empty fields)
+        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+        const lastChecked = location.lastEnrichedAt ? new Date(location.lastEnrichedAt).getTime() : 0;
+        const isRecentlyChecked = (Date.now() - lastChecked) < THIRTY_DAYS;
+
+        if ((location.openingHours && (location.imageUrl || (location.imageUrls && location.imageUrls.length > 0))) || isRecentlyChecked) {
+          console.log(`✨ Skipping enrichment for "${location.name}" - already data or checked recently`);
+          continue;
+        }
+
+        const googleData = await googlePlacesService.enrichPlaceWithGoogleData(
+          location.name,
+          location.latitude,
+          location.longitude
+        );
+        
+        if (googleData.data) {
+          // Check if another place already has this googlePlaceId to avoid unique constraint violations
+          const existingPlace = await itineraryProvider.findPlaceByGoogleId(googleData.data.googlePlaceId);
+
+          // Only update googlePlaceId if it doesn't exist or belongs to this place
+          const shouldUpdateId = !existingPlace || existingPlace.id === location.id;
+
+          await itineraryProvider.updatePlaceEnrichment(location.id, {
+            ...(shouldUpdateId ? { googlePlaceId: googleData.data.googlePlaceId } : {}),
+            rating: googleData.data.rating,
+            totalRatings: googleData.data.totalRatings,
+            topReviews: googleData.data.topReviews as any,
+            imageUrls: googleData.data.photos,
+            imageUrl: googleData.data.photos[0] || undefined,
+            openingHours: googleData.data.openingHours as any,
+            lastEnrichedAt: new Date(),
+          });
+          
+          // Attach to location object for embedding generation and response
+          location.rating = googleData.data.rating;
+          location.totalRatings = googleData.data.totalRatings;
+          location.topReviews = googleData.data.topReviews;
+          location.openingHours = googleData.data.openingHours;
+          location.imageUrls = googleData.data.photos;
+          location.imageUrl = googleData.data.photos[0];
+        }
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          console.log(` Place "${location.name}" already has Google Place ID attached.`);
+          continue;
+        }
+        console.warn(` Failed to enrich "${location.name}":`, error.message);
+      }
+    }
+  }
+}
+
+/**
+ * Build the itinerary response object
+ */
+export function buildItineraryResponse(
+  itineraryId: string, 
+  input: any, 
+  result: ItineraryResult,
+  countryConfig: any,
+  airportConfig: any
+) {
+  const totalCost = result.totalEstimatedCostUSD || input.budgetUSD;
+  
+  // Helper to map a place to response format
+  const mapPlace = (loc: any, idx: number, dayNum: number) => loc ? {
+    id: loc.id || `loc-${dayNum}-${idx}`,
+    name: loc.name,
+    classification: loc.classification,
+    category: loc.category,
+    description: loc.description || '',
+    costMinUSD: loc.costMinUSD,
+    costMaxUSD: loc.costMaxUSD,
+    crowdLevel: loc.crowdLevel,
+    bestTimeToVisit: loc.bestTimeToVisit,
+    latitude: loc.latitude,
+    longitude: loc.longitude,
+    rating: loc.rating,
+    totalRatings: loc.totalRatings,
+    imageUrl: loc.imageUrl,
+    imageUrls: loc.imageUrls,
+    scamWarning: loc.scamWarning,
+  } : null;
+  
+  const daysWithIds = result.days.map((d: any) => ({
+    id: `day-${d.dayNumber}`,
+    dayNumber: d.dayNumber,
+    description: d.description,
+    theme: d.theme,
+    locations: d.locations.map((loc: any, idx: number) => mapPlace(loc, idx, d.dayNumber)),
+    meals: d.meals ? {
+      breakfast: mapPlace(d.meals.breakfast, 0, d.dayNumber),
+      lunch: mapPlace(d.meals.lunch, 1, d.dayNumber),
+      dinner: mapPlace(d.meals.dinner, 2, d.dayNumber),
+    } : null,
+    hotel: d.hotel ? mapPlace(d.hotel, 0, d.dayNumber) : null,
+    routeDescription: d.routeDescription,
+  }));
+  
+  // Map primary hotel
+  const hotel = result.hotel ? {
+    id: result.hotel.id,
+    name: result.hotel.name,
+    category: result.hotel.category,
+    latitude: result.hotel.latitude,
+    longitude: result.hotel.longitude,
+    rating: result.hotel.rating,
+    imageUrl: result.hotel.imageUrl,
+    address: result.hotel.address,
+  } : null;
+  
+  return {
+    source: 'DATABASE',
+    itinerary: {
+      id: itineraryId,
+      numberOfDays: input.numberOfDays,
+      budgetUSD: input.budgetUSD,
+      totalEstimatedCostUSD: totalCost,
+      budgetBreakdown: {
+        food: Math.round(totalCost * 0.3),
+        activities: Math.round(totalCost * 0.2),
+        transport: Math.round(totalCost * 0.1),
+        accommodation: Math.round(totalCost * 0.4),
+      },
+    },
+    days: daysWithIds,
+    hotel,
+    airport: {
+      name: airportConfig.name,
+      code: airportConfig.code,
+      latitude: airportConfig.latitude,
+      longitude: airportConfig.longitude,
+    },
+    country: {
+      id: countryConfig.key,
+      name: countryConfig.name,
+      code: countryConfig.code,
+      currency: countryConfig.currency,
+    },
+    warnings: result.warnings.map((w: any, idx: number) => ({ id: `warn-${idx}`, ...w })),
+    touristTraps: result.touristTraps.map((t: any, idx: number) => ({ id: `trap-${idx}`, ...t })),
+    localTips: result.localTips,
+    routeSummary: result.routeSummary || '',
+  };
+}
+
+/**
+ * Build response for getItineraryDetails endpoint
+ * Uses response mappers for consistent formatting
+ */
+export function buildItineraryDetailsResponse(
+  itinerary: any,
+  _countryConfig: any,  // kept for API consistency with buildItineraryResponse
+  airportConfig: any
+) {
+  // Import mappers inline to avoid circular dependency
+  const { mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } = require('../utils/response-mappers');
+  
+  // Build response from ItineraryDay structure
+  const days = itinerary.days.map((day: any) => {
+    const activities = day.items.filter((i: any) => i.itemType === 'ACTIVITY');
+    const meals = {
+      breakfast: day.items.find((i: any) => i.itemType === 'BREAKFAST')?.place || null,
+      lunch: day.items.find((i: any) => i.itemType === 'LUNCH')?.place || null,
+      dinner: day.items.find((i: any) => i.itemType === 'DINNER')?.place || null,
+    };
+
+    const locations = activities.map((item: any) => 
+      mapPlaceToLocation(item.place, item.notes)
+    );
+
+    return {
+      id: day.id,
+      dayNumber: day.dayNumber,
+      theme: day.theme,
+      description: day.description || `Day ${day.dayNumber}`,
+      locations,
+      meals: {
+        breakfast: mapPlaceToMeal(meals.breakfast),
+        lunch: mapPlaceToMeal(meals.lunch),
+        dinner: mapPlaceToMeal(meals.dinner),
+      },
+      hotel: mapPlaceToHotel(day.hotel),
+    };
+  });
+
+  return {
+    source: 'DATABASE',
+    itinerary: {
+      id: itinerary.id,
+      numberOfDays: itinerary.numberOfDays,
+      budgetUSD: itinerary.budgetUSD,
+      totalEstimatedCostUSD: itinerary.totalEstimatedCostUSD,
+      travelStyles: itinerary.travelStyles,
+    },
+    days,
+    airport: mapAirportToResponse(airportConfig, {
+      country: itinerary.country,
+      code: itinerary.airportCode,
+    }),
+    warnings: [],
+    touristTraps: [],
+    localTips: [],
+    routeSummary: itinerary.routeSummary,
+  };
+}

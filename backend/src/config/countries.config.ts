@@ -143,3 +143,14 @@ export function validateBudget(countryKey: string, budgetUSD: number, numberOfDa
   const minRequired = country.minBudgetPerDay * numberOfDays;
   return { valid: budgetUSD >= minRequired, minRequired };
 }
+
+// Get combined country and airport config (useful for response building)
+export function getAirportConfig(country: string, airportCode: string): {
+  countryConfig: CountryConfig | undefined;
+  airportConfig: Airport | undefined;
+} {
+  const countryConfig = getCountryByKey(country);
+  const airportConfig = countryConfig?.airports.find(a => a.code === airportCode) 
+    || countryConfig?.airports[0];
+  return { countryConfig, airportConfig };
+}

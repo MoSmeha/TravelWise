@@ -1,8 +1,68 @@
 import { ChecklistCategory } from '@prisma/client';
 import { WeatherForecast } from './weather.service';
+import { checklistProvider } from '../providers/checklist.provider.pg';
+import {
+  IChecklistProvider,
+  ChecklistItemRecord,
+  CreateChecklistItemData,
+} from '../provider-contract/checklist.provider-contract';
+import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema';
+
+// ============================================================================
+// CHECKLIST SERVICE CLASS
+// Handles CRUD operations using the provider-contract pattern
+// ============================================================================
+
+export class ChecklistService {
+  constructor(private provider: IChecklistProvider = checklistProvider) {}
+
+  /**
+   * Get all checklist items for an itinerary
+   */
+  async getItineraryChecklist(itineraryId: string): Promise<ChecklistItemRecord[]> {
+    return this.provider.findByItineraryId(itineraryId);
+  }
+
+  /**
+   * Update a checklist item's checked status
+   */
+  async updateItem(itemId: string, input: UpdateChecklistItemInput): Promise<ChecklistItemRecord> {
+    return this.provider.updateIsChecked(itemId, input.isChecked);
+  }
+
+  /**
+   * Create a custom checklist item
+   */
+  async createItem(itineraryId: string, input: CreateChecklistItemInput): Promise<ChecklistItemRecord> {
+    return this.provider.create({
+      itineraryId,
+      category: input.category as ChecklistCategory,
+      item: input.item,
+      reason: input.reason || null,
+      source: 'user',
+    });
+  }
+
+  /**
+   * Delete a checklist item
+   */
+  async deleteItem(itemId: string): Promise<void> {
+    return this.provider.delete(itemId);
+  }
+
+  /**
+   * Bulk create checklist items (used by itinerary generation)
+   */
+  async createBulkItems(items: CreateChecklistItemData[]): Promise<{ count: number }> {
+    return this.provider.createMany(items);
+  }
+}
+
+// Singleton instance for use throughout the app
+export const checklistService = new ChecklistService();
 
 // ==========================================
-// CHECKLIST SERVICE
+// CHECKLIST GENERATION LOGIC
 // Generates personalized packing checklists based on
 // itinerary, weather, and activity types
 // ==========================================
