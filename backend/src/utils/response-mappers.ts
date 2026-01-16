@@ -7,6 +7,54 @@
 import { LocationCategory, LocationClassification } from '@prisma/client';
 
 // ============================================================================
+// Photo URL Helpers
+// ============================================================================
+
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';
+
+/**
+ * Convert a photo reference to a full Google Places photo URL
+ * Photo references from the new API look like: places/ChIJ.../photos/AZLasHr...
+ * Full URLs start with https://
+ */
+function convertPhotoRefToUrl(photoRef: string | null | undefined): string | null {
+  if (!photoRef) return null;
+  
+  // Already a full URL
+  if (photoRef.startsWith('http')) {
+    return photoRef;
+  }
+  
+  // Photo reference from Google Places API (New) - starts with 'places/'
+  if (photoRef.startsWith('places/')) {
+    // Extract the photo reference part (after 'photos/')
+    const match = photoRef.match(/photos\/(.+)$/);
+    if (match && GOOGLE_PLACES_API_KEY) {
+      return `${GOOGLE_PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${match[1]}&key=${GOOGLE_PLACES_API_KEY}`;
+    }
+  }
+  
+  // Assume it's a raw photo reference (older format)
+  if (GOOGLE_PLACES_API_KEY && photoRef.length > 50) {
+    return `${GOOGLE_PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${photoRef}&key=${GOOGLE_PLACES_API_KEY}`;
+  }
+  
+  return null;
+}
+
+/**
+ * Convert an array of photo references to full URLs
+ */
+function convertPhotoRefsToUrls(photoRefs: string[] | undefined): string[] {
+  if (!photoRefs || photoRefs.length === 0) return [];
+  
+  return photoRefs
+    .map(ref => convertPhotoRefToUrl(ref))
+    .filter((url): url is string => url !== null);
+}
+
+// ============================================================================
 // Place Mappers
 // ============================================================================
 
@@ -92,8 +140,8 @@ export function mapPlaceToLocation(place: PlaceLike, notes?: string | null): Loc
     rating: place.rating || null,
     totalRatings: place.totalRatings || null,
     topReviews: place.topReviews || [],
-    imageUrls: place.imageUrls || [],
-    imageUrl: place.imageUrl || null,
+    imageUrls: convertPhotoRefsToUrls(place.imageUrls),
+    imageUrl: convertPhotoRefToUrl(place.imageUrl),
     scamWarning: place.scamWarning || null,
     bestTimeToVisit: place.bestTimeToVisit || null,
     crowdLevel: 'MODERATE',
@@ -124,7 +172,7 @@ export function mapPlaceToHotel(place: PlaceLike | null): HotelResponse | null {
     category: String(place.category),
     latitude: place.latitude,
     longitude: place.longitude,
-    imageUrl: place.imageUrl || null,
+    imageUrl: convertPhotoRefToUrl(place.imageUrl),
   };
 }
 
@@ -173,8 +221,8 @@ export function mapPlaceForGenerateResponse(
     rating: loc.rating || null,
     totalRatings: loc.totalRatings || null,
     topReviews: loc.topReviews || [],
-    imageUrls: loc.imageUrls || [],
-    imageUrl: loc.imageUrl || null,
+    imageUrls: convertPhotoRefsToUrls(loc.imageUrls),
+    imageUrl: convertPhotoRefToUrl(loc.imageUrl),
     scamWarning: loc.scamWarning || null,
     bestTimeToVisit: loc.bestTimeToVisit || null,
     crowdLevel: loc.crowdLevel || 'MODERATE',

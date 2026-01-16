@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { itineraryProvider } from '../providers/itinerary.provider.pg';
 import { IItineraryProvider } from '../provider-contract/itinerary.provider-contract';
+import { mapPlaceForGenerateResponse } from '../utils/response-mappers';
 
 // Local type extension if needed, but primarily use Prisma Place
 // We use intersection to add arbitrary keys if needed (for enrichments)
@@ -379,6 +380,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   
   const days: ItineraryDayResult[] = structuredDays.map((sd) => {
     // Collect all places for the day for route optimization
+    // Note: hotel is NOT included here - it's stored separately in day.hotel
     const dayPlaces = [
       sd.activities.anchor,
       sd.meals.breakfast,
@@ -675,38 +677,18 @@ export function buildItineraryResponse(
 ) {
   const totalCost = result.totalEstimatedCostUSD || input.budgetUSD;
   
-  // Helper to map a place to response format
-  const mapPlace = (loc: any, idx: number, dayNum: number) => loc ? {
-    id: loc.id || `loc-${dayNum}-${idx}`,
-    name: loc.name,
-    classification: loc.classification,
-    category: loc.category,
-    description: loc.description || '',
-    costMinUSD: loc.costMinUSD,
-    costMaxUSD: loc.costMaxUSD,
-    crowdLevel: loc.crowdLevel,
-    bestTimeToVisit: loc.bestTimeToVisit,
-    latitude: loc.latitude,
-    longitude: loc.longitude,
-    rating: loc.rating,
-    totalRatings: loc.totalRatings,
-    imageUrl: loc.imageUrl,
-    imageUrls: loc.imageUrls,
-    scamWarning: loc.scamWarning,
-  } : null;
-  
   const daysWithIds = result.days.map((d: any) => ({
     id: `day-${d.dayNumber}`,
     dayNumber: d.dayNumber,
     description: d.description,
     theme: d.theme,
-    locations: d.locations.map((loc: any, idx: number) => mapPlace(loc, idx, d.dayNumber)),
+    locations: d.locations.map((loc: any, idx: number) => mapPlaceForGenerateResponse(loc, idx, d.dayNumber)),
     meals: d.meals ? {
-      breakfast: mapPlace(d.meals.breakfast, 0, d.dayNumber),
-      lunch: mapPlace(d.meals.lunch, 1, d.dayNumber),
-      dinner: mapPlace(d.meals.dinner, 2, d.dayNumber),
+      breakfast: mapPlaceForGenerateResponse(d.meals.breakfast, 0, d.dayNumber),
+      lunch: mapPlaceForGenerateResponse(d.meals.lunch, 1, d.dayNumber),
+      dinner: mapPlaceForGenerateResponse(d.meals.dinner, 2, d.dayNumber),
     } : null,
-    hotel: d.hotel ? mapPlace(d.hotel, 0, d.dayNumber) : null,
+    hotel: d.hotel ? mapPlaceForGenerateResponse(d.hotel, 0, d.dayNumber) : null,
     routeDescription: d.routeDescription,
   }));
   

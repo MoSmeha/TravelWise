@@ -358,9 +358,9 @@ export default function MapScreen() {
         )}
 
         {/* Location markers */}
-        {allLocations.map((location) => (
+        {allLocations.map((location, index) => (
           <Marker
-            key={location.id}
+            key={`${location.id}-${index}`}
             coordinate={{
               latitude: location.latitude,
               longitude: location.longitude,
