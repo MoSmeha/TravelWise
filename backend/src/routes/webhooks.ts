@@ -3,10 +3,8 @@ import prisma from '../lib/prisma';
 
 const router = express.Router();
 
-// ==========================================
 // WEBHOOK ROUTES FOR n8n INTEGRATION
 // Endpoints for automation workflows
-// ==========================================
 
 // GET /api/webhooks/upcoming-trips
 // Returns itineraries with flights in the next 1-2 days

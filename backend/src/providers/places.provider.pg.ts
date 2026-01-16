@@ -1,8 +1,3 @@
-/**
- * Places Provider - PostgreSQL Implementation
- * Implements the IPlacesProvider interface using Prisma/PostgreSQL
- */
-
 import prisma from '../lib/prisma';
 import {
   CategoryCount,
@@ -15,9 +10,6 @@ import {
   PlaceRecord,
 } from '../provider-contract/places.provider-contract';
 
-/**
- * PostgreSQL implementation of the Places Provider
- */
 class PlacesPgProvider implements IPlacesProvider {
   // -------------------------------------------------------------------------
   // Read Operations
@@ -150,8 +142,6 @@ class PlacesPgProvider implements IPlacesProvider {
   }
 }
 
-// Export a singleton instance
 export const placesProvider = new PlacesPgProvider();
 
-// Also export the class for testing (allows mocking)
 export { PlacesPgProvider };

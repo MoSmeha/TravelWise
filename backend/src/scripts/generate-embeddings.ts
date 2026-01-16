@@ -19,20 +19,20 @@ const prisma = new PrismaClient();
  * Note: Run this AFTER seeding places with `npx prisma db seed`
  */
 async function main() {
-  console.log('🚀 Starting Knowledge Embedding Generation...');
+  console.log('>>> Starting Knowledge Embedding Generation...');
   
   // Get all places from database
   const places = await prisma.place.findMany();
   
   if (places.length === 0) {
-    console.error('❌ No places found in database. Run `npx prisma db seed` first.');
+    console.error('[ERROR] No places found in database. Run `npx prisma db seed` first.');
     process.exit(1);
   }
   
-  console.log(`📦 Found ${places.length} places to process.`);
+  console.log(`[INFO] Found ${places.length} places to process.`);
 
   // Cleanup old seed embeddings to prevent duplication on re-run
-  console.log('🧹 Cleaning old seed embeddings...');
+  console.log('[CLEANUP] Cleaning old seed embeddings...');
   await prisma.knowledgeEmbedding.deleteMany({
     where: { source: 'seed_data' }
   });
@@ -87,14 +87,14 @@ async function main() {
       }
 
     } catch (e: any) {
-      console.error(`\n❌ Error processing ${place.name}: ${e.message}`);
+      console.error(`\n[ERROR] Error processing ${place.name}: ${e.message}`);
       errors++;
     }
   }
 
-  console.log(`\n\n🎉 Embedding generation completed!`);
-  console.log(`✅ Processed: ${processed}`);
-  console.log(`❌ Errors: ${errors}`);
+  console.log(`\n\n[COMPLETED] Embedding generation completed!`);
+  console.log(`[SUCCESS] Processed: ${processed}`);
+  console.log(`[ERROR] Errors: ${errors}`);
 }
 
 main()

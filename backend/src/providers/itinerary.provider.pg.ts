@@ -1,8 +1,3 @@
-/**
- * Itinerary Provider - PostgreSQL Implementation
- * Implements the IItineraryProvider interface using Prisma/PostgreSQL
- */
-
 import { LocationClassification } from '@prisma/client';
 import prisma from '../lib/prisma';
 import {
@@ -20,13 +15,9 @@ import {
   UserItineraryWithDays,
 } from '../provider-contract/itinerary.provider-contract';
 
-/**
- * PostgreSQL implementation of the Itinerary Provider
- */
+
 class ItineraryPgProvider implements IItineraryProvider {
-  // -------------------------------------------------------------------------
   // Place Operations
-  // -------------------------------------------------------------------------
 
   async fetchPlaces(params: FetchPlacesParams): Promise<PlaceRecord[]> {
     const { categories, country, city, limit, excludeIds = [], priceLevel } = params;
@@ -110,9 +101,7 @@ class ItineraryPgProvider implements IItineraryProvider {
     });
   }
 
-  // -------------------------------------------------------------------------
   // Itinerary Operations
-  // -------------------------------------------------------------------------
 
   async createItinerary(data: CreateItineraryData): Promise<CreatedItinerary> {
     return prisma.userItinerary.create({
@@ -173,10 +162,9 @@ class ItineraryPgProvider implements IItineraryProvider {
     });
   }
 
-  // -------------------------------------------------------------------------
+  
   // Day & Item Operations
-  // -------------------------------------------------------------------------
-
+ 
   async createItineraryDay(data: CreateItineraryDayData): Promise<ItineraryDayRecord> {
     return prisma.itineraryDay.create({
       data: {
@@ -216,8 +204,7 @@ class ItineraryPgProvider implements IItineraryProvider {
   }
 }
 
-// Export a singleton instance
+
 export const itineraryProvider = new ItineraryPgProvider();
 
-// Also export the class for testing (allows mocking)
 export { ItineraryPgProvider };

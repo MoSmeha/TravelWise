@@ -1,8 +1,3 @@
-/**
- * Checklist Routes
- * Pure routing - all logic delegated to controllers
- */
-
 import { Router } from 'express';
 import * as checklistController from '../controllers/checklist.controller';
 import { requireOwnership } from '../middleware/ownership.middleware';

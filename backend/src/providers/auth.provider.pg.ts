@@ -1,8 +1,3 @@
-/**
- * Auth Provider - PostgreSQL Implementation
- * Implements the IAuthProvider interface using Prisma/PostgreSQL
- */
-
 import { EmailVerificationToken } from '@prisma/client';
 import prisma from '../lib/prisma';
 import {
@@ -15,14 +10,7 @@ import {
   UserWithPassword,
 } from '../provider-contract/auth.provider-contract';
 
-/**
- * PostgreSQL implementation of the Auth Provider
- */
 class AuthPgProvider implements IAuthProvider {
-  // -------------------------------------------------------------------------
-  // User Operations
-  // -------------------------------------------------------------------------
-
   async findUserByEmail(email: string): Promise<UserWithPassword | null> {
     return prisma.user.findUnique({
       where: { email },
@@ -88,10 +76,6 @@ class AuthPgProvider implements IAuthProvider {
       data: { emailVerified: verified },
     });
   }
-
-  // -------------------------------------------------------------------------
-  // Refresh Token Operations
-  // -------------------------------------------------------------------------
 
   async createRefreshToken(data: CreateRefreshTokenData): Promise<void> {
     await prisma.refreshToken.create({
@@ -173,8 +157,6 @@ class AuthPgProvider implements IAuthProvider {
   }
 }
 
-// Export a singleton instance
 export const authProvider = new AuthPgProvider();
 
-// Also export the class for testing (allows mocking)
 export { AuthPgProvider };

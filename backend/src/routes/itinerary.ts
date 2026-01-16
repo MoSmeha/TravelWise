@@ -1,8 +1,3 @@
-/**
- * Itinerary Routes
- * Pure routing - all logic delegated to controllers
- */
-
 import { Router } from 'express';
 import * as itineraryController from '../controllers/itinerary.controller';
 import { requireOwnership } from '../middleware/ownership.middleware';

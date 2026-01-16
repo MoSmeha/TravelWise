@@ -1,8 +1,3 @@
-/**
- * Checklist Provider - PostgreSQL Implementation
- * Implements the IChecklistProvider interface using Prisma/PostgreSQL
- */
-
 import prisma from '../lib/prisma';
 import {
   ChecklistItemRecord,
@@ -10,14 +5,7 @@ import {
   IChecklistProvider,
 } from '../provider-contract/checklist.provider-contract';
 
-/**
- * PostgreSQL implementation of the Checklist Provider
- */
 class ChecklistPgProvider implements IChecklistProvider {
-  // -------------------------------------------------------------------------
-  // Read Operations
-  // -------------------------------------------------------------------------
-
   async findByItineraryId(itineraryId: string): Promise<ChecklistItemRecord[]> {
     return prisma.checklistItem.findMany({
       where: { itineraryId },
@@ -33,10 +21,6 @@ class ChecklistPgProvider implements IChecklistProvider {
       where: { id },
     });
   }
-
-  // -------------------------------------------------------------------------
-  // Write Operations
-  // -------------------------------------------------------------------------
 
   async create(data: CreateChecklistItemData): Promise<ChecklistItemRecord> {
     return prisma.checklistItem.create({
@@ -77,8 +61,6 @@ class ChecklistPgProvider implements IChecklistProvider {
   }
 }
 
-// Export a singleton instance
 export const checklistProvider = new ChecklistPgProvider();
 
-// Also export the class for testing (allows mocking)
 export { ChecklistPgProvider };

@@ -1,22 +1,10 @@
-/**
- * RAG Provider - PostgreSQL Implementation
- * Implements the IRagProvider interface using Prisma/PostgreSQL
- */
-
 import prisma from '../lib/prisma';
 import {
   EmbeddingTypeBreakdown,
   IRagProvider,
 } from '../provider-contract/rag.provider-contract';
 
-/**
- * PostgreSQL implementation of the RAG Provider
- */
 class RagPgProvider implements IRagProvider {
-  // -------------------------------------------------------------------------
-  // Read Operations
-  // -------------------------------------------------------------------------
-
   async itineraryExists(id: string): Promise<boolean> {
     const itinerary = await prisma.userItinerary.findUnique({
       where: { id },
@@ -45,8 +33,6 @@ class RagPgProvider implements IRagProvider {
   }
 }
 
-// Export a singleton instance
 export const ragProvider = new RagPgProvider();
 
-// Also export the class for testing (allows mocking)
 export { RagPgProvider };
