@@ -20,7 +20,7 @@ app.use(express.json());
 
 // Request logging
 app.use((req: Request, _res: Response, next: NextFunction) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log(`[API] ${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
@@ -55,16 +55,16 @@ app.use((_req: Request, res: Response) => {
 
 // Error handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Error:', err);
+  console.error('[ERROR] Error:', err);
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
 const portToListen = Number(PORT);
 
 const server = app.listen(portToListen, '0.0.0.0', () => {
-  console.log(`TravelWise Backend running on port ${portToListen}`);
-  console.log(`Listening on all network interfaces (0.0.0.0)`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`[SYSTEM] TravelWise Backend running on port ${portToListen}`);
+  console.log(`[SYSTEM] Listening on all network interfaces (0.0.0.0)`);
+  console.log(`[SYSTEM] Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 // Set timeout to 5 minutes for long AI generations

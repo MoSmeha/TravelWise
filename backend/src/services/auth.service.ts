@@ -86,7 +86,7 @@ export class AuthService {
     // Generate verification token
     const verificationToken = await this.generateVerificationToken(user.id);
 
-    console.log(`✅ User registered: ${user.username} (${user.email})`);
+    console.log(`[AUTH] User registered: ${user.username} (${user.email})`);
 
     return { user, verificationToken };
   }
@@ -119,7 +119,7 @@ export class AuthService {
     const accessToken = this.generateAccessToken(user.id, user.email || undefined);
     const refreshToken = await this.generateRefreshToken(user.id);
 
-    console.log(`✅ User logged in: ${user.username}`);
+    console.log(`[AUTH] User logged in: ${user.username}`);
 
     return {
       user: {
@@ -267,7 +267,7 @@ export class AuthService {
     // Delete the used token
     await this.provider.deleteVerificationToken(verificationToken.id);
 
-    console.log(`✅ Email verified for user: ${verificationToken.userId}`);
+    console.log(`[AUTH] Email verified for user: ${verificationToken.userId}`);
 
     return { userId: verificationToken.userId };
   }

@@ -278,17 +278,17 @@ export async function enrichPlaceWithGoogleData(
   lat: number,
   lng: number
 ): Promise<PlaceEnrichmentResult> {
-  console.log(`🔍 Enriching "${name}" with Google Places data...`);
+  console.log(`[SEARCH] Enriching "${name}" with Google Places data...`);
   
   // Search for the place
   const searchResult = await searchPlace(name, lat, lng, 2000);
   
   if (!searchResult.data) {
-    console.warn(`⚠️ Could not find Google Places data for "${name}"`);
+    console.warn(`[WARN] Could not find Google Places data for "${name}"`);
     return searchResult;
   }
   
-  console.log(`✅ Found Google Places data for "${name}" (${searchResult.data.rating} stars, ${searchResult.data.totalRatings} reviews)`);
+  console.log(`[SUCCESS] Found Google Places data for "${name}" (${searchResult.data.rating} stars, ${searchResult.data.totalRatings} reviews)`);
   
   return searchResult;
 }

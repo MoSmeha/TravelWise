@@ -249,7 +249,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   const country = 'Lebanon';
   const cityName = cityId; // Treat as city filter hint
   
-  console.log(`🗺️ Generating structured itinerary: ${cityName}, ${numberOfDays} days, styles: ${travelStyles.join(', ')}...`);
+  console.log(`[ITINERARY] Generating structured itinerary: ${cityName}, ${numberOfDays} days, styles: ${travelStyles.join(', ')}...`);
   
   // Calculate how many places we need
   const activitiesPerDay = 4; // anchor + medium + light + optional evening
@@ -265,7 +265,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     const logPath = path.join(__dirname, '../../logs/missing-data.log');
     const logEntry = `[${new Date().toISOString()}] No categories for styles: ${travelStyles.join(', ')}\n`;
     fs.appendFileSync(logPath, logEntry);
-    console.warn(`⚠️ No categories match travel styles: ${travelStyles.join(', ')}`);
+    console.warn(`[WARN] No categories match travel styles: ${travelStyles.join(', ')}`);
   }
   
   // Fetch activities with proper filtering (limited to what we need + buffer)
@@ -273,7 +273,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   
   // Map budget level to price level for filtering
   const priceLevel = mapBudgetToPriceLevel(budgetLevel);
-  console.log(`📍 Fetching ${totalActivitiesNeeded} activities for ${numberOfDays} days, budget: ${budgetLevel} -> ${priceLevel}...`);
+  console.log(`[FETCH] Fetching ${totalActivitiesNeeded} activities for ${numberOfDays} days, budget: ${budgetLevel} -> ${priceLevel}...`);
   
   const activities = await fetchPlaces(
     activityCategories.length > 0 ? activityCategories : [LocationCategory.OTHER],
@@ -285,7 +285,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   );
   usedIds.push(...activities.map(a => a.id));
   
-  console.log(`🍽️ Fetching ${totalMealsNeeded} meal spots...`);
+  console.log(`[FETCH] Fetching ${totalMealsNeeded} meal spots...`);
   const restaurants = await fetchPlaces(
     MEAL_CATEGORIES,
     country,
@@ -296,7 +296,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   );
   usedIds.push(...restaurants.map(r => r.id));
   
-  console.log(`🌙 Fetching evening options...`);
+  console.log(`[FETCH] Fetching evening options...`);
   const nightSpots = await fetchPlaces(
     NIGHT_CATEGORIES,
     country,
@@ -307,7 +307,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   );
   usedIds.push(...nightSpots.map(n => n.id));
   
-  console.log(`🏨 Fetching hotels...`);
+  console.log(`[FETCH] Fetching hotels...`);
   const hotels = await fetchPlaces(
     HOTEL_CATEGORIES,
     country,
@@ -316,7 +316,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     usedIds
   );
   
-  console.log(`📊 Fetched: ${activities.length} activities, ${restaurants.length} restaurants, ${nightSpots.length} night spots, ${hotels.length} hotels`);
+  console.log(`[STATS] Fetched: ${activities.length} activities, ${restaurants.length} restaurants, ${nightSpots.length} night spots, ${hotels.length} hotels`);
   
   // Build structured days
   const structuredDays: StructuredDay[] = [];
@@ -421,12 +421,12 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   });
   
   // Enrich with images if missing (only for places that need it)
-  console.log('🖼️ Checking for missing images...');
+  console.log('[IMAGES] Checking for missing images...');
   for (const day of days) {
     for (const location of day.locations) {
       if ((!location.imageUrl || location.imageUrl === '') && location.googlePlaceId) {
         try {
-          console.log(`🖼️ Fetching image for ${location.name} (${location.googlePlaceId})...`);
+          console.log(`[IMAGES] Fetching image for ${location.name} (${location.googlePlaceId})...`);
           const details = await googlePlacesService.getPlaceDetails(location.googlePlaceId);
           
           if (details.data && details.data.photos && details.data.photos.length > 0) {
@@ -441,10 +441,10 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
               imageUrl: mainPhoto,
               imageUrls: allPhotos,
               lastEnrichedAt: new Date()
-            }).catch((err: Error) => console.error(`❌ Failed to save images for ${location.name}:`, err));
+            }).catch((err: Error) => console.error(`[ERROR] Failed to save images for ${location.name}:`, err));
           }
         } catch (error) {
-          console.error(`❌ Failed to fetch image for ${location.name}:`, error);
+          console.error(`[ERROR] Failed to fetch image for ${location.name}:`, error);
         }
       }
     }
@@ -470,7 +470,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   }
   
   const totalLocations = days.reduce((sum, d) => sum + d.locations.length, 0);
-  console.log(`✅ Generated itinerary: ${days.length} days, ${totalLocations} total locations (avg ${(totalLocations / days.length).toFixed(1)}/day)`);
+  console.log(`[SUCCESS] Generated itinerary: ${days.length} days, ${totalLocations} total locations (avg ${(totalLocations / days.length).toFixed(1)}/day)`);
   
   return {
     itinerary: {
@@ -607,7 +607,7 @@ export interface DayWithLocations {
 }
 
 export async function enrichLocations(days: DayWithLocations[]) {
-  console.log(`📸 Enriching ${days.reduce((sum: number, d) => sum + d.locations.length, 0)} locations with Google Places data...`);
+  console.log(`[IMAGES] Enriching ${days.reduce((sum: number, d) => sum + d.locations.length, 0)} locations with Google Places data...`);
   
   for (const day of days) {
     for (const location of day.locations) {
@@ -618,7 +618,7 @@ export async function enrichLocations(days: DayWithLocations[]) {
         const isRecentlyChecked = (Date.now() - lastChecked) < THIRTY_DAYS;
 
         if ((location.openingHours && (location.imageUrl || (location.imageUrls && location.imageUrls.length > 0))) || isRecentlyChecked) {
-          console.log(`✨ Skipping enrichment for "${location.name}" - already data or checked recently`);
+          console.log(`[SKIP] Skipping enrichment for "${location.name}" - already data or checked recently`);
           continue;
         }
 
@@ -656,10 +656,10 @@ export async function enrichLocations(days: DayWithLocations[]) {
         }
       } catch (error: any) {
         if (error.code === 'P2002') {
-          console.log(` Place "${location.name}" already has Google Place ID attached.`);
+          console.log(`[INFO] Place "${location.name}" already has Google Place ID attached.`);
           continue;
         }
-        console.warn(` Failed to enrich "${location.name}":`, error.message);
+        console.warn(`[WARN] Failed to enrich "${location.name}":`, error.message);
       }
     }
   }
