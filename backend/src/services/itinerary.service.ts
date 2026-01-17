@@ -27,7 +27,8 @@ interface GenerateItineraryParams {
 // Structured day with activities, meals, and hotel
 interface StructuredDay {
   dayNumber: number;
-  hotel: PlaceExtended | null;
+  startingHotel: PlaceExtended | null;  // For Day 1: hotel near airport
+  endingHotel: PlaceExtended | null;    // Hotel near last activity (null for last day)
   meals: {
     breakfast: PlaceExtended | null;
     lunch: PlaceExtended | null;
@@ -40,6 +41,7 @@ interface StructuredDay {
     evening: PlaceExtended | null;   // Optional night activity
   };
   theme?: string;
+  isLastDay?: boolean;
 }
 
 interface ItineraryDayResult {
@@ -48,13 +50,15 @@ interface ItineraryDayResult {
   description: string;
   routeDescription: string;
   locations: PlaceExtended[];
-  hotel: PlaceExtended | null;
+  hotel: PlaceExtended | null;           // End-of-day hotel
+  startingHotel?: PlaceExtended | null;  // For Day 1 only
   meals: {
     breakfast: PlaceExtended | null;
     lunch: PlaceExtended | null;
     dinner: PlaceExtended | null;
   };
   theme?: string;
+  isLastDay?: boolean;
 }
 
 export interface ItineraryResult {
@@ -199,47 +203,113 @@ function getActivityCategories(travelStyles: TravelStyle[]): LocationCategory[] 
 }
 
 /**
- * Assign hotel for the trip - minimize switching
- * Only assign different hotels if places span very different regions
+ * Find a hotel near a specific location
+ * First checks DB hotels, then falls back to Google Places API
  */
-function assignHotels(
-  hotels: PlaceExtended[],
-  structuredDays: StructuredDay[]
-): PlaceExtended | null {
-  if (hotels.length === 0) return null;
+async function findHotelNearLocation(
+  lat: number,
+  lng: number,
+  dbHotels: PlaceExtended[],
+  country: string,
+  radiusKm: number = 10
+): Promise<PlaceExtended | null> {
+  // Calculate distance to each DB hotel
+  const hotelsWithDistance = dbHotels.map(hotel => ({
+    hotel,
+    distance: Math.sqrt(
+      Math.pow(hotel.latitude - lat, 2) + 
+      Math.pow(hotel.longitude - lng, 2)
+    ) * 111 // Rough conversion to km
+  }));
   
-  // For MVP, use single hotel for entire trip
-  // Pick the hotel closest to the centroid of all activities
-  const allActivities = structuredDays.flatMap(d => [
-    d.activities.anchor,
-    d.activities.medium,
-    d.activities.light,
-  ].filter(Boolean) as PlaceExtended[]);
+  // Filter hotels within radius and sort by distance
+  const nearbyDbHotels = hotelsWithDistance
+    .filter(h => h.distance <= radiusKm)
+    .sort((a, b) => a.distance - b.distance);
   
-  if (allActivities.length === 0) return hotels[0];
+  if (nearbyDbHotels.length > 0) {
+    console.log(`[HOTEL] Found DB hotel "${nearbyDbHotels[0].hotel.name}" ${nearbyDbHotels[0].distance.toFixed(1)}km from location`);
+    return nearbyDbHotels[0].hotel;
+  }
   
-  // Calculate centroid
-  const centroid = {
-    lat: allActivities.reduce((sum, p) => sum + p.latitude, 0) / allActivities.length,
-    lng: allActivities.reduce((sum, p) => sum + p.longitude, 0) / allActivities.length,
-  };
+  // Fallback to Google Places API
+  console.log(`[HOTEL] No DB hotels within ${radiusKm}km of (${lat.toFixed(4)}, ${lng.toFixed(4)}), searching Google Places...`);
   
-  // Find closest hotel to centroid
-  let closestHotel = hotels[0];
-  let minDist = Infinity;
+  const googleResult = await googlePlacesService.searchNearbyHotels(lat, lng, radiusKm * 1000, 4.0);
   
-  for (const hotel of hotels) {
-    const dist = Math.sqrt(
-      Math.pow(hotel.latitude - centroid.lat, 2) + 
-      Math.pow(hotel.longitude - centroid.lng, 2)
-    );
-    if (dist < minDist) {
-      minDist = dist;
-      closestHotel = hotel;
+  if (googleResult.hotels.length > 0) {
+    const bestHotel = googleResult.hotels[0];
+    console.log(`[HOTEL] Found Google hotel "${bestHotel.name}" (${bestHotel.rating}★)`);
+    
+    // Convert to PlaceExtended format
+    const externalHotel: PlaceExtended = {
+      id: `external-${bestHotel.googlePlaceId}`,
+      name: bestHotel.name,
+      classification: 'MUST_SEE' as any,
+      category: 'HOTEL' as any,
+      description: `${bestHotel.rating}★ hotel with ${bestHotel.totalRatings} reviews`,
+      sources: ['google_places'],
+      sourceUrls: [],
+      popularity: bestHotel.totalRatings,
+      googlePlaceId: bestHotel.googlePlaceId,
+      rating: bestHotel.rating,
+      totalRatings: bestHotel.totalRatings,
+      priceLevel: bestHotel.priceLevel as any,
+      openingHours: null,
+      topReviews: null,
+      latitude: bestHotel.latitude,
+      longitude: bestHotel.longitude,
+      address: bestHotel.formattedAddress,
+      city: country,
+      country,
+      costMinUSD: null,
+      costMaxUSD: null,
+      activityTypes: ['accommodation'],
+      bestTimeToVisit: null,
+      localTip: null,
+      scamWarning: null,
+      imageUrl: bestHotel.photos[0] || null,
+      imageUrls: bestHotel.photos,
+      sourceReviews: null,
+      lastEnrichedAt: new Date(),
+      lastValidatedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // External hotel properties
+      websiteUrl: bestHotel.websiteUrl,
+      bookingUrl: bestHotel.bookingUrl,
+      isExternalHotel: true,
+    };
+    
+    return externalHotel;
+  }
+  
+  console.log(`[HOTEL] No hotels found near (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+  return null;
+}
+
+/**
+ * Get the last activity location for a day (for determining end-of-day hotel position)
+ */
+function getLastActivityLocation(sd: StructuredDay): { lat: number; lng: number } | null {
+  // Priority: evening -> light -> medium -> anchor -> dinner -> lunch -> breakfast
+  const places = [
+    sd.activities.evening,
+    sd.activities.light,
+    sd.activities.medium,
+    sd.activities.anchor,
+    sd.meals.dinner,
+    sd.meals.lunch,
+    sd.meals.breakfast,
+  ];
+  
+  for (const place of places) {
+    if (place) {
+      return { lat: place.latitude, lng: place.longitude };
     }
   }
   
-  return closestHotel;
+  return null;
 }
 
 export async function generateItinerary(params: GenerateItineraryParams): Promise<ItineraryResult> {
@@ -318,7 +388,10 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   
   console.log(`[STATS] Fetched: ${activities.length} activities, ${restaurants.length} restaurants, ${nightSpots.length} night spots, ${hotels.length} hotels`);
   
-  // Build structured days
+  // Airport coordinates (Beirut Airport default)
+  const airportCoords = { lat: 33.8209, lng: 35.4913 };
+  
+  // Build structured days first (without hotels)
   const structuredDays: StructuredDay[] = [];
   let activityIdx = 0;
   let restaurantIdx = 0;
@@ -353,11 +426,14 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     if (!medium && dayActivities.length > 1) medium = dayActivities[1];
     if (!light && dayActivities.length > 2) light = dayActivities[2];
     
+    const isLastDay = dayNum === numberOfDays;
+    
     structuredDays.push({
       dayNumber: dayNum,
-      hotel: null, // Will be assigned later
+      startingHotel: null, // Will be assigned for Day 1
+      endingHotel: null,   // Will be assigned for non-last days
       meals: {
-        breakfast: dayMeals[0] || null, // Usually at hotel or cafe
+        breakfast: dayMeals[0] || null,
         lunch: dayMeals[1] || null,
         dinner: dayMeals[2] || null,
       },
@@ -368,19 +444,80 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
         evening: nightActivity,
       },
       theme: anchor?.category?.toString() || 'Mixed',
+      isLastDay,
     });
   }
   
-  // Assign hotel(s)
-  const primaryHotel = assignHotels(hotels, structuredDays);
-  structuredDays.forEach(d => d.hotel = primaryHotel);
+  // Assign hotels per day based on last activity location
+  console.log('[HOTEL] Assigning hotels for each day...');
+  
+  // Day 1: Find hotel near airport (for check-in after arrival)
+  if (structuredDays.length > 0) {
+    const day1Hotel = await findHotelNearLocation(
+      airportCoords.lat,
+      airportCoords.lng,
+      hotels,
+      country,
+      15 // 15km radius for airport area
+    );
+    structuredDays[0].startingHotel = day1Hotel;
+    console.log(`[HOTEL] Day 1 starting hotel: ${day1Hotel?.name || 'None found'}`);
+  }
+  
+  // For each day (except last), find hotel near last activity
+  for (let i = 0; i < structuredDays.length; i++) {
+    const sd = structuredDays[i];
+    
+    // Last day ends at airport, no ending hotel needed
+    if (sd.isLastDay) {
+      console.log(`[HOTEL] Day ${sd.dayNumber} (last day): ends at airport, no ending hotel`);
+      continue;
+    }
+    
+    // Find last activity location for this day
+    const lastLocation = getLastActivityLocation(sd);
+    
+    if (lastLocation) {
+      const endingHotel = await findHotelNearLocation(
+        lastLocation.lat,
+        lastLocation.lng,
+        hotels,
+        country,
+        10 // 10km radius
+      );
+      sd.endingHotel = endingHotel;
+      console.log(`[HOTEL] Day ${sd.dayNumber} ending hotel: ${endingHotel?.name || 'None found'}`);
+    } else {
+      // Fallback to airport area
+      sd.endingHotel = structuredDays[0].startingHotel;
+      console.log(`[HOTEL] Day ${sd.dayNumber} ending hotel (fallback): ${sd.endingHotel?.name || 'None'}`);
+    }
+  }
   
   // Use route optimizer to order activities within each day
-  const startPoint = { lat: 33.8209, lng: 35.4913 }; // Beirut Airport default
+  // Each day starts from previous day's hotel (or airport for Day 1)
+  const days: ItineraryDayResult[] = [];
   
-  const days: ItineraryDayResult[] = structuredDays.map((sd) => {
+  for (let i = 0; i < structuredDays.length; i++) {
+    const sd = structuredDays[i];
+    
+    // Determine start point for this day's route
+    let dayStartPoint: { lat: number; lng: number };
+    
+    if (sd.dayNumber === 1) {
+      // Day 1: start from airport (or starting hotel if found)
+      dayStartPoint = sd.startingHotel 
+        ? { lat: sd.startingHotel.latitude, lng: sd.startingHotel.longitude }
+        : airportCoords;
+    } else {
+      // Other days: start from previous day's ending hotel
+      const prevDay = structuredDays[i - 1];
+      dayStartPoint = prevDay.endingHotel
+        ? { lat: prevDay.endingHotel.latitude, lng: prevDay.endingHotel.longitude }
+        : airportCoords;
+    }
+    
     // Collect all places for the day for route optimization
-    // Note: hotel is NOT included here - it's stored separately in day.hotel
     const dayPlaces = [
       sd.activities.anchor,
       sd.meals.breakfast,
@@ -391,7 +528,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       sd.activities.evening,
     ].filter((p): p is PlaceExtended => p !== null);
     
-    // Optimize route within the day
+    // Optimize route within the day from start point
     const placesWithCoords = dayPlaces.map(p => ({
       id: p.id,
       name: p.name,
@@ -401,24 +538,30 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       suggestedDuration: p.category === LocationCategory.MUSEUM || p.category === LocationCategory.HIKING ? 180 : 90,
     }));
     
-    const orderedPlaces = routeOptimizer.nearestNeighborRoute(placesWithCoords, startPoint);
+    const orderedPlaces = routeOptimizer.nearestNeighborRoute(placesWithCoords, dayStartPoint);
     const orderedFullPlaces = orderedPlaces
       .map(p => dayPlaces.find(dp => dp.id === p.id))
       .filter((p): p is PlaceExtended => p !== undefined);
     
     const locationNames = orderedFullPlaces.map(p => p.name).join(' → ');
     
-    return {
+    days.push({
       id: uuidv4(),
       dayNumber: sd.dayNumber,
       description: `Day ${sd.dayNumber}: ${sd.theme || 'Exploring'}`,
-      routeDescription: locationNames,
+      routeDescription: sd.dayNumber === 1 
+        ? `Airport → ${sd.startingHotel?.name || 'Hotel'} → ${locationNames}`
+        : sd.isLastDay 
+          ? `${locationNames} → Airport`
+          : locationNames,
       locations: orderedFullPlaces,
-      hotel: sd.hotel,
+      hotel: sd.endingHotel,  // End-of-day hotel
+      startingHotel: sd.dayNumber === 1 ? sd.startingHotel : undefined,
       meals: sd.meals,
       theme: sd.theme,
-    };
-  });
+      isLastDay: sd.isLastDay,
+    });
+  }
   
   // Enrich with images if missing (only for places that need it)
   console.log('[IMAGES] Checking for missing images...');
@@ -480,7 +623,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       travelStyles,
     },
     days,
-    hotel: primaryHotel,
+    hotel: structuredDays[0]?.startingHotel || days[0]?.hotel || null,
     totalEstimatedCostUSD,
     routeSummary: `${numberOfDays} days in ${days[0]?.locations[0]?.city || cityName}`,
     warnings,
