@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 // AUTHENTICATION MODELS
@@ -76,6 +78,8 @@ enum LocationCategory {
   RELIGIOUS_SITE
   SHOPPING
   ACTIVITY
+  HOTEL
+  ACCOMMODATION
   OTHER
 }
 
@@ -137,6 +141,7 @@ model Place {
   updatedAt           DateTime  @updatedAt
   
   itineraryItems      ItineraryItem[]
+  hotelDays           ItineraryDay[] @relation("DayHotel")
   
   @@index([classification])
   @@index([city])
@@ -174,7 +179,7 @@ model UserItinerary {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   
-  items               ItineraryItem[]
+  days                ItineraryDay[]
   checklist           ChecklistItem[]
   embeddings          ItineraryEmbedding[]
   
@@ -183,10 +188,33 @@ model UserItinerary {
   @@index([country])
 }
 
+model ItineraryDay {
+  id            String   @id @default(cuid())
+  
+  itineraryId   String
+  itinerary     UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  
+  dayNumber     Int
+  theme         String?       // "CULTURAL", "ADVENTURE", etc.
+  description   String?       // "Exploring Beirut's historic downtown"
+  
+  // Hotel for this day (usually same across days)
+  hotelId       String?
+  hotel         Place? @relation("DayHotel", fields: [hotelId], references: [id])
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  items         ItineraryItem[]
+  
+  @@unique([itineraryId, dayNumber])
+  @@index([itineraryId])
+}
+
 model ItineraryItem {
   id                  String   @id @default(cuid())
   
-  dayNumber           Int
   orderInDay          Int
   
   // Duration and timing
@@ -194,10 +222,13 @@ model ItineraryItem {
   suggestedDuration   Int?     // minutes
   travelTimeFromPrev  Int?     // minutes
   
+  // Item type for structured days
+  itemType            ItineraryItemType @default(ACTIVITY)
+  
   notes               String?
   
-  itineraryId         String
-  itinerary           UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  dayId               String
+  day                 ItineraryDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
   
   placeId             String
   place               Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
@@ -205,10 +236,18 @@ model ItineraryItem {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   
-  @@unique([itineraryId, dayNumber, orderInDay])
-  @@index([itineraryId])
+  @@unique([dayId, orderInDay])
+  @@index([dayId])
   @@index([placeId])
-  @@index([itineraryId, dayNumber, orderInDay])
+}
+
+enum ItineraryItemType {
+  ACTIVITY
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+  EVENING
 }
 
 model ChecklistItem {
@@ -257,8 +296,11 @@ model ItineraryEmbedding {
   dayNumbers      Int[]      // Days covered
   activityTypes   String[]   // Activity types in chunk
   
-
-  embeddingJson   Json?      
+  // Vector embedding (1536 dimensions for OpenAI ada-002)
+  embedding       Unsupported("vector(1536)")?
+  
+  // Legacy JSON field - will be removed after migration
+  embeddingJson   Json?      @ignore
   
   createdAt       DateTime @default(now())
   
@@ -276,8 +318,11 @@ model KnowledgeEmbedding {
   // Metadata like author, url, activityTypes, popularity
   metadata        Json?    
   
-  // Vector
-  embeddingJson   Json?
+  // Vector embedding (1536 dimensions for OpenAI ada-002)
+  embedding       Unsupported("vector(1536)")?
+  
+  // Legacy JSON field - will be removed after migration  
+  embeddingJson   Json?    @ignore
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

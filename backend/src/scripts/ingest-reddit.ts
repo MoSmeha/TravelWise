@@ -10,11 +10,11 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🚀 Starting Reddit Data Ingestion...');
+  console.log('>>> Starting Reddit Data Ingestion...');
 
   const dataPath = path.join(__dirname, '../../../data/reddit_real_data.json');
   if (!fs.existsSync(dataPath)) {
-    console.error(`❌ Data file not found at ${dataPath}`);
+    console.error(`[ERROR] Data file not found at ${dataPath}`);
     process.exit(1);
   }
 
@@ -24,7 +24,7 @@ async function main() {
   let totalCount = 0;
   
   // Clean existing knowledge for Lebanon (idempotency)
-  console.log('🧹 Cleaning old Reddit embeddings for LB...');
+  console.log('[CLEANUP] Cleaning old Reddit embeddings for LB...');
   await prisma.knowledgeEmbedding.deleteMany({
     where: {
       countryCode: 'LB',
@@ -36,7 +36,7 @@ async function main() {
     const items = data[category];
     if (!Array.isArray(items)) continue;
 
-    console.log(`📦 Processing category: ${category} (${items.length} items)`);
+    console.log(`[INFO] Processing category: ${category} (${items.length} items)`);
 
     for (const item of items) {
       if (!item.text) continue;
@@ -49,30 +49,37 @@ async function main() {
       // Generate embedding
       try {
         const embedding = await generateEmbedding(content);
+        const vectorStr = `[${embedding.join(',')}]`;
         
-        await prisma.knowledgeEmbedding.create({
-          data: {
-            content: content,
-            countryCode: 'LB',
-            source: 'reddit',
-            metadata: {
+        // Use raw SQL to insert with native vector type
+        await prisma.$executeRaw`
+          INSERT INTO "KnowledgeEmbedding" (
+            "id", "content", "countryCode", "source", "metadata", "embedding", "createdAt", "updatedAt"
+          ) VALUES (
+            ${`reddit_${Date.now()}_${totalCount}`},
+            ${content},
+            'LB',
+            'reddit',
+            ${JSON.stringify({
               ...item,
               originalCategory: category
-            },
-            embeddingJson: embedding
-          }
-        });
+            })}::jsonb,
+            ${vectorStr}::vector,
+            NOW(),
+            NOW()
+          )
+        `;
         
         totalCount++;
         process.stdout.write('.');
       } catch (error: any) {
-        console.error(`\n❌ Failed to embed item from ${item.author}: ${error.message}`);
+        console.error(`\n[ERROR] Failed to embed item from ${item.author}: ${error.message}`);
       }
     }
     console.log('\n');
   }
 
-  console.log(`✅ Ingestion Complete! Processed ${totalCount} items.`);
+  console.log(`[SUCCESS] Ingestion Complete! Processed ${totalCount} items.`);
 }
 
 main()

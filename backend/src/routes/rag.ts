@@ -1,8 +1,3 @@
-/**
- * RAG Routes
- * Pure routing - all logic delegated to controllers
- */
-
 import { Router } from 'express';
 import * as ragController from '../controllers/rag.controller';
 import { requireOwnership } from '../middleware/ownership.middleware';

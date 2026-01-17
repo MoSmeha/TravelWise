@@ -1,10 +1,6 @@
 import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/circuit-breaker';
 import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from './cache.service';
 
-// ==========================================
-// WEATHER SERVICE
-// Provides weather forecasts with graceful degradation
-// ==========================================
 
 const OPENWEATHERMAP_API_KEY = process.env.OPENWEATHERMAP_API_KEY;
 const OPENWEATHERMAP_BASE_URL = 'https://api.openweathermap.org/data/2.5';

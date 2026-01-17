@@ -2,7 +2,7 @@ import { View, Text, FlatList, TouchableOpacity, Image, RefreshControl } from 'r
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { useUserItineraries } from '../../hooks/queries/useItineraries';
-import { useAuth } from '../../store/authStore';
+import { useUser } from '../../hooks/queries/useUser';
 import { Calendar, Wallet } from 'lucide-react-native';
 
 const COUNTRY_IMAGES: Record<string, string> = {
@@ -41,7 +41,7 @@ const getTagTailwindClasses = (tag: string) => {
 
 export default function TripsScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { data: user } = useUser();
   const { data: itineraries, isLoading, refetch, isRefetching } = useUserItineraries();
 
   const handlePress = (id: string, data: any) => {

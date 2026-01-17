@@ -1,11 +1,6 @@
 import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/circuit-breaker';
 import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from './cache.service';
 
-// ==========================================
-// GOOGLE PLACES SERVICE
-// Enriches places with data from Google Places API
-// Includes graceful degradation and caching
-// ==========================================
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';
@@ -24,10 +19,16 @@ export interface PlaceEnrichment {
   phoneNumber: string | null;
   website: string | null;
   types: string[];
+  geometry?: {
+    location: { lat: number; lng: number };
+    viewport?: any;
+  };
+  editorialSummary?: string;
 }
 
 export interface WeeklyHours {
   weekdayText: string[];
+  weekdayDescriptions?: string[];
   isOpen: boolean;
   periods: Array<{
     open: { day: number; time: string };
@@ -58,11 +59,11 @@ export function isGooglePlacesConfigured(): boolean {
 // Search for a place by name and location
 export async function searchPlace(
   name: string,
-  lat: number,
-  lng: number,
+  lat?: number,
+  lng?: number,
   radius: number = 1000
 ): Promise<PlaceEnrichmentResult> {
-  const cacheKey = CACHE_KEYS.googlePlaceSearch(name, lat, lng);
+  const cacheKey = CACHE_KEYS.googlePlaceSearch(name, lat || 0, lng || 0);
   
   // Check cache first
   const cached = cacheGet<PlaceEnrichment>(cacheKey);
@@ -93,7 +94,9 @@ export async function searchPlace(
         const url = new URL(`${GOOGLE_PLACES_BASE_URL}/findplacefromtext/json`);
         url.searchParams.set('input', name);
         url.searchParams.set('inputtype', 'textquery');
-        url.searchParams.set('locationbias', `circle:${radius}@${lat},${lng}`);
+        if (lat && lng) {
+          url.searchParams.set('locationbias', `circle:${radius}@${lat},${lng}`);
+        }
         url.searchParams.set('fields', 'place_id,name,formatted_address,geometry');
         url.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
         
@@ -177,7 +180,7 @@ export async function getPlaceDetails(googlePlaceId: string): Promise<PlaceEnric
         const fields = [
           'place_id', 'name', 'rating', 'user_ratings_total', 'price_level',
           'opening_hours', 'reviews', 'photos', 'formatted_address',
-          'formatted_phone_number', 'website', 'types'
+          'formatted_phone_number', 'website', 'types', 'geometry', 'editorial_summary'
         ].join(',');
         
         const url = new URL(`${GOOGLE_PLACES_BASE_URL}/details/json`);
@@ -208,6 +211,7 @@ export async function getPlaceDetails(googlePlaceId: string): Promise<PlaceEnric
         priceLevel: place.price_level ?? null,
         openingHours: place.opening_hours ? {
           weekdayText: place.opening_hours.weekday_text || [],
+          weekdayDescriptions: place.opening_hours.weekday_text || [], // Google often executes this as weekday_text
           isOpen: place.opening_hours.open_now || false,
           periods: place.opening_hours.periods || [],
         } : null,
@@ -218,12 +222,14 @@ export async function getPlaceDetails(googlePlaceId: string): Promise<PlaceEnric
           relativeTimeDescription: r.relative_time_description,
         })),
         photos: (place.photos || []).slice(0, 5).map((p: any) => 
-          `${GOOGLE_PLACES_BASE_URL}/photo?maxwidth=400&photo_reference=${p.photo_reference}&key=${GOOGLE_PLACES_API_KEY}`
+          `${GOOGLE_PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${p.photo_reference}&key=${GOOGLE_PLACES_API_KEY}`
         ),
         formattedAddress: place.formatted_address || '',
         phoneNumber: place.formatted_phone_number || null,
         website: place.website || null,
         types: place.types || [],
+        geometry: place.geometry,
+        editorialSummary: place.editorial_summary?.overview || null,
       };
       
       // Cache the result
@@ -272,17 +278,17 @@ export async function enrichPlaceWithGoogleData(
   lat: number,
   lng: number
 ): Promise<PlaceEnrichmentResult> {
-  console.log(`🔍 Enriching "${name}" with Google Places data...`);
+  console.log(`[SEARCH] Enriching "${name}" with Google Places data...`);
   
   // Search for the place
   const searchResult = await searchPlace(name, lat, lng, 2000);
   
   if (!searchResult.data) {
-    console.warn(`⚠️ Could not find Google Places data for "${name}"`);
+    console.warn(`[WARN] Could not find Google Places data for "${name}"`);
     return searchResult;
   }
   
-  console.log(`✅ Found Google Places data for "${name}" (${searchResult.data.rating} stars, ${searchResult.data.totalRatings} reviews)`);
+  console.log(`[SUCCESS] Found Google Places data for "${name}" (${searchResult.data.rating} stars, ${searchResult.data.totalRatings} reviews)`);
   
   return searchResult;
 }

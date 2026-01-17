@@ -3,10 +3,8 @@ import prisma from '../lib/prisma';
 
 const router = express.Router();
 
-// ==========================================
 // WEBHOOK ROUTES FOR n8n INTEGRATION
 // Endpoints for automation workflows
-// ==========================================
 
 // GET /api/webhooks/upcoming-trips
 // Returns itineraries with flights in the next 1-2 days
@@ -26,14 +24,15 @@ router.get('/upcoming-trips', async (req, res) => {
         notificationsEnabled: true,
       },
       include: {
-        items: {
+        days: {
           include: {
-            place: true,
+            items: {
+              include: {
+                place: true,
+              },
+            },
           },
-          orderBy: [
-            { dayNumber: 'asc' },
-            { orderInDay: 'asc' },
-          ],
+          orderBy: { dayNumber: 'asc' },
         },
         checklist: {
           where: { isChecked: false },
@@ -42,20 +41,24 @@ router.get('/upcoming-trips', async (req, res) => {
     });
     
     res.json({
-      data: upcomingTrips.map(trip => ({
-        id: trip.id,
-        country: trip.country,
-        flightDate: trip.flightDate,
-        hoursUntilFlight: trip.flightDate 
-          ? Math.round((trip.flightDate.getTime() - now.getTime()) / (1000 * 60 * 60))
-          : null,
-        numberOfDays: trip.numberOfDays,
-        travelStyles: trip.travelStyles,
-        uncheckedItemsCount: trip.checklist.length,
-        firstDayPlaces: trip.items
-          .filter(i => i.dayNumber === 1)
-          .map(i => i.place.name),
-      })),
+      data: upcomingTrips.map(trip => {
+        // Get first day items
+        const firstDay = trip.days.find(d => d.dayNumber === 1);
+        const firstDayPlaces = firstDay?.items.map(i => i.place.name) || [];
+        
+        return {
+          id: trip.id,
+          country: trip.country,
+          flightDate: trip.flightDate,
+          hoursUntilFlight: trip.flightDate 
+            ? Math.round((trip.flightDate.getTime() - now.getTime()) / (1000 * 60 * 60))
+            : null,
+          numberOfDays: trip.numberOfDays,
+          travelStyles: trip.travelStyles,
+          uncheckedItemsCount: trip.checklist.length,
+          firstDayPlaces,
+        };
+      }),
       count: upcomingTrips.length,
     });
   } catch (error) {

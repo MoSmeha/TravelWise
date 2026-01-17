@@ -1,8 +1,3 @@
-/**
- * Checklist Routes
- * Pure routing - all logic delegated to controllers
- */
-
 import { Router } from 'express';
 import * as checklistController from '../controllers/checklist.controller';
 import { requireOwnership } from '../middleware/ownership.middleware';
@@ -17,7 +12,7 @@ const router = Router();
 // GET /api/checklist/:itineraryId - Get all checklist items (requires itinerary ownership)
 router.get('/:itineraryId', requireOwnership('itinerary', 'itineraryId'), checklistController.getChecklist);
 
-// PATCH /api/checklist/:itemId - Toggle checklist item (requires checklistItem ownership)
+// PATCH /api/checklist/:itemId - Toggle checklist ite  m (requires checklistItem ownership)
 router.patch('/:itemId', requireOwnership('checklistItem', 'itemId'), validate(updateChecklistItemSchema), checklistController.updateItem);
 
 // POST /api/checklist/:itineraryId - Add custom item (requires itinerary ownership)

@@ -131,8 +131,8 @@ export const placesService = {
     return response.data.data;
   },
 
-  async getPlacePhotos(name: string, lat?: number, lng?: number): Promise<{ photos: string[]; reviews: any[] }> {
-    const params = { name, lat, lng };
+  async getPlacePhotos(name: string, lat?: number, lng?: number, id?: string): Promise<{ photos: string[]; reviews: any[] }> {
+    const params = { name, lat, lng, id };
     const response = await api.get<{ photos: string[]; reviews: any[] }>('/places/photos', { params });
     return response.data;
   },
