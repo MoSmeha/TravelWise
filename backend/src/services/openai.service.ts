@@ -185,7 +185,7 @@ RESPOND WITH ONLY VALID JSON. NO EXPLANATIONS OUTSIDE JSON.`;
   try {
     const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
-      model: 'gpt-4.1', // Ensure this model supports large context. If not, use 'gpt-4-turbo-preview'
+      model: 'gpt-5.2', // Ensure this model supports large context. If not, use 'gpt-4-turbo-preview'
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 8192,

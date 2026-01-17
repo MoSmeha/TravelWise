@@ -345,13 +345,14 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   const priceLevel = mapBudgetToPriceLevel(budgetLevel);
   console.log(`[FETCH] Fetching ${totalActivitiesNeeded} activities for ${numberOfDays} days, budget: ${budgetLevel} -> ${priceLevel}...`);
   
+  // Don't filter activities by price - hiking, museums, parks have fixed/no fees unrelated to budget
   const activities = await fetchPlaces(
     activityCategories.length > 0 ? activityCategories : [LocationCategory.OTHER],
     country,
     cityName,
     Math.ceil(totalActivitiesNeeded * 1.5), // 50% buffer for variety
     [],
-    priceLevel
+    undefined  // No price filter for activities
   );
   usedIds.push(...activities.map(a => a.id));
   
@@ -367,13 +368,14 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   usedIds.push(...restaurants.map(r => r.id));
   
   console.log(`[FETCH] Fetching evening options...`);
+  // Night spots selected by quality, not price
   const nightSpots = await fetchPlaces(
     NIGHT_CATEGORIES,
     country,
     cityName,
     numberOfDays, // 1 per day max
     usedIds,
-    priceLevel
+    undefined  // No price filter for evening activities
   );
   usedIds.push(...nightSpots.map(n => n.id));
   
