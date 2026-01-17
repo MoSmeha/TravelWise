@@ -47,6 +47,23 @@ export interface CreateChecklistItemData {
   reason?: string;
 }
 
+export interface CreateExternalHotelData {
+  googlePlaceId: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  country: string;
+  city?: string;
+  address?: string;
+  description?: string;
+  rating?: number | null;
+  totalRatings?: number | null;
+  priceLevel?: PriceLevel | null;
+  imageUrl?: string | null;
+  imageUrls?: string[];
+  websiteUrl?: string | null;
+}
+
 export interface UpdatePlaceEnrichmentData {
   googlePlaceId?: string;
   rating?: number | null;
@@ -180,4 +197,6 @@ export interface IItineraryProvider {
   createItineraryItem(data: CreateItineraryItemData): Promise<{ id: string }>;
   
   createChecklistItem(data: CreateChecklistItemData): Promise<{ id: string }>;
+  
+  createExternalHotel(data: CreateExternalHotelData): Promise<{ id: string }>;
 }

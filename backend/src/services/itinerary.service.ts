@@ -657,13 +657,42 @@ export async function saveItineraryToDb(
   
   // Create ItineraryDays and ItineraryItems
   for (const day of generated.days) {
+    // Resolve hotel ID - save external hotels to DB first
+    let hotelId: string | null = null;
+    
+    if (day.hotel) {
+      if (day.hotel.isExternalHotel && day.hotel.googlePlaceId) {
+        // External hotel from Google Places - save to database first
+        const savedHotel = await provider.createExternalHotel({
+          googlePlaceId: day.hotel.googlePlaceId,
+          name: day.hotel.name,
+          latitude: day.hotel.latitude,
+          longitude: day.hotel.longitude,
+          country: day.hotel.country,
+          city: day.hotel.city ?? undefined,
+          address: day.hotel.address ?? undefined,
+          description: day.hotel.description ?? undefined,
+          rating: day.hotel.rating ?? undefined,
+          totalRatings: day.hotel.totalRatings ?? undefined,
+          priceLevel: day.hotel.priceLevel ?? undefined,
+          imageUrl: day.hotel.imageUrl ?? undefined,
+          imageUrls: day.hotel.imageUrls || [],
+          websiteUrl: day.hotel.websiteUrl ?? undefined,
+        });
+        hotelId = savedHotel.id;
+      } else {
+        // DB hotel - use existing ID
+        hotelId = day.hotel.id;
+      }
+    }
+    
     // Create ItineraryDay with theme and hotel
     const itineraryDay = await provider.createItineraryDay({
       itineraryId: itinerary.id,
       dayNumber: day.dayNumber,
       theme: day.theme || 'Mixed',
       description: day.description,
-      hotelId: day.hotel?.id || null,
+      hotelId,
     });
     
     let order = 1;
