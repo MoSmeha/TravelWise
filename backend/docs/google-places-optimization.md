@@ -61,3 +61,11 @@ The enrichment process specifically targets:
 - **Enrichment Validity:** 30 Days (Hardcoded in `itinerary.service.ts`)
 - **Cache TTL:** 7 Days (Configurable via `CACHE_TTL_PLACES`)
 - **API Key:** `GOOGLE_PLACES_API_KEY` env variable.
+
+. Implementation Phases
+Phase 1: Add Socket.IO + Friend System (search, add, accept/reject)
+Phase 2: Notification system (live + persistent)
+Phase 3: 1:1 Direct messaging
+Phase 4: Group chats
+Phase 5: Itinerary invitations
+Phase 6: Image posts (Instagram-like feed)

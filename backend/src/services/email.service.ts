@@ -4,40 +4,38 @@
  */
 
 import nodemailer from 'nodemailer';
-import { authService } from './auth.service';
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const EMAIL_FROM = process.env.EMAIL_FROM || 'TravelWise <noreply@travelwise.app>';
-const NODE_ENV = process.env.NODE_ENV || 'development';
+// Gmail SMTP configuration
+const SMTP_GMAIL = process.env.SMTP_GMAIL;
+const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
+const EMAIL_FROM = process.env.EMAIL_FROM || `TravelWise <${SMTP_GMAIL}>`;
 
-// Create transporter - only if SMTP is configured
+// Create transporter - configured for Gmail SMTP
 let transporter: nodemailer.Transporter | null = null;
 
-if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+if (SMTP_GMAIL && SMTP_PASSWORD) {
   transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // use SSL
     auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
+      user: SMTP_GMAIL,
+      pass: SMTP_PASSWORD,
     },
   });
+  console.log('[INFO] Email service configured with Gmail SMTP');
+} else {
+  console.log('[INFO] Email service running in console mode (SMTP credentials not configured)');
 }
 
 /**
- * Send verification email
+ * Send verification email with OTP
  */
 export async function sendVerificationEmail(
   email: string,
   name: string,
-  token: string
+  otp: string
 ): Promise<boolean> {
-  const verificationLink = authService.getVerificationLink(token);
-  
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -52,14 +50,15 @@ export async function sendVerificationEmail(
       </div>
       <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none;">
         <h2 style="color: #1f2937; margin-top: 0;">Welcome, ${name}! 👋</h2>
-        <p style="color: #4b5563;">Thanks for signing up for TravelWise! Please verify your email address to get started discovering hidden gems and planning your perfect trips.</p>
+        <p style="color: #4b5563;">Thanks for signing up for TravelWise! Use the code below to verify your email address:</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationLink}" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;">Verify Email Address</a>
+          <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 20px 40px; border-radius: 12px; display: inline-block;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px;">${otp}</span>
+          </div>
         </div>
-        <p style="color: #6b7280; font-size: 14px;">Or copy and paste this link in your browser:</p>
-        <p style="color: #4f46e5; font-size: 12px; word-break: break-all; background: #eef2ff; padding: 12px; border-radius: 6px;">${verificationLink}</p>
+        <p style="color: #6b7280; font-size: 14px; text-align: center;">Enter this code in the app to verify your email.</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-bottom: 0;">This link will expire in 24 hours. If you didn't create an account, you can safely ignore this email.</p>
+        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-bottom: 0;">This code will expire in 10 minutes. If you didn't create an account, you can safely ignore this email.</p>
       </div>
     </body>
     </html>
@@ -68,25 +67,25 @@ export async function sendVerificationEmail(
   const textContent = `
 Welcome to TravelWise, ${name}!
 
-Please verify your email address by clicking the link below:
+Your verification code is: ${otp}
 
-${verificationLink}
+Enter this code in the app to verify your email.
 
-This link will expire in 24 hours.
+This code will expire in 10 minutes.
 
 If you didn't create an account, you can safely ignore this email.
   `;
 
-  // In development without SMTP, just log the link
-  if (!transporter || NODE_ENV === 'development') {
+  // If SMTP is not configured, log to console instead
+  if (!transporter) {
     console.log('');
-    console.log('📧 ═══════════════════════════════════════════════════════════');
-    console.log('📧 VERIFICATION EMAIL (console mode - SMTP not configured)');
-    console.log('📧 ═══════════════════════════════════════════════════════════');
-    console.log(`📧 To: ${email}`);
-    console.log(`📧 Name: ${name}`);
-    console.log(`📧 Verification Link: ${verificationLink}`);
-    console.log('📧 ═══════════════════════════════════════════════════════════');
+    console.log('[EMAIL] ═══════════════════════════════════════════════════════════');
+    console.log('[EMAIL] VERIFICATION EMAIL (console mode - SMTP not configured)');
+    console.log('[EMAIL] ═══════════════════════════════════════════════════════════');
+    console.log(`[EMAIL] To: ${email}`);
+    console.log(`[EMAIL] Name: ${name}`);
+    console.log(`[EMAIL] Verification OTP: ${otp}`);
+    console.log('[EMAIL] ═══════════════════════════════════════════════════════════');
     console.log('');
     return true;
   }
@@ -133,8 +132,8 @@ export async function sendWelcomeEmail(email: string, name: string): Promise<boo
     </html>
   `;
 
-  if (!transporter || NODE_ENV === 'development') {
-    console.log(`📧 Welcome email would be sent to ${email} (dev mode)`);
+  if (!transporter) {
+    console.log(`[EMAIL] Welcome email would be sent to ${email} (SMTP not configured)`);
     return true;
   }
 

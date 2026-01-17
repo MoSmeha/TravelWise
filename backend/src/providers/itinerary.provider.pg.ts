@@ -1,7 +1,8 @@
-import { LocationClassification } from '@prisma/client';
+import { LocationCategory, LocationClassification } from '@prisma/client';
 import prisma from '../lib/prisma';
 import {
   CreateChecklistItemData,
+  CreateExternalHotelData,
   CreateItineraryData,
   CreateItineraryDayData,
   CreateItineraryItemData,
@@ -201,6 +202,47 @@ class ItineraryPgProvider implements IItineraryProvider {
       },
       select: { id: true },
     });
+  }
+
+  async createExternalHotel(data: CreateExternalHotelData): Promise<{ id: string }> {
+    // Upsert hotel by googlePlaceId to avoid duplicates
+    const hotel = await prisma.place.upsert({
+      where: { googlePlaceId: data.googlePlaceId },
+      update: {
+        // Update fields if hotel already exists
+        rating: data.rating ?? undefined,
+        totalRatings: data.totalRatings ?? undefined,
+        imageUrl: data.imageUrl ?? undefined,
+        imageUrls: data.imageUrls ?? undefined,
+        lastEnrichedAt: new Date(),
+      },
+      create: {
+        name: data.name,
+        classification: LocationClassification.MUST_SEE,
+        category: LocationCategory.HOTEL,
+        description: data.description || `${data.rating ?? 0}★ hotel with ${data.totalRatings ?? 0} reviews`,
+        sources: ['google_places'],
+        sourceUrls: [],
+        popularity: data.totalRatings ?? 0,
+        googlePlaceId: data.googlePlaceId,
+        rating: data.rating ?? null,
+        totalRatings: data.totalRatings ?? null,
+        priceLevel: data.priceLevel ?? null,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        address: data.address ?? null,
+        city: data.city ?? data.country,
+        country: data.country,
+        imageUrl: data.imageUrl ?? null,
+        imageUrls: data.imageUrls ?? [],
+        activityTypes: ['accommodation'],
+        lastEnrichedAt: new Date(),
+      },
+      select: { id: true },
+    });
+    
+    console.log(`[HOTEL] Saved external hotel "${data.name}" to database with id: ${hotel.id}`);
+    return hotel;
   }
 }
 

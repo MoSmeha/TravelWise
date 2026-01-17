@@ -9,15 +9,15 @@ import Toast from 'react-native-toast-message';
 export default function VerifyScreen() {
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
-  const [token, setToken] = useState('');
+  const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { hydrate } = useAuth();
 
   const handleVerify = async () => {
-    if (!token) {
+    if (!otp || !email) {
       Toast.show({
         type: 'error',
-        text1: 'Missing Code',
+        text1: 'Missing Information',
         text2: 'Please enter the verification code',
       });
       return;
@@ -25,7 +25,7 @@ export default function VerifyScreen() {
 
     setIsLoading(true);
     try {
-      await authService.verifyEmail({ token });
+      await authService.verifyEmail({ email, otp });
       
       Toast.show({
         type: 'success',
@@ -101,9 +101,11 @@ export default function VerifyScreen() {
           <View>
             <TextInput
               className="w-full h-14 bg-gray-50 border border-gray-200 rounded-xl px-4 text-center text-2xl tracking-widest font-bold text-gray-900 focus:border-blue-500"
-              placeholder="Enter Code"
-              value={token}
-              onChangeText={setToken}
+              placeholder="Enter 6-digit code"
+              value={otp}
+              onChangeText={setOtp}
+              keyboardType="number-pad"
+              maxLength={6}
               autoCapitalize="none"
             />
           </View>

@@ -64,6 +64,20 @@ export const CLASSIFICATION_COLORS = {
   MUST_SEE: '#3b82f6',       // Blue - iconic attractions
 } as const;
 
+// distinct colors for each day of the trip
+export const DAY_COLORS = [
+  '#0ea5e9', // Sky Blue
+  '#8b5cf6', // Violet
+  '#ec4899', // Pink
+  '#f59e0b', // Amber
+  '#10b981', // Emerald
+  '#6366f1', // Indigo
+  '#f43f5e', // Rose
+  '#84cc16', // Lime
+  '#06b6d4', // Cyan
+  '#d946ef', // Fuchsia
+] as const;
+
 // Price level display configuration
 export const PRICE_LEVEL_CONFIG = {
   INEXPENSIVE: {

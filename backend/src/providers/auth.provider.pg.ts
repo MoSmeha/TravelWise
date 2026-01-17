@@ -102,7 +102,7 @@ class AuthPgProvider implements IAuthProvider {
   }
 
   async deleteRefreshToken(id: string): Promise<void> {
-    await prisma.refreshToken.delete({
+    await prisma.refreshToken.deleteMany({
       where: { id },
     });
   }

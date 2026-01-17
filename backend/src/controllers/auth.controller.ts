@@ -9,10 +9,6 @@ import {
 } from '../schemas/auth.schema';
 import { authService } from '../services/auth.service';
 import { sendVerificationEmail, sendWelcomeEmail } from '../services/email.service';
-import {
-  getVerificationErrorHtml,
-  getVerificationSuccessHtml,
-} from '../templates/verification-email.template';
 
 //POST /api/auth/register
 
@@ -20,11 +16,11 @@ export async function register(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as RegisterInput;
 
-    const { user, verificationToken } = await authService.register(input);
+    const { user, verificationOTP } = await authService.register(input);
 
     // Send verification email
     if (user.email) {
-      await sendVerificationEmail(user.email, user.name, verificationToken);
+      await sendVerificationEmail(user.email, user.name, verificationOTP);
     }
 
     res.status(201).json({
@@ -107,30 +103,16 @@ export async function refresh(req: Request, res: Response): Promise<void> {
   }
 }
 
-//POST /api/auth/verify-email (and GET for browser links)
-//Verify email using token
+//POST /api/auth/verify-email
+//Verify email using OTP
 export async function verifyEmail(req: Request, res: Response): Promise<void> {
   try {
-    // Support both POST body and GET query param
-    const token = (req.body as VerifyEmailInput).token || (req.query.token as string);
+    const { email, otp } = req.body as VerifyEmailInput;
 
-    if (!token) {
-      if (req.method === 'GET') {
-        res.send(getVerificationErrorHtml('Verification token is required'));
-        return;
-      }
-      res.status(400).json({ error: 'Verification token is required' });
-      return;
-    }
-
-    const result = await authService.verifyEmail(token);
+    const result = await authService.verifyEmailWithOTP(email, otp);
 
     if (!result) {
-      if (req.method === 'GET') {
-        res.send(getVerificationErrorHtml('Invalid or expired verification token'));
-        return;
-      }
-      res.status(400).json({ error: 'Invalid or expired verification token' });
+      res.status(400).json({ error: 'Invalid or expired OTP' });
       return;
     }
 
@@ -140,22 +122,12 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
       await sendWelcomeEmail(user.email, user.name);
     }
 
-    // If accessed via GET (browser link), show HTML page
-    if (req.method === 'GET') {
-      res.send(getVerificationSuccessHtml());
-      return;
-    }
-
     res.json({
       message: 'Email verified successfully',
       userId: result.userId,
     });
   } catch (error: any) {
     console.error('Email verification error:', error.message);
-    if (req.method === 'GET') {
-      res.send(getVerificationErrorHtml('An error occurred during verification'));
-      return;
-    }
     res.status(500).json({ error: 'Email verification failed', message: error.message });
   }
 }
@@ -181,8 +153,8 @@ export async function resendVerification(req: Request, res: Response): Promise<v
       return;
     }
 
-    const verificationToken = await authService.generateVerificationToken(user.id);
-    await sendVerificationEmail(user.email!, user.name, verificationToken);
+    const verificationOTP = await authService.generateVerificationOTP(user.id);
+    await sendVerificationEmail(user.email!, user.name, verificationOTP);
 
     res.json({ message: 'Verification email sent' });
   } catch (error: any) {

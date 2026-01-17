@@ -45,6 +45,24 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Token refresh state to prevent multiple simultaneous refresh attempts
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (error: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token!);
+    }
+  });
+  failedQueue = [];
+};
+
 // Response interceptor: Handle 401
 api.interceptors.response.use(
   (response) => response,
@@ -53,34 +71,59 @@ api.interceptors.response.use(
     
     // Check if error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
+      
+      // If already refreshing, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token: string) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(api(originalRequest));
+            },
+            reject: (err: unknown) => {
+              reject(err);
+            }
+          });
+        });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
       
       try {
         const { useAuth } = require('../store/authStore');
         const { refreshToken: rToken, setTokens, logout } = useAuth.getState();
         
         if (!rToken) {
-            // No refresh token, just logout
-            logout();
-            return Promise.reject(error);
+          // No refresh token, just logout
+          console.log('[Auth] No refresh token available, logging out');
+          await logout();
+          processQueue(error, null);
+          return Promise.reject(error);
         }
 
-        // Call refresh endpoint directly to avoid circular authService calls if it uses api
-        // Actually authService uses api... so allow authService.refreshToken to bypass interceptors?
-        // Or manually call axios here.
+        // Call refresh endpoint directly with axios (not the intercepted api)
         const response = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken: rToken });
         const { accessToken, refreshToken: newRefreshToken } = response.data;
         
         setTokens(accessToken, newRefreshToken);
+        processQueue(null, accessToken);
         
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
         
-      } catch (refreshError) {
-        // Refresh failed
+      } catch (refreshError: unknown) {
+        // Refresh failed - could be network error, invalid token, or server error
+        console.log('[Auth] Token refresh failed, logging out:', 
+          refreshError instanceof Error ? refreshError.message : 'Unknown error'
+        );
+        
         const { useAuth } = require('../store/authStore');
-        useAuth.getState().logout();
+        await useAuth.getState().logout();
+        processQueue(refreshError, null);
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
     return Promise.reject(error);

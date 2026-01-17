@@ -34,7 +34,8 @@ export interface RegisterResponse {
 }
 
 export interface VerifyEmailInput {
-  token: string;
+  email: string;
+  otp: string;
 }
 
 export interface ResendVerificationInput {

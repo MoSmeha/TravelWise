@@ -14,13 +14,13 @@ import { IAuthProvider, UserResponse, UserWithPassword } from '../provider-contr
 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-in-production';
-const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+
 
 // Token expiry times
 const JWT_ACCESS_EXPIRY_SEC = 15 * 60; // 15 minutes
 const JWT_REFRESH_EXPIRY_SEC = 7 * 24 * 60 * 60; // 7 days
 const REFRESH_TOKEN_EXPIRY_MS = JWT_REFRESH_EXPIRY_SEC * 1000;
-const VERIFICATION_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 
 
 export interface JwtPayload {
@@ -31,7 +31,7 @@ export interface JwtPayload {
 
 export interface RegisterResult {
   user: UserResponse;
-  verificationToken: string;
+  verificationOTP: string;
 }
 
 export interface LoginResult {
@@ -83,12 +83,12 @@ export class AuthService {
       avatarUrl,
     });
 
-    // Generate verification token
-    const verificationToken = await this.generateVerificationToken(user.id);
+    // Generate verification OTP
+    const verificationOTP = await this.generateVerificationOTP(user.id);
 
     console.log(`[AUTH] User registered: ${user.username} (${user.email})`);
 
-    return { user, verificationToken };
+    return { user, verificationOTP };
   }
 
 
@@ -230,28 +230,40 @@ export class AuthService {
 
 
   /**
-   * Generate email verification token
+   * Generate 6-digit OTP for email verification
    */
-  async generateVerificationToken(userId: string): Promise<string> {
-    const token = uuidv4() + uuidv4(); // Extra long for security
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-
-    await this.provider.createVerificationToken({
-      userId,
-      tokenHash,
-      expiresAt: new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY_MS),
-    });
-
-    return token;
+  generateOTP(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
   /**
-   * Verify email using token
+   * Generate email verification OTP
    */
-  async verifyEmail(token: string): Promise<{ userId: string } | null> {
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  async generateVerificationOTP(userId: string): Promise<string> {
+    const otp = this.generateOTP();
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
 
-    const verificationToken = await this.provider.findVerificationToken(tokenHash);
+    await this.provider.createVerificationToken({
+      userId,
+      tokenHash: otpHash,
+      expiresAt: new Date(Date.now() + OTP_EXPIRY_MS),
+    });
+
+    return otp;
+  }
+
+  /**
+   * Verify email using OTP
+   */
+  async verifyEmailWithOTP(email: string, otp: string): Promise<{ userId: string } | null> {
+    // Find user by email first
+    const user = await this.provider.findUserByEmail(email);
+    if (!user) {
+      return null;
+    }
+
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const verificationToken = await this.provider.findVerificationToken(otpHash);
 
     if (!verificationToken || verificationToken.expiresAt < new Date()) {
       // Delete expired token if exists
@@ -261,15 +273,20 @@ export class AuthService {
       return null;
     }
 
+    // Check that the token belongs to the user
+    if (verificationToken.userId !== user.id) {
+      return null;
+    }
+
     // Mark user as verified
-    await this.provider.updateUserEmailVerified(verificationToken.userId, true);
+    await this.provider.updateUserEmailVerified(user.id, true);
 
     // Delete the used token
     await this.provider.deleteVerificationToken(verificationToken.id);
 
-    console.log(`[AUTH] Email verified for user: ${verificationToken.userId}`);
+    console.log(`[AUTH] Email verified for user: ${user.username}`);
 
-    return { userId: verificationToken.userId };
+    return { userId: user.id };
   }
 
   /**
@@ -286,12 +303,6 @@ export class AuthService {
     return this.provider.findUserById(id);
   }
 
-  /**
-   * Get verification link URL
-   */
-  getVerificationLink(token: string): string {
-    return `${APP_URL}/api/auth/verify-email?token=${token}`;
-  }
 
 
   /**

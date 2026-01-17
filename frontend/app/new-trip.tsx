@@ -1,5 +1,5 @@
 import { Picker } from '@react-native-picker/picker';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,15 +14,27 @@ import { useCountries } from '../hooks/queries/useCountries';
 import { useGenerateItinerary } from '../hooks/mutations/useItinerary';
 import { useItineraryStore } from '../store/itineraryStore';
 import type { Airport, TravelStyle } from '../types/api';
+import { 
+  ArrowLeft, 
+  Database, 
+  Calendar, 
+  DollarSign, 
+  Compass, 
+  Landmark, 
+  Leaf, 
+  Sun, 
+  Building2, 
+  Users 
+} from 'lucide-react-native';
 
-// Available travel styles (6 new categories, max 3 selections)
-const TRAVEL_STYLES: { key: TravelStyle; label: string; emoji: string }[] = [
-  { key: 'ADVENTURE', label: 'Adventure Travel', emoji: '🏔️' },
-  { key: 'CULTURAL', label: 'Cultural & Historical', emoji: '🏛️' },
-  { key: 'NATURE_ECO', label: 'Nature & Eco', emoji: '🌿' },
-  { key: 'BEACH_RELAXATION', label: 'Beach & Relaxation', emoji: '🏖️' },
-  { key: 'URBAN_CITY', label: 'Urban Exploration', emoji: '🌃' },
-  { key: 'FAMILY_GROUP', label: 'Family & Group', emoji: '👨‍👩‍👧‍👦' },
+// Available travel styles with Lucide icons
+const TRAVEL_STYLES: { key: TravelStyle; label: string; icon: any }[] = [
+  { key: 'ADVENTURE', label: 'Adventure', icon: Compass },
+  { key: 'CULTURAL', label: 'Culture & History', icon: Landmark },
+  { key: 'NATURE_ECO', label: 'Nature & Included', icon: Leaf },
+  { key: 'BEACH_RELAXATION', label: 'Relaxation', icon: Sun },
+  { key: 'URBAN_CITY', label: 'Urban', icon: Building2 },
+  { key: 'FAMILY_GROUP', label: 'Family', icon: Users },
 ];
 
 export default function NewTripScreen() {
@@ -42,7 +54,6 @@ export default function NewTripScreen() {
   const [budgetUSD, setBudgetUSD] = useState('');
   const [selectedStyles, setSelectedStyles] = useState<TravelStyle[]>(['CULTURAL', 'ADVENTURE']);
   const [travelDate, setTravelDate] = useState(''); // Format: YYYY-MM-DD
-  // const [loading, setLoading] = useState(false); // Handled by mutation status
 
   // Set defaults when countries load
   useEffect(() => {
@@ -138,28 +149,24 @@ export default function NewTripScreen() {
     if (dailyBudget >= 150) budgetLevel = 'HIGH';
     else if (dailyBudget >= 80) budgetLevel = 'MEDIUM';
 
-    // setLoading(true);
     try {
       // Backend expects: cityId, budgetLevel, travelStyles (array)
-      // We map country -> cityId (MVP behavior)
       const payload: any = {
-        cityId: selectedCountryKey, // e.g., 'lebanon'
+        cityId: selectedCountryKey,
         airportCode: selectedAirportCode,
         numberOfDays: daysNum,
         budgetUSD: budgetNum,
         budgetLevel: budgetLevel,
-        travelStyles: selectedStyles, // Send all selected styles as array
+        travelStyles: selectedStyles,
         startDate: travelDate || undefined,
       };
 
       const response = await generateItineraryMutation.mutateAsync(payload);
       
-      // Set active itinerary in store for checklist tab access
       if (response.itinerary?.id) {
         setActiveItinerary(response.itinerary.id);
       }
 
-      // Navigate to map screen with data
       router.push({
         pathname: '/map',
         params: { data: JSON.stringify(response) },
@@ -183,143 +190,183 @@ export default function NewTripScreen() {
 
   if (loadingCountries) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-100">
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View className="flex-1 justify-center items-center bg-gray-50">
+        <Stack.Screen options={{ headerShown: false }} />
+        <ActivityIndicator size="large" color="#0A4974" />
         <Text className="mt-3 text-lg text-gray-600">Loading destinations...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-100 p-5">
-      <Text className="text-4xl font-bold mt-12 mb-1 text-gray-900">TravelWise</Text>
-      <Text className="text-lg text-gray-600 mb-8">AI-Powered Travel Planning</Text>
-
-      <View className="gap-4 pb-10">
-        {/* Country Selector */}
-        <Text className="text-base font-semibold mb-1 text-gray-800">Select Country</Text>
-        <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <Picker
-            selectedValue={selectedCountryKey}
-            onValueChange={handleCountryChange}
-            style={{ height: 50 }}
+    <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
+      <Stack.Screen options={{ headerShown: false }} />
+      {/* Header Section */}
+      <View className="pt-14 px-5 pb-4 bg-white border-b border-gray-100">
+        <View className="flex-row justify-between items-start">
+          <TouchableOpacity onPress={() => router.back()} className="mr-3 mt-1">
+             <ArrowLeft size={24} color="#000" />
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="text-2xl font-bold text-gray-900 leading-tight">Plan Your Trip</Text>
+            <Text className="text-sm text-gray-500 mt-0.5">Tell us about your dream destination</Text>
+          </View>
+          <TouchableOpacity 
+            onPress={() => router.push('/places')}
+            className="flex-row items-center bg-gray-100 px-3 py-1.5 rounded-full"
           >
-            {countries.map((country) => (
-              <Picker.Item
-                key={country.code}
-                label={`${country.name} (min $${country.minBudgetPerDay}/day)`}
-                value={country.key}
-              />
-            ))}
-          </Picker>
+            <Database size={14} color="#0A4974" />
+            <Text className="text-xs font-semibold ml-1.5 text-[#0A4974]">Check DB</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View className="p-5 gap-6 pb-12">
+        {/* Country Selector */}
+        <View>
+          <Text className="text-base font-bold text-gray-800 mb-2">Where do you want to go?</Text>
+          <View className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+            <Picker
+              selectedValue={selectedCountryKey}
+              onValueChange={handleCountryChange}
+              style={{ height: 50, color: '#333' }}
+            >
+              {countries.map((country) => (
+                <Picker.Item
+                  key={country.code}
+                  label={`${country.name}`}
+                  value={country.key}
+                />
+              ))}
+            </Picker>
+          </View>
         </View>
 
         {/* Airport Selector */}
-        <Text className="text-base font-semibold mb-1 text-gray-800">Landing Airport</Text>
-        <View className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <Picker
-            selectedValue={selectedAirportCode}
-            onValueChange={setSelectedAirportCode}
-            style={{ height: 50 }}
-          >
-            {availableAirports.map((airport) => (
-              <Picker.Item
-                key={airport.code}
-                label={`${airport.name} (${airport.code})`}
-                value={airport.code}
-              />
-            ))}
-          </Picker>
+        <View>
+          <Text className="text-base font-bold text-gray-800 mb-2">Landing airport</Text>
+          <View className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+             <Picker
+               selectedValue={selectedAirportCode}
+               onValueChange={setSelectedAirportCode}
+               style={{ height: 50, color: '#333' }}
+             >
+               {availableAirports.map((airport) => (
+                 <Picker.Item
+                   key={airport.code}
+                   label={`${airport.name} (${airport.code})`}
+                   value={airport.code}
+                 />
+               ))}
+             </Picker>
+          </View>
         </View>
 
-        {/* Number of Days */}
-        <Text className="text-base font-semibold mb-1 text-gray-800">Number of Days</Text>
-        <TextInput
-          className="bg-white border border-gray-200 rounded-xl p-3.5 text-base"
-          value={numberOfDays}
-          onChangeText={handleDaysChange}
-          keyboardType="numeric"
-          placeholder="1-30"
-        />
+        {/* Trip Duration */}
+        <View>
+          <Text className="text-base font-bold text-gray-800 mb-2">Trip duration</Text>
+          <View className="flex-row items-center bg-gray-50 rounded-xl p-1 border border-gray-200">
+            <TouchableOpacity 
+              onPress={() => {
+                const current = parseInt(numberOfDays) || 1;
+                if (current > 1) handleDaysChange(String(current - 1));
+              }}
+              className="w-12 h-12 bg-gray-200 rounded-lg justify-center items-center"
+            >
+              <Text className="text-2xl text-gray-600 font-medium">-</Text>
+            </TouchableOpacity>
+            
+            <View className="flex-1 items-center">
+              <TextInput
+                value={numberOfDays}
+                onChangeText={handleDaysChange}
+                keyboardType="numeric"
+                className="text-lg font-bold text-center w-full"
+              />
+              <Text className="text-xs text-gray-500">days</Text>
+            </View>
+
+            <TouchableOpacity 
+              onPress={() => {
+                const current = parseInt(numberOfDays) || 1;
+                if (current < 30) handleDaysChange(String(current + 1));
+              }}
+              className="w-12 h-12 bg-gray-200 rounded-lg justify-center items-center"
+            >
+              <Text className="text-2xl text-gray-600 font-medium">+</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Budget */}
-        <Text className="text-base font-semibold mb-1 text-gray-800">Total Budget (USD)</Text>
-        <TextInput
-          className="bg-white border border-gray-200 rounded-xl p-3.5 text-base"
-          value={budgetUSD}
-          onChangeText={setBudgetUSD}
-          keyboardType="numeric"
-          placeholder={`Minimum: $${minBudget}`}
-        />
-        <Text className="text-xs text-gray-500 -mt-2">
-          Minimum for {selectedCountry?.name}: ${selectedCountry?.minBudgetPerDay}/day × {days} days = ${minBudget}
-        </Text>
-
-        {/* Travel Styles */}
-        <Text className="text-base font-semibold mb-1 text-gray-800">Travel Style</Text>
-        <Text className="text-xs text-gray-500 -mt-2">Select what you want to experience (tap to toggle)</Text>
-        <View className="flex-row flex-wrap gap-2 mt-2">
-          {TRAVEL_STYLES.map((style) => (
-            <TouchableOpacity
-              key={style.key}
-              className={`px-3.5 py-2.5 rounded-full border ${selectedStyles.includes(style.key) ? 'bg-blue-500 border-blue-500' : 'bg-gray-100 border-gray-200'}`}
-              onPress={() => toggleStyle(style.key)}
-            >
-              <Text className={`text-sm ${selectedStyles.includes(style.key) ? 'text-white font-semibold' : 'text-gray-800'}`}>
-                {style.emoji} {style.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View>
+          <Text className="text-base font-bold text-gray-800 mb-2">Budget level</Text>
+          <View className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center shadow-sm">
+            <DollarSign size={20} color="#666" className="mr-2" />
+            <TextInput
+              className="flex-1 text-base ml-2 text-gray-900"
+              value={budgetUSD}
+              onChangeText={setBudgetUSD}
+              keyboardType="numeric"
+              placeholder={`Min: $${minBudget}`}
+            />
+          </View>
+          <Text className="text-xs text-gray-500 mt-1 ml-1">
+             Minimum for {days} days: ${minBudget}
+          </Text>
         </View>
 
+        {/* Travel Style */}
+        <View>
+          <Text className="text-base font-bold text-gray-800 mb-2">What interests you? (select at least one)</Text>
+          <View className="flex-row flex-wrap gap-2">
+            {TRAVEL_STYLES.map((style) => {
+              const isActive = selectedStyles.includes(style.key);
+              const Icon = style.icon;
+              return (
+                <TouchableOpacity
+                  key={style.key}
+                  className={`flex-row items-center w-[48%] p-3 rounded-xl border ${isActive ? 'bg-[#0A4974]/10 border-[#0A4974]' : 'bg-white border-gray-200'}`}
+                  onPress={() => toggleStyle(style.key)}
+                >
+                  <Icon size={18} color={isActive ? '#0A4974' : '#666'} />
+                  <Text className={`text-sm ml-2 ${isActive ? 'text-[#0A4974] font-semibold' : 'text-gray-700'}`}>
+                    {style.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+        
         {/* Travel Date */}
-        <Text className="text-base font-semibold mb-1 text-gray-800">Travel Date (Optional)</Text>
-        <TextInput
-          className="bg-white border border-gray-200 rounded-xl p-3.5 text-base"
-          value={travelDate}
-          onChangeText={setTravelDate}
-          placeholder="YYYY-MM-DD (e.g. 2026-02-15)"
-          keyboardType="default"
-        />
-        <Text className="text-xs text-gray-500 -mt-2">
-          Set your flight date for weather-based checklist and notifications
-        </Text>
+        <View>
+          <Text className="text-base font-bold text-gray-800 mb-2">Travel Date (Optional)</Text>
+          <View className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center shadow-sm">
+            <Calendar size={20} color="#666" className="mr-2" />
+            <TextInput
+              className="flex-1 text-base ml-2 text-gray-900"
+              value={travelDate}
+              onChangeText={setTravelDate}
+              placeholder="YYYY-MM-DD"
+            />
+          </View>
+        </View>
 
         <TouchableOpacity
-          className={`bg-blue-500 p-4.5 rounded-xl items-center mt-3 shadow-lg shadow-blue-500/30 ${generateItineraryMutation.isPending ? 'opacity-70' : ''}`}
+          className={`bg-[#0A4974] p-4 rounded-xl items-center mt-2 shadow-md ${generateItineraryMutation.isPending ? 'opacity-80' : ''}`}
           onPress={handleGenerate}
           disabled={generateItineraryMutation.isPending}
         >
           {generateItineraryMutation.isPending ? (
             <View className="flex-row items-center">
               <ActivityIndicator color="#fff" />
-              <Text className="text-white text-lg font-semibold ml-2"> Generating with AI...</Text>
+              <Text className="text-white text-lg font-semibold ml-2"> Planning Trip...</Text>
             </View>
           ) : (
-            <Text className="text-white text-lg font-semibold">🤖 Generate Itinerary</Text>
+            <Text className="text-white text-lg font-semibold">Generate Itinerary</Text>
           )}
         </TouchableOpacity>
-
-        {/* Info Box */}
-        <View className="bg-blue-50 p-4 rounded-xl mt-2">
-          <Text className="text-sm font-semibold mb-2 text-blue-700">What you&apos;ll get:</Text>
-          <Text className="text-sm text-gray-800 mb-1">✨ Hidden gems locals love</Text>
-          <Text className="text-sm text-gray-800 mb-1">🏨 Hotel recommendations with booking links</Text>
-          <Text className="text-sm text-gray-800 mb-1">⚠️ Tourist traps to avoid</Text>
-          <Text className="text-sm text-gray-800 mb-1">🗺️ Optimized route from your airport</Text>
-          <Text className="text-sm text-gray-800 mb-1">🚨 Scam & safety warnings</Text>
-        </View>
-
-        {/* Explore Places Button */}
-        <TouchableOpacity
-          className="bg-green-500 p-4 rounded-xl items-center mt-4"
-          onPress={() => router.push('/places')}
-        >
-          <Text className="text-white text-base font-semibold">📍 Explore Places from Database</Text>
-        </TouchableOpacity>
-        <Text className="text-xs text-gray-500 -mt-2 text-center">
-          View pre-loaded places, checklist, and ask questions about your trip
-        </Text>
       </View>
     </ScrollView>
   );

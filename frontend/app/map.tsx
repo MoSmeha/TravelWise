@@ -4,7 +4,7 @@ import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOp
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { AlertTriangle, ArrowLeft, Clock, DollarSign, List, MapPin, Maximize2, Star, Users, X } from 'lucide-react-native';
 import { placesService } from '../services/api';
-import { CLASSIFICATION_COLORS } from '../constants/theme';
+import { CLASSIFICATION_COLORS, DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
 import { useItineraryStore } from '../store/itineraryStore';
 import type { Hotel, ItineraryResponse, Location } from '../types/api';
@@ -97,19 +97,22 @@ export default function MapScreen() {
   const allLocations: Location[] = data.days.flatMap((day) => day.locations);
   const hotels: Hotel[] = data.hotels || [];
 
-  // Build route coordinates for polyline
-  const routeCoordinates = allLocations.map(loc => ({
-    latitude: loc.latitude,
-    longitude: loc.longitude,
-  }));
+  // Build routes for each day
+  const dayRoutes = data.days.map((day, index) => {
+    const coords = day.locations.map(loc => ({
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    }));
 
-  // Add airport as starting point
-  if (data.airport) {
-    routeCoordinates.unshift({
-      latitude: data.airport.latitude,
-      longitude: data.airport.longitude,
-    });
-  }
+    // Add airport as starting point for the first day
+    if (index === 0 && data.airport) {
+      coords.unshift({
+        latitude: data.airport.latitude,
+        longitude: data.airport.longitude,
+      });
+    }
+    return coords;
+  });
 
   const initialRegion = {
     latitude: data.airport?.latitude || allLocations[0]?.latitude || 0,
@@ -334,15 +337,18 @@ export default function MapScreen() {
         style={{ flex: 1 }}
         initialRegion={initialRegion}
       >
-        {/* Route polyline */}
-        {routeCoordinates.length > 1 && (
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor="#007AFF"
-            strokeWidth={3}
-            lineDashPattern={[10, 5]}
-          />
-        )}
+        {/* Route polylines per day */}
+        {dayRoutes.map((route, index) => (
+          route.length > 1 && (
+            <Polyline
+              key={`route-${index}`}
+              coordinates={route}
+              strokeColor={DAY_COLORS[index % DAY_COLORS.length]}
+              strokeWidth={3}
+              lineDashPattern={[10, 5]}
+            />
+          )
+        ))}
 
         {/* Airport marker */}
         {data.airport && (
