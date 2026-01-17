@@ -39,6 +39,8 @@ const getTagTailwindClasses = (tag: string) => {
   return styles[Math.abs(hash) % styles.length];
 };
 
+import { NotificationBell } from '../../components/NotificationBell';
+
 export default function TripsScreen() {
   const router = useRouter();
   const { data: user } = useUser();
@@ -146,12 +148,15 @@ export default function TripsScreen() {
           <Text className="text-gray-500 text-base mt-0.5">{itineraries ? itineraries.length : 0} saved itineraries</Text>
         </View>
         
-        <TouchableOpacity 
-            onPress={() => router.push('/new-trip')}
-            className="bg-[#0f172a] w-10 h-10 rounded-full items-center justify-center shadow-sm"
-        >
-            <Text className="text-white font-bold text-xl leading-none pb-0.5">+</Text>
-        </TouchableOpacity>
+        <View className="flex-row items-center gap-3">
+            <NotificationBell />
+            <TouchableOpacity 
+                onPress={() => router.push('/new-trip')}
+                className="bg-[#0f172a] w-10 h-10 rounded-full items-center justify-center shadow-sm"
+            >
+                <Text className="text-white font-bold text-xl leading-none pb-0.5">+</Text>
+            </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList

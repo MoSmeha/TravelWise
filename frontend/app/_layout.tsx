@@ -12,6 +12,7 @@ import { customToastConfig } from '../components/ui/ToastMessage';
 
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { useAuth } from '../store/authStore';
+import { useSocket } from '../hooks/useSocket';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -20,6 +21,9 @@ function RootLayoutNav() {
   const { isAuthenticated, isRestoring } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  
+  // Initialize socket connection
+  useSocket();
 
   useEffect(() => {
     console.log('[NAV] Auth state changed:', { isAuthenticated, isRestoring, segments: segments[0] });
