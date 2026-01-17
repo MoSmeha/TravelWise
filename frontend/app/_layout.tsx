@@ -7,31 +7,8 @@ import 'react-native-reanimated';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/react-query';
 import '../global.css';
-import Toast, { BaseToast, ErrorToast, ToastConfig } from 'react-native-toast-message';
-
-// Custom Toast config to show longer messages
-const toastConfig: ToastConfig = {
-  success: (props) => (
-    <BaseToast
-      {...props}
-      style={{ borderLeftColor: '#22c55e' }}
-      contentContainerStyle={{ paddingHorizontal: 15 }}
-      text1Style={{ fontSize: 15, fontWeight: '600' }}
-      text2Style={{ fontSize: 13 }}
-      text2NumberOfLines={5}
-    />
-  ),
-  error: (props) => (
-    <ErrorToast
-      {...props}
-      style={{ borderLeftColor: '#ef4444' }}
-      contentContainerStyle={{ paddingHorizontal: 15 }}
-      text1Style={{ fontSize: 15, fontWeight: '600' }}
-      text2Style={{ fontSize: 13 }}
-      text2NumberOfLines={5}
-    />
-  ),
-};
+import Toast from 'react-native-toast-message';
+import { customToastConfig } from '../components/ui/ToastMessage';
 
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { useAuth } from '../store/authStore';
@@ -91,7 +68,7 @@ export default function RootLayout() {
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <RootLayoutNav />
           <StatusBar style="auto" />
-          <Toast config={toastConfig} visibilityTime={4000} />
+          <Toast config={customToastConfig} visibilityTime={4000} />
         </ThemeProvider>
     </QueryClientProvider>
   );
