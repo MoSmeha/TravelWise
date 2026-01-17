@@ -8,6 +8,9 @@ import itineraryRouter from './routes/itinerary';
 import placesRouter from './routes/places';
 import ragRouter from './routes/rag';
 import webhooksRouter from './routes/webhooks';
+import usersRouter from './routes/users';
+import friendshipRouter from './routes/friendship';
+import notificationRouter from './routes/notifications';
 
 dotenv.config();
 
@@ -38,6 +41,9 @@ app.use('/api/itinerary', authenticate, ragRouter); // RAG endpoints under /api/
 app.use('/api/places', authenticate, placesRouter);
 app.use('/api/checklist', authenticate, checklistRouter);
 app.use('/api/webhooks', authenticate, webhooksRouter);
+app.use('/api/users', authenticate, usersRouter);
+app.use('/api/friends', authenticate, friendshipRouter);
+app.use('/api/notifications', authenticate, notificationRouter);
 
 // Health check
 app.get('/', (_req: Request, res: Response) => {
@@ -59,12 +65,20 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
 
+import { createServer } from 'http';
+import { socketService } from './services/socket.service';
+
+const server = createServer(app);
+
 const portToListen = Number(PORT);
 
-const server = app.listen(portToListen, '0.0.0.0', () => {
+server.listen(portToListen, '0.0.0.0', () => {
   console.log(`[SYSTEM] TravelWise Backend running on port ${portToListen}`);
   console.log(`[SYSTEM] Listening on all network interfaces (0.0.0.0)`);
   console.log(`[SYSTEM] Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Initialize Socket.IO
+  socketService.initialize(server);
 });
 
 // Set timeout to 5 minutes for long AI generations
