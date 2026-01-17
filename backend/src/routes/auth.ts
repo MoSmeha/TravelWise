@@ -47,15 +47,12 @@ router.post(
   authController.refresh
 );
 
-// POST /api/auth/verify-email - Verify email with token
+// POST /api/auth/verify-email - Verify email with OTP
 router.post(
   '/verify-email',
   validate(verifyEmailSchema),
   authController.verifyEmail
 );
-
-// GET /api/auth/verify-email - Verify email via browser link
-router.get('/verify-email', authController.verifyEmail);
 
 // POST /api/auth/resend-verification - Resend verification email
 router.post(

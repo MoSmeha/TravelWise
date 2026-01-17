@@ -49,7 +49,16 @@ export const useRegisterMutation = () => {
     },
     onError: (error: any) => {
       const errorData = error.response?.data;
-      const msg = errorData?.message || errorData?.error || 'Registration failed.';
+      // Backend returns { error: "Validation failed", details: [{path, message}] }
+      let msg = 'Registration failed.';
+      if (errorData?.details && Array.isArray(errorData.details) && errorData.details.length > 0) {
+        // Show the first validation error detail
+        msg = errorData.details[0].message;
+      } else if (errorData?.message) {
+        msg = errorData.message;
+      } else if (errorData?.error) {
+        msg = errorData.error;
+      }
       Toast.show({
         type: 'error',
         text1: 'Registration Failed',

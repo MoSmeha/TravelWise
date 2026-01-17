@@ -27,8 +27,14 @@ export const useAuth = create<AuthState>((set, get) => ({
   isRestoring: true,
 
   logout: async () => {
+    console.log('[AUTH] Logout called');
     await SecureStore.deleteItemAsync(STORAGE_KEY_ACCESS);
     await SecureStore.deleteItemAsync(STORAGE_KEY_REFRESH);
+    
+    // Clear React Query cache to prevent stale data
+    const { queryClient } = require('../lib/react-query');
+    queryClient.clear();
+    console.log('[AUTH] Cleared tokens and query cache');
     
     set({ 
       user: null, 
@@ -36,25 +42,32 @@ export const useAuth = create<AuthState>((set, get) => ({
       refreshToken: null, 
       isAuthenticated: false,
     });
+    console.log('[AUTH] Set isAuthenticated=false');
   },
 
   hydrate: async () => {
+     console.log('[AUTH] Hydrating...');
      set({ isRestoring: true });
      try {
        const accessToken = await SecureStore.getItemAsync(STORAGE_KEY_ACCESS);
        const refreshToken = await SecureStore.getItemAsync(STORAGE_KEY_REFRESH);
+       console.log('[AUTH] Found tokens:', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
 
        if (accessToken && refreshToken) {
          set({ 
             accessToken, 
             refreshToken,
-            isAuthenticated: true // Optimistically set to true, useUser will validate or fail 401
-         }); 
+            isAuthenticated: true
+         });
+         console.log('[AUTH] Set isAuthenticated=true');
+       } else {
+         console.log('[AUTH] No tokens found, staying unauthenticated');
        }
      } catch (error) {
-       console.error('Hydration failed:', error);
+       console.error('[AUTH] Hydration failed:', error);
      } finally {
        set({ isRestoring: false });
+       console.log('[AUTH] Hydration complete, isRestoring=false');
      }
   },
   

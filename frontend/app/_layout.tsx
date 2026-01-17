@@ -7,7 +7,31 @@ import 'react-native-reanimated';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/react-query';
 import '../global.css';
-import Toast from 'react-native-toast-message';
+import Toast, { BaseToast, ErrorToast, ToastConfig } from 'react-native-toast-message';
+
+// Custom Toast config to show longer messages
+const toastConfig: ToastConfig = {
+  success: (props) => (
+    <BaseToast
+      {...props}
+      style={{ borderLeftColor: '#22c55e' }}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
+      text1Style={{ fontSize: 15, fontWeight: '600' }}
+      text2Style={{ fontSize: 13 }}
+      text2NumberOfLines={5}
+    />
+  ),
+  error: (props) => (
+    <ErrorToast
+      {...props}
+      style={{ borderLeftColor: '#ef4444' }}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
+      text1Style={{ fontSize: 15, fontWeight: '600' }}
+      text2Style={{ fontSize: 13 }}
+      text2NumberOfLines={5}
+    />
+  ),
+};
 
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { useAuth } from '../store/authStore';
@@ -21,15 +45,19 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('[NAV] Auth state changed:', { isAuthenticated, isRestoring, segments: segments[0] });
     if (isRestoring) return;
 
     const inAuthGroup = (segments[0] as string) === 'auth';
+    console.log('[NAV] Navigation decision:', { inAuthGroup, shouldRedirect: !isAuthenticated && !inAuthGroup });
 
     if (isAuthenticated && inAuthGroup) {
+      console.log('[NAV] Redirecting to tabs (authenticated user on auth page)');
       router.replace('/(tabs)' as any);
     } else if (!isAuthenticated && !inAuthGroup) {
         // Redirect to login if accessing protected route
         // Allow access to auth screens
+        console.log('[NAV] Redirecting to login (unauthenticated user on protected page)');
         router.replace('/auth/login' as any);
     }
   }, [isAuthenticated, segments, isRestoring, router]);
@@ -63,7 +91,7 @@ export default function RootLayout() {
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <RootLayoutNav />
           <StatusBar style="auto" />
-          <Toast />
+          <Toast config={toastConfig} visibilityTime={4000} />
         </ThemeProvider>
     </QueryClientProvider>
   );
