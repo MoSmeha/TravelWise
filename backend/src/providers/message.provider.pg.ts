@@ -26,7 +26,13 @@ export class PostgresMessageProvider implements IMessageProvider {
         ],
       },
       include: {
-        participants: true,
+        participants: {
+          include: {
+            user: {
+              select: { id: true, name: true, username: true, avatarUrl: true },
+            },
+          },
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -50,7 +56,13 @@ export class PostgresMessageProvider implements IMessageProvider {
         },
       },
       include: {
-        participants: true,
+        participants: {
+          include: {
+            user: {
+              select: { id: true, name: true, username: true, avatarUrl: true },
+            },
+          },
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -77,7 +89,13 @@ export class PostgresMessageProvider implements IMessageProvider {
           participants: { some: { userId } },
         },
         include: {
-          participants: true,
+          participants: {
+            include: {
+              user: {
+                select: { id: true, name: true, username: true, avatarUrl: true },
+              },
+            },
+          },
           messages: {
             orderBy: { createdAt: 'desc' },
             take: 1,
@@ -119,7 +137,13 @@ export class PostgresMessageProvider implements IMessageProvider {
         participants: { some: { userId } },
       },
       include: {
-        participants: true,
+        participants: {
+          include: {
+            user: {
+              select: { id: true, name: true, username: true, avatarUrl: true },
+            },
+          },
+        },
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -271,19 +295,16 @@ export class PostgresMessageProvider implements IMessageProvider {
       name: string | null;
       imageUrl: string | null;
       updatedAt: Date;
-      participants: { userId: string; role: string; lastReadAt: Date }[];
+      participants: {
+        userId: string;
+        role: string;
+        lastReadAt: Date;
+        user?: { id: string; name: string; username: string; avatarUrl: string };
+      }[];
       messages: { id: string; content: string; senderId: string; conversationId: string; createdAt: Date }[];
     },
     currentUserId: string
   ): Promise<ConversationWithDetails> {
-    // Fetch user details for all participants
-    const userIds = conversation.participants.map((p) => p.userId);
-    const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, name: true, username: true, avatarUrl: true },
-    });
-    const userMap = new Map(users.map((u) => [u.id, u]));
-
     // Get current user's participant record for lastReadAt
     const currentParticipant = conversation.participants.find(
       (p) => p.userId === currentUserId
@@ -313,7 +334,7 @@ export class PostgresMessageProvider implements IMessageProvider {
         role: p.role,
         joinedAt: new Date(),
         lastReadAt: p.lastReadAt,
-        user: userMap.get(p.userId),
+        user: p.user || undefined,
       })),
       lastMessage: conversation.messages[0] || null,
       unreadCount,
