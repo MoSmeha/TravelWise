@@ -30,6 +30,8 @@ import {
     useCreateConversation,
     Conversation
 } from '../../hooks/queries/useMessages';
+import { useOnlineStatus } from '../../hooks/queries/useOnlineStatus';
+import { OnlineIndicator } from '../../components/OnlineIndicator';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../../store/authStore';
 
@@ -68,15 +70,53 @@ export default function ActivityScreen() {
         return conversationsData?.pages.flatMap(page => page.data) || [];
     }, [conversationsData]);
 
+    // Get online status for all friends
+    const friendIds = useMemo(() => friends.map(f => f.id), [friends]);
+    const { data: onlineStatus = {} } = useOnlineStatus(friendIds);
+
+    // Merge friends with their conversation data
+    interface FriendWithConversation extends User {
+        conversation?: Conversation;
+        lastMessageAt?: Date;
+        unreadCount?: number;
+    }
+
+    const friendsWithConversations = useMemo((): FriendWithConversation[] => {
+        return friends.map(friend => {
+            // Find conversation with this friend
+            const conversation = conversations.find(conv => {
+                if (conv.type !== 'DIRECT') return false;
+                return conv.participants.some(p => p.userId === friend.id);
+            });
+
+            return {
+                ...friend,
+                conversation,
+                lastMessageAt: conversation?.lastMessage ? new Date(conversation.lastMessage.createdAt) : undefined,
+                unreadCount: conversation?.unreadCount || 0,
+            };
+        }).sort((a, b) => {
+            // Sort: unread first, then by last message time, then alphabetically
+            if ((a.unreadCount || 0) > 0 && (b.unreadCount || 0) === 0) return -1;
+            if ((a.unreadCount || 0) === 0 && (b.unreadCount || 0) > 0) return 1;
+            if (a.lastMessageAt && b.lastMessageAt) {
+                return b.lastMessageAt.getTime() - a.lastMessageAt.getTime();
+            }
+            if (a.lastMessageAt) return -1;
+            if (b.lastMessageAt) return 1;
+            return a.name.localeCompare(b.name);
+        });
+    }, [friends, conversations]);
+
     // Filter friends based on search
     const filteredFriends = useMemo(() => {
-        if (!searchQuery.trim()) return friends;
+        if (!searchQuery.trim()) return friendsWithConversations;
         const query = searchQuery.toLowerCase();
-        return friends.filter(friend => 
+        return friendsWithConversations.filter(friend => 
             friend.name.toLowerCase().includes(query) ||
             friend.username.toLowerCase().includes(query)
         );
-    }, [friends, searchQuery]);
+    }, [friendsWithConversations, searchQuery]);
 
     const handleAccept = async (id: string) => {
         try {
@@ -315,45 +355,70 @@ export default function ActivityScreen() {
         );
     };
 
-    const renderFriendItem = ({ item }: { item: User }) => {
+    // Unified friend item renderer (shows friend with optional conversation data)
+    const renderFriendWithConversation = ({ item }: { item: typeof friendsWithConversations[0] }) => {
+        const isOnline = onlineStatus[item.id] || false;
+        
         return (
             <TouchableOpacity 
                 activeOpacity={0.7}
-                onPress={() => handleFriendPress(item)}
+                onPress={() => item.conversation 
+                    ? handleConversationPress(item.conversation)
+                    : handleFriendPress(item)
+                }
                 className="flex-row p-4 items-center border-b border-gray-100"
                 disabled={createConversationMutation.isPending}
             >
-                {item.avatarUrl ? (
-                    <Image 
-                        source={{ uri: item.avatarUrl }} 
-                        className="w-12 h-12 rounded-full mr-4"
-                    />
-                ) : (
-                    <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mr-4">
-                        <Text className="text-gray-600 font-bold text-lg">
-                            {item.name.charAt(0).toUpperCase()}
-                        </Text>
-                    </View>
-                )}
+                <View style={{ position: 'relative' }}>
+                    {item.avatarUrl ? (
+                        <Image 
+                            source={{ uri: item.avatarUrl }} 
+                            className="w-12 h-12 rounded-full"
+                        />
+                    ) : (
+                        <View className="w-12 h-12 rounded-full bg-indigo-100 items-center justify-center">
+                            <Text className="text-indigo-600 font-bold text-lg">
+                                {item.name.charAt(0).toUpperCase()}
+                            </Text>
+                        </View>
+                    )}
+                    <OnlineIndicator isOnline={isOnline} size="medium" />
+                </View>
                 
-                <View className="flex-1">
+                <View className="flex-1 ml-4">
                     <Text className="text-gray-900 font-semibold text-base">
                         {item.name}
                     </Text>
-                    <Text className="text-gray-500 text-sm">
-                        @{item.username}
-                    </Text>
+                    {item.conversation?.lastMessage ? (
+                        <Text className="text-gray-500 text-sm mt-0.5" numberOfLines={1}>
+                            {item.conversation.lastMessage.content}
+                        </Text>
+                    ) : (
+                        <Text className="text-gray-400 text-sm mt-0.5">
+                            @{item.username}
+                        </Text>
+                    )}
                 </View>
 
-                <MessageCircle size={22} color="#6366f1" />
+                <View className="items-end">
+                    {item.conversation?.lastMessage && (
+                        <Text className="text-gray-400 text-xs">
+                            {formatTime(item.conversation.lastMessage.createdAt)}
+                        </Text>
+                    )}
+                    {(item.unreadCount || 0) > 0 && (
+                        <View className="bg-indigo-600 rounded-full min-w-[20px] h-5 items-center justify-center mt-1 px-1.5">
+                            <Text className="text-white text-xs font-bold">
+                                {item.unreadCount}
+                            </Text>
+                        </View>
+                    )}
+                </View>
             </TouchableOpacity>
         );
     };
 
     const renderMessagesTab = () => {
-        // Show conversations if any exist, otherwise show friends list
-        const hasConversations = conversations.length > 0;
-
         return (
             <View className="flex-1">
                 {/* Search Bar */}
@@ -361,7 +426,7 @@ export default function ActivityScreen() {
                     <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2.5">
                         <Search size={20} color="#9ca3af" />
                         <TextInput
-                            placeholder="Search conversations..."
+                            placeholder="Search friends..."
                             placeholderTextColor="#9ca3af"
                             value={searchQuery}
                             onChangeText={setSearchQuery}
@@ -374,48 +439,23 @@ export default function ActivityScreen() {
                     <View className="flex-1 items-center justify-center">
                         <ActivityIndicator size="large" color="#4F46E5" />
                     </View>
-                ) : hasConversations ? (
-                    <FlatList
-                        data={conversations}
-                        renderItem={renderConversationItem}
-                        keyExtractor={item => item.id}
-                        refreshing={conversationsLoading}
-                        onRefresh={refetchConversations}
-                        onEndReached={() => hasNextPage && fetchNextPage()}
-                        onEndReachedThreshold={0.5}
-                        ListFooterComponent={
-                            isFetchingNextPage ? (
-                                <View className="py-4">
-                                    <ActivityIndicator size="small" color="#4F46E5" />
-                                </View>
-                            ) : null
-                        }
-                        contentContainerStyle={{ paddingBottom: 20 }}
-                    />
                 ) : filteredFriends.length > 0 ? (
                     <FlatList
                         data={filteredFriends}
-                        renderItem={renderFriendItem}
+                        renderItem={renderFriendWithConversation}
                         keyExtractor={item => item.id}
+                        refreshing={conversationsLoading}
+                        onRefresh={refetchConversations}
                         contentContainerStyle={{ paddingBottom: 20 }}
-                        ListHeaderComponent={
-                            <View className="px-4 py-2">
-                                <Text className="text-gray-500 text-sm">
-                                    Start a conversation with a friend
-                                </Text>
-                            </View>
-                        }
                     />
                 ) : (
                     <View className="flex-1 items-center justify-center p-8">
                         <View className="w-20 h-20 bg-gray-50 rounded-full items-center justify-center mb-4">
                             <MessageCircle size={40} color="#94a3b8" />
                         </View>
-                        <Text className="text-xl font-bold text-gray-900 mb-2">No messages yet</Text>
+                        <Text className="text-xl font-bold text-gray-900 mb-2">No friends yet</Text>
                         <Text className="text-gray-500 text-center leading-6">
-                            {friends.length === 0 
-                                ? "Add some friends to start chatting!"
-                                : "Start a conversation with your travel buddies!"}
+                            Add some friends to start chatting!
                         </Text>
                     </View>
                 )}

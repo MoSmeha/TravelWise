@@ -21,6 +21,8 @@ import {
     Message 
 } from '../../hooks/queries/useMessages';
 import { useUser } from '../../hooks/queries/useUser';
+import { useOnlineStatus } from '../../hooks/queries/useOnlineStatus';
+import { OnlineIndicator } from '../../components/OnlineIndicator';
 import Toast from 'react-native-toast-message';
 
 export default function ChatScreen() {
@@ -65,6 +67,11 @@ export default function ChatScreen() {
     const avatarUrl = conversation?.type === 'GROUP' 
         ? conversation.imageUrl 
         : otherUser?.avatarUrl;
+
+    // Get online status for the other user
+    const otherUserIds = useMemo(() => otherUser?.id ? [otherUser.id] : [], [otherUser?.id]);
+    const { data: onlineStatus = {} } = useOnlineStatus(otherUserIds);
+    const isOtherUserOnline = otherUser?.id ? (onlineStatus[otherUser.id] || false) : false;
 
     // Mark conversation as read on mount (only once)
     useEffect(() => {
@@ -172,18 +179,23 @@ export default function ChatScreen() {
                     <ArrowLeft size={24} color="#374151" />
                 </TouchableOpacity>
 
-                {avatarUrl ? (
-                    <Image 
-                        source={{ uri: avatarUrl }} 
-                        className="w-10 h-10 rounded-full mr-3"
-                    />
-                ) : (
-                    <View className="w-10 h-10 rounded-full bg-indigo-100 items-center justify-center mr-3">
-                        <Text className="text-indigo-600 font-bold text-lg">
-                            {displayName?.charAt(0).toUpperCase() || '?'}
-                        </Text>
-                    </View>
-                )}
+                <View style={{ position: 'relative' }} className="mr-3">
+                    {avatarUrl ? (
+                        <Image 
+                            source={{ uri: avatarUrl }} 
+                            className="w-10 h-10 rounded-full"
+                        />
+                    ) : (
+                        <View className="w-10 h-10 rounded-full bg-indigo-100 items-center justify-center">
+                            <Text className="text-indigo-600 font-bold text-lg">
+                                {displayName?.charAt(0).toUpperCase() || '?'}
+                            </Text>
+                        </View>
+                    )}
+                    {conversation?.type === 'DIRECT' && (
+                        <OnlineIndicator isOnline={isOtherUserOnline} size="small" />
+                    )}
+                </View>
 
                 <View className="flex-1">
                     <Text className="text-gray-900 font-semibold text-lg">

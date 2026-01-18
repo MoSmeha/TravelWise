@@ -49,9 +49,10 @@ export const useSocket = () => {
   }, [queryClient]);
 
   useEffect(() => {
-    // Only connect socket after hydration is complete to ensure fresh token
-    if (accessToken && !isRestoring) {
-      console.log('[useSocket] Connecting with token, user:', user?.id || 'not yet loaded');
+    // Only connect socket after hydration is complete AND user data is loaded
+    // This prevents race conditions where socket connects before auth is fully ready
+    if (accessToken && !isRestoring && user?.id) {
+      console.log('[useSocket] Connecting with token, user:', user.id);
       // Connect socket
       socketService.connect(accessToken);
 
@@ -69,7 +70,7 @@ export const useSocket = () => {
         socketService.off('message:new', handleNewMessage);
       }
     };
-  }, [accessToken, isRestoring, handleNotification, handleNewMessage]);
+  }, [accessToken, isRestoring, user?.id, handleNotification, handleNewMessage]);
 
   return socketService;
 };
