@@ -182,49 +182,47 @@ export default function ActivityScreen() {
                    }
                    handleNotificationPress(item);
                 }}
-                className="flex-row p-4 items-start border-b border-gray-100 border-dashed"
+                className="flex-row p-4 items-center border-b border-gray-100 border-dashed"
             >
                <View className={`w-12 h-12 rounded-full items-center justify-center mr-4`} style={{backgroundColor: iconBgColor}}>
                     <Icon size={24} color={iconColor} strokeWidth={1.5} />
                </View>
                
-               <View className="flex-1">
-                   <Text className="text-gray-900 font-medium text-base mb-1 pr-4">
+               <View className="flex-1 mr-2">
+                   <Text className="text-gray-900 font-medium text-base mb-1">
                         <Text className="font-normal text-gray-600">{item.message}</Text>
                    </Text>
                    <Text className="text-gray-400 text-xs font-medium">
                        {formatTime(item.createdAt)}
                    </Text>
-
-                   {showActions && (
-                       <View className="flex-row mt-3 gap-3">
-                           <TouchableOpacity 
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    handleAction('accept');
-                                }}
-                                className="bg-black px-4 py-2 rounded-lg flex-row items-center justify-center"
-                           >
-                               <Check size={16} color="white" strokeWidth={3} />
-                               <Text className="text-white font-bold ml-2 text-sm">Accept</Text>
-                           </TouchableOpacity>
-
-                           <TouchableOpacity 
-                                onPress={(e) => {
-                                    e.stopPropagation();
-                                    handleAction('reject');
-                                }}
-                                className="bg-gray-100 px-4 py-2 rounded-lg flex-row items-center justify-center border border-gray-200"
-                           >
-                               <X size={16} color="black" strokeWidth={3} />
-                               <Text className="text-black font-bold ml-2 text-sm">Delete</Text>
-                           </TouchableOpacity>
-                       </View>
-                   )}
                </View>
 
+               {showActions && (
+                   <View className="flex-row gap-2 mr-2">
+                       <TouchableOpacity 
+                            onPress={(e) => {
+                                e.stopPropagation();
+                                handleAction('reject');
+                            }}
+                            className="bg-gray-100 p-2 rounded-full"
+                       >
+                           <X size={20} color="#EF4444" strokeWidth={2} />
+                       </TouchableOpacity>
+
+                       <TouchableOpacity 
+                            onPress={(e) => {
+                                e.stopPropagation();
+                                handleAction('accept');
+                            }}
+                            className="bg-indigo-100 p-2 rounded-full"
+                       >
+                           <Check size={20} color="#4F46E5" strokeWidth={2} />
+                       </TouchableOpacity>
+                   </View>
+               )}
+
                {!item.read && (
-                   <View className="w-2.5 h-2.5 rounded-full bg-blue-500 mt-2" />
+                   <View className="w-2.5 h-2.5 rounded-full bg-blue-500" />
                )}
             </TouchableOpacity>
         );

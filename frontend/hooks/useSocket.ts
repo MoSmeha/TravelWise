@@ -6,7 +6,7 @@ import Toast from 'react-native-toast-message';
 import { useCallback } from 'react';
 
 export const useSocket = () => {
-  const { accessToken, user } = useAuth();
+  const { accessToken, user, isRestoring } = useAuth();
   const { handleNewNotification } = useNotificationStore();
 
   const handleNotification = useCallback((notification: Notification) => {
@@ -24,16 +24,15 @@ export const useSocket = () => {
   }, [handleNewNotification]);
 
   useEffect(() => {
-    // Connect socket when accessToken is available (don't wait for user object)
-    // The backend extracts userId from the token, so we don't need user here
-    if (accessToken) {
+    // Only connect socket after hydration is complete to ensure fresh token
+    if (accessToken && !isRestoring) {
       console.log('[useSocket] Connecting with token, user:', user?.id || 'not yet loaded');
       // Connect socket
       socketService.connect(accessToken);
 
       // Subscribe to events
       socketService.on('notification:new', handleNotification);
-    } else {
+    } else if (!accessToken) {
       socketService.disconnect();
     }
 
@@ -43,7 +42,7 @@ export const useSocket = () => {
         socketService.off('notification:new', handleNotification);
       }
     };
-  }, [accessToken, handleNotification]); // Removed user dependency
+  }, [accessToken, isRestoring, handleNotification]); // Added isRestoring dependency
 
   return socketService;
 };

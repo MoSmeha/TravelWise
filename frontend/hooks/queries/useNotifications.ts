@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
+import { useAuth } from '../../store/authStore';
 
 export interface Notification {
   id: string;
@@ -14,23 +15,27 @@ export interface Notification {
 
 // Fetch all notifications
 export const useNotifications = () => {
+  const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
     queryKey: ['notifications'],
     queryFn: async (): Promise<Notification[]> => {
       const response = await api.get('/notifications');
       return response.data;
     },
+    enabled: isAuthenticated && !isRestoring,
   });
 };
 
 // Fetch unread count
 export const useUnreadNotificationCount = () => {
+  const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
     queryKey: ['notifications', 'unread-count'],
     queryFn: async (): Promise<number> => {
       const response = await api.get('/notifications/unread-count');
       return response.data.count;
     },
+    enabled: isAuthenticated && !isRestoring,
   });
 };
 

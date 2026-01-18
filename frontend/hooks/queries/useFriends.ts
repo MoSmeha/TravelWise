@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
+import { useAuth } from '../../store/authStore';
 
 export interface User {
   id: string;
@@ -20,34 +21,40 @@ export interface FriendRequest {
 
 // Fetch friends list
 export const useFriends = () => {
+  const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
     queryKey: ['friends'],
     queryFn: async (): Promise<User[]> => {
       const response = await api.get('/friends');
       return response.data;
     },
+    enabled: isAuthenticated && !isRestoring,
   });
 };
 
 // Fetch pending friend requests
 export const usePendingRequests = () => {
+  const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
     queryKey: ['friends', 'pending'],
     queryFn: async (): Promise<FriendRequest[]> => {
       const response = await api.get('/friends/requests/pending');
       return response.data;
     },
+    enabled: isAuthenticated && !isRestoring,
   });
 };
 
 // Fetch sent requests
 export const useSentRequests = () => {
+  const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
     queryKey: ['friends', 'sent'],
     queryFn: async (): Promise<FriendRequest[]> => {
       const response = await api.get('/friends/requests/sent');
       return response.data;
     },
+    enabled: isAuthenticated && !isRestoring,
   });
 };
 
