@@ -65,6 +65,7 @@ class FriendshipService {
     const updatedFriendship = await this.provider.updateFriendshipStatus(friendshipId, 'ACCEPTED');
 
     // Notify the requester
+    console.log(`[FRIENDSHIP] Accepting request. friendshipId: ${friendshipId}, requesterId: ${friendship.requesterId}, addresseeId: ${friendship.addresseeId}`);
     const accepterName = (updatedFriendship as any).addressee?.name || 'Someone';
     await notificationService.createNotification(
       friendship.requesterId,

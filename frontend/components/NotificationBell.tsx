@@ -10,7 +10,7 @@ export const NotificationBell = () => {
 
   return (
     <TouchableOpacity 
-      onPress={() => router.push('/notifications')}
+      onPress={() => router.push('/activity')}
       className="p-2 relative"
     >
       <Ionicons name="notifications-outline" size={24} color="#000" />

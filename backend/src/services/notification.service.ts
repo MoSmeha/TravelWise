@@ -20,10 +20,9 @@ class NotificationService {
       },
     });
 
-    // Real-time delivery
-    if (socketService.isUserOnline(userId)) {
-      socketService.emitToUser(userId, 'notification:new', notification);
-    }
+    // Real-time delivery - always emit, socket.io handles if user is offline
+    console.log(`[NOTIFICATION] Emitting to user ${userId}, online: ${socketService.isUserOnline(userId)}`);
+    socketService.emitToUser(userId, 'notification:new', notification);
 
     return notification;
   }

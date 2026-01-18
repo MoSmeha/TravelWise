@@ -43,25 +43,28 @@ class SocketService {
     this.io.on('connection', (socket: AuthSocket) => {
       if (!socket.userId) return;
 
-      console.log(`[SOCKET] User connected: ${socket.userId}`);
+      console.log(`[SOCKET] User connected: ${socket.userId}, socketId: ${socket.id}`);
       
       // Add socket to user's socket list
       if (!this.userSockets.has(socket.userId)) {
         this.userSockets.set(socket.userId, new Set());
       }
       this.userSockets.get(socket.userId)?.add(socket.id);
+      
+      console.log(`[SOCKET] Active users: ${Array.from(this.userSockets.keys()).join(', ')}`);
 
       // Join a room specifically for this user
       socket.join(`user:${socket.userId}`);
 
-      socket.on('disconnect', () => {
-        console.log(`[SOCKET] User disconnected: ${socket.userId}`);
+      socket.on('disconnect', (reason) => {
+        console.log(`[SOCKET] User disconnected: ${socket.userId}, reason: ${reason}`);
         if (socket.userId && this.userSockets.has(socket.userId)) {
           this.userSockets.get(socket.userId)?.delete(socket.id);
           if (this.userSockets.get(socket.userId)?.size === 0) {
             this.userSockets.delete(socket.userId);
           }
         }
+        console.log(`[SOCKET] Remaining active users: ${Array.from(this.userSockets.keys()).join(', ')}`);
       });
     });
 

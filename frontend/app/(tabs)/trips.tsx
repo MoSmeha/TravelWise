@@ -39,7 +39,7 @@ const getTagTailwindClasses = (tag: string) => {
   return styles[Math.abs(hash) % styles.length];
 };
 
-import { NotificationBell } from '../../components/NotificationBell';
+
 
 export default function TripsScreen() {
   const router = useRouter();
@@ -149,7 +149,7 @@ export default function TripsScreen() {
         </View>
         
         <View className="flex-row items-center gap-3">
-            <NotificationBell />
+
             <TouchableOpacity 
                 onPress={() => router.push('/new-trip')}
                 className="bg-[#0f172a] w-10 h-10 rounded-full items-center justify-center shadow-sm"
