@@ -34,6 +34,7 @@
     "node-cache": "^5.1.2",
     "nodemailer": "^6.10.1",
     "openai": "^4.24.1",
+    "socket.io": "^4.8.3",
     "tiktoken": "^1.0.22",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
@@ -44,6 +45,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.10.6",
     "@types/nodemailer": "^6.4.21",
+    "@types/socket.io": "^3.0.1",
     "@types/uuid": "^9.0.8",
     "prisma": "^5.8.0",
     "ts-node": "^10.9.2",

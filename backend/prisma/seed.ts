@@ -1,4 +1,5 @@
 import { LocationCategory, LocationClassification, PriceLevel, PrismaClient } from "@prisma/client";
+import * as argon2 from "argon2";
 import fs from "fs";
 import path from "path";
 
@@ -118,6 +119,99 @@ async function main() {
       console.error(`\n❌ Error processing ${place.name}: ${e.message}`);
       errors++;
     }
+  }
+
+  console.log(`\n\n🎉 Places seeding completed!`);
+  console.log(`✅ Processed: ${processed}`);
+  console.log(`⚠️ Skipped: ${skipped}`);
+  console.log(`❌ Errors: ${errors}`);
+
+  // Seed Users
+  console.log("\n🚀 Seeding users...");
+  
+  const password = "Password123-";
+  const passwordHash = await argon2.hash(password);
+
+  const users = [
+    {
+      email: "user1@example.com",
+      username: "user1",
+      name: "User One",
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=user1",
+    },
+    {
+      email: "user2@example.com",
+      username: "user2",
+      name: "User Two",
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=user2",
+    },
+    {
+      email: "user3@example.com",
+      username: "user3",
+      name: "User Three",
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=user3",
+    },
+    {
+      email: "a@a.co",
+      username: "auser",
+      name: "Alice",
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=alice",
+      password: "Pass1-",
+    },
+    {
+      email: "b@b.co",
+      username: "buser",
+      name: "Bob",
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=bob",
+      password: "Pass1-",
+    },
+    {
+      email: "c@c.co",
+      username: "cuser",
+      name: "Charlie",
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=charlie",
+      password: "Pass1-",
+    },
+     {
+      email: "d@d.co",
+      username: "duser",
+      name: "David",
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=david",
+      password: "Pass1-",
+    },
+     {
+      email: "e@e.co",
+      username: "euser",
+      name: "Eve",
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=eve",
+      password: "Pass1-",
+    },
+  ];
+
+  for (const user of users) {
+    const userPasswordHash = (user as any).password 
+      ? await argon2.hash((user as any).password) 
+      : passwordHash;
+    
+    await prisma.user.upsert({
+      where: { email: user.email },
+      update: {
+        passwordHash: userPasswordHash,
+        name: user.name,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        emailVerified: true
+      },
+      create: {
+        email: user.email,
+        username: user.username,
+        name: user.name,
+        passwordHash: userPasswordHash,
+        avatarUrl: user.avatarUrl,
+        emailVerified: true,
+      },
+    });
+    console.log(`✅ Upserted user: ${user.username}`);
   }
 
   console.log(`\n\n🎉 Seeding completed!`);

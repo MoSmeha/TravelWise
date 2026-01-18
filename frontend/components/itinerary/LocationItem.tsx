@@ -1,9 +1,7 @@
 import React from 'react';
 import {
   Image as RNImage,
-  ScrollView,
   Text,
-  TouchableOpacity,
   View
 } from 'react-native';
 import { CLASSIFICATION_COLORS } from '../../constants/theme';

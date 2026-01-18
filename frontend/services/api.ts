@@ -92,7 +92,21 @@ api.interceptors.response.use(
       
       try {
         const { useAuth } = require('../store/authStore');
-        const { refreshToken: rToken, setTokens, logout } = useAuth.getState();
+        let { refreshToken: rToken, isRestoring, setTokens, logout } = useAuth.getState();
+        
+        // If still hydrating, wait for it to complete (max 3 seconds)
+        if (isRestoring) {
+          console.log('[Auth] Waiting for hydration to complete...');
+          let waitCount = 0;
+          while (isRestoring && waitCount < 6) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            const state = useAuth.getState();
+            isRestoring = state.isRestoring;
+            rToken = state.refreshToken;
+            waitCount++;
+          }
+          console.log('[Auth] Hydration wait complete, hasRefreshToken:', !!rToken);
+        }
         
         if (!rToken) {
           // No refresh token, just logout

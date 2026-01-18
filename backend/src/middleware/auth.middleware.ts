@@ -17,6 +17,8 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
+export type AuthRequest = AuthenticatedRequest;
+
 /**
  * Authenticate middleware
  * Verifies JWT access token from Authorization header

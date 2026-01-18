@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-import { AlertTriangle, ArrowLeft, Clock, DollarSign, List, MapPin, Maximize2, Star, Users, X } from 'lucide-react-native';
+import { AlertTriangle, ArrowLeft, Clock, DollarSign, List, MapPin, Star, X } from 'lucide-react-native';
 import { placesService } from '../services/api';
 import { CLASSIFICATION_COLORS, DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';

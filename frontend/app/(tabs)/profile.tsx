@@ -63,6 +63,20 @@ export default function ProfileScreen() {
         <View className="px-6 -mt-6">
             <ProfileInfo user={user} />
 
+            {/* Friends Interaction */}
+            <TouchableOpacity 
+                className="flex-row items-center justify-between bg-white p-4 rounded-xl border border-gray-100 mb-4 shadow-sm"
+                onPress={() => router.push('/friends')}
+            >
+                <View className="flex-row items-center">
+                    <View className="bg-indigo-50 p-2 rounded-full mr-3">
+                        <Ionicons name="people" size={20} color="#4F46E5" />
+                    </View>
+                    <Text className="text-gray-700 font-semibold text-base">Friends & Requests</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+
              {/* Logout */}
             <TouchableOpacity 
                 className="flex-row items-center justify-center bg-red-50 p-4 rounded-xl border border-red-100 mb-8"
