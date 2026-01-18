@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, TouchableOpacity, FlatList, TextInput, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Heart, 
@@ -8,7 +8,8 @@ import {
   Users, 
   Check, 
   X,
-  Bell
+  Bell,
+  Search
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { 
@@ -21,15 +22,24 @@ import {
     useAcceptFriendRequest, 
     useRejectFriendRequest,
     useFriends,
-    usePendingRequests
+    usePendingRequests,
+    User
 } from '../../hooks/queries/useFriends';
+import {
+    useInfiniteConversations,
+    useCreateConversation,
+    Conversation
+} from '../../hooks/queries/useMessages';
 import Toast from 'react-native-toast-message';
+import { useAuth } from '../../store/authStore';
 
 type Tab = 'notifications' | 'messages';
 
 export default function ActivityScreen() {
     const router = useRouter();
+    const { user: currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState<Tab>('notifications');
+    const [searchQuery, setSearchQuery] = useState('');
     
     // Notifications Data
     const { data: notifications = [], isLoading, refetch } = useNotifications();
@@ -40,9 +50,33 @@ export default function ActivityScreen() {
     const acceptMutation = useAcceptFriendRequest();
     const rejectMutation = useRejectFriendRequest();
     
-    // Friends Data for verifying status
+    // Friends and Conversations Data
     const { data: friends = [] } = useFriends();
     const { data: pendingRequests = [] } = usePendingRequests();
+    const { 
+        data: conversationsData, 
+        isLoading: conversationsLoading,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        refetch: refetchConversations
+    } = useInfiniteConversations();
+    const createConversationMutation = useCreateConversation();
+
+    // Flatten conversations from infinite query
+    const conversations = useMemo(() => {
+        return conversationsData?.pages.flatMap(page => page.data) || [];
+    }, [conversationsData]);
+
+    // Filter friends based on search
+    const filteredFriends = useMemo(() => {
+        if (!searchQuery.trim()) return friends;
+        const query = searchQuery.toLowerCase();
+        return friends.filter(friend => 
+            friend.name.toLowerCase().includes(query) ||
+            friend.username.toLowerCase().includes(query)
+        );
+    }, [friends, searchQuery]);
 
     const handleAccept = async (id: string) => {
         try {
@@ -84,9 +118,27 @@ export default function ActivityScreen() {
         }
         
         if (notification.type === 'FRIEND_REQUEST' || notification.type === 'FRIEND_ACCEPTED') {
-            router.push('/friends'); // Fallback if they click the body not the button
+            router.push('/friends');
         }
-        // Handle other types if needed
+    };
+
+    const handleFriendPress = async (friend: User) => {
+        try {
+            // Create or get existing conversation
+            const conversation = await createConversationMutation.mutateAsync(friend.id);
+            // Navigate to chat screen
+            router.push(`/chat/${conversation.id}`);
+        } catch (error: any) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.response?.data?.error || 'Failed to open chat'
+            });
+        }
+    };
+
+    const handleConversationPress = (conversation: Conversation) => {
+        router.push(`/chat/${conversation.id}`);
     };
 
     const formatTime = (dateString: string) => {
@@ -108,60 +160,47 @@ export default function ActivityScreen() {
         return date.toLocaleDateString();
     };
 
+    // Get the other participant in a direct conversation
+    const getOtherParticipant = (conversation: Conversation) => {
+        if (conversation.type === 'DIRECT') {
+            return conversation.participants.find(p => p.userId !== currentUser?.id)?.user;
+        }
+        return null;
+    };
+
     const renderNotificationItem = ({ item }: { item: Notification }) => {
         let Icon = Bell;
-        let iconColor = '#64748b'; // slate-500
-        let iconBgColor = '#f1f5f9'; // slate-100
+        let iconColor = '#64748b';
+        let iconBgColor = '#f1f5f9';
 
         if (item.type === 'FRIEND_REQUEST') {
             Icon = UserPlus;
-            iconColor = '#4F46E5'; // indigo-600
-            iconBgColor = '#e0e7ff'; // indigo-100
+            iconColor = '#4F46E5';
+            iconBgColor = '#e0e7ff';
         } else if (item.type === 'FRIEND_ACCEPTED') {
-            Icon = Users; // Or CheckCircle
-            iconColor = '#10B981'; // emerald-500
-            iconBgColor = '#d1fae5'; // emerald-100
+            Icon = Users;
+            iconColor = '#10B981';
+            iconBgColor = '#d1fae5';
         } else if (item.title.toLowerCase().includes('liked')) {
              Icon = Heart;
-             iconColor = '#ec4899'; // pink-500
-             iconBgColor = '#fce7f3'; // pink-100
+             iconColor = '#ec4899';
+             iconBgColor = '#fce7f3';
         } else if (item.title.toLowerCase().includes('commented')) {
              Icon = MessageCircle;
-             iconColor = '#3b82f6'; // blue-500
-             iconBgColor = '#dbeafe'; // blue-100
+             iconColor = '#3b82f6';
+             iconBgColor = '#dbeafe';
         }
-
-        // Check if it's a friend request to show actions
-        // Assuming the notification object might have a 'metadata' field or similar with requestId
-        // If not, we might need to rely on matching pending requests. 
-        // For this task, I'll assume we can use the notification ID or if the system uses request ID.
-        // The previous 'friends.tsx' used `item.id` for accept/reject, which was the FriendRequest ID.
-        // A Notification about a friend request usually links to it. 
-        // If the notification `type` is FRIEND_REQUEST, we might need a way to get the request ID.
-        // Inspecting `useNotifications` hook types would be ideal, but let's assume `item.referenceId` or similar exists
-        // For now, I'll render the buttons and use `item.referenceId` if available, or fallback to investigating structure.
-        // Looking at typical schema, `referenceId` is common.
 
         const isFriendRequest = item.type === 'FRIEND_REQUEST';
         const friendshipId = item.data?.friendshipId;
-        const requesterId = item.data?.requesterId; // Assuming fetch includes this
-
-        // Check if actionable
-        // 1. Is the requester already a friend?
+        const requesterId = item.data?.requesterId;
         const isAlreadyFriend = friends.some(f => f.id === requesterId);
-        // 2. Is the request actually pending? (Cross-reference with pendingRequests list if possible)
-        // If we don't have requesterId easily, finding it in pendingRequests by friendshipId requires matching
-        // Let's assume friendshipId is the Request ID (which is true in this system mostly)
         const isPending = pendingRequests.some(r => r.id === friendshipId);
-        
-        // Show actions only if not already friend AND explicitly pending
-        // If we are not sure about pending list sync, at least check 'isAlreadyFriend'
         const showActions = isFriendRequest && friendshipId && !isAlreadyFriend && isPending;
 
         const handleAction = async (action: 'accept' | 'reject') => {
             if (!friendshipId) return;
             
-            // Mark as read when acting
             if (!item.read) {
                 markAllReadMutation.mutate(); 
             }
@@ -176,12 +215,7 @@ export default function ActivityScreen() {
         return (
             <TouchableOpacity 
                 activeOpacity={0.7}
-                onPress={() => {
-                   if (!item.read) {
-                       // Trigger read logic if needed
-                   }
-                   handleNotificationPress(item);
-                }}
+                onPress={() => handleNotificationPress(item)}
                 className="flex-row p-4 items-center border-b border-gray-100 border-dashed"
             >
                <View className={`w-12 h-12 rounded-full items-center justify-center mr-4`} style={{backgroundColor: iconBgColor}}>
@@ -225,6 +259,167 @@ export default function ActivityScreen() {
                    <View className="w-2.5 h-2.5 rounded-full bg-blue-500" />
                )}
             </TouchableOpacity>
+        );
+    };
+
+    const renderConversationItem = ({ item }: { item: Conversation }) => {
+        const otherUser = getOtherParticipant(item);
+        const displayName = item.type === 'GROUP' ? item.name : otherUser?.name;
+        const avatarUrl = item.type === 'GROUP' ? item.imageUrl : otherUser?.avatarUrl;
+        
+        return (
+            <TouchableOpacity 
+                activeOpacity={0.7}
+                onPress={() => handleConversationPress(item)}
+                className="flex-row p-4 items-center border-b border-gray-100"
+            >
+                {avatarUrl ? (
+                    <Image 
+                        source={{ uri: avatarUrl }} 
+                        className="w-12 h-12 rounded-full mr-4"
+                    />
+                ) : (
+                    <View className="w-12 h-12 rounded-full bg-indigo-100 items-center justify-center mr-4">
+                        <Text className="text-indigo-600 font-bold text-lg">
+                            {displayName?.charAt(0).toUpperCase() || '?'}
+                        </Text>
+                    </View>
+                )}
+                
+                <View className="flex-1 mr-2">
+                    <Text className="text-gray-900 font-semibold text-base">
+                        {displayName || 'Unknown'}
+                    </Text>
+                    {item.lastMessage && (
+                        <Text className="text-gray-500 text-sm mt-0.5" numberOfLines={1}>
+                            {item.lastMessage.content}
+                        </Text>
+                    )}
+                </View>
+
+                <View className="items-end">
+                    {item.lastMessage && (
+                        <Text className="text-gray-400 text-xs">
+                            {formatTime(item.lastMessage.createdAt)}
+                        </Text>
+                    )}
+                    {(item.unreadCount || 0) > 0 && (
+                        <View className="bg-indigo-600 rounded-full min-w-[20px] h-5 items-center justify-center mt-1 px-1.5">
+                            <Text className="text-white text-xs font-bold">
+                                {item.unreadCount}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
+    const renderFriendItem = ({ item }: { item: User }) => {
+        return (
+            <TouchableOpacity 
+                activeOpacity={0.7}
+                onPress={() => handleFriendPress(item)}
+                className="flex-row p-4 items-center border-b border-gray-100"
+                disabled={createConversationMutation.isPending}
+            >
+                {item.avatarUrl ? (
+                    <Image 
+                        source={{ uri: item.avatarUrl }} 
+                        className="w-12 h-12 rounded-full mr-4"
+                    />
+                ) : (
+                    <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mr-4">
+                        <Text className="text-gray-600 font-bold text-lg">
+                            {item.name.charAt(0).toUpperCase()}
+                        </Text>
+                    </View>
+                )}
+                
+                <View className="flex-1">
+                    <Text className="text-gray-900 font-semibold text-base">
+                        {item.name}
+                    </Text>
+                    <Text className="text-gray-500 text-sm">
+                        @{item.username}
+                    </Text>
+                </View>
+
+                <MessageCircle size={22} color="#6366f1" />
+            </TouchableOpacity>
+        );
+    };
+
+    const renderMessagesTab = () => {
+        // Show conversations if any exist, otherwise show friends list
+        const hasConversations = conversations.length > 0;
+
+        return (
+            <View className="flex-1">
+                {/* Search Bar */}
+                <View className="px-4 py-2">
+                    <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2.5">
+                        <Search size={20} color="#9ca3af" />
+                        <TextInput
+                            placeholder="Search conversations..."
+                            placeholderTextColor="#9ca3af"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            className="flex-1 ml-2 text-gray-900 text-base"
+                        />
+                    </View>
+                </View>
+
+                {conversationsLoading ? (
+                    <View className="flex-1 items-center justify-center">
+                        <ActivityIndicator size="large" color="#4F46E5" />
+                    </View>
+                ) : hasConversations ? (
+                    <FlatList
+                        data={conversations}
+                        renderItem={renderConversationItem}
+                        keyExtractor={item => item.id}
+                        refreshing={conversationsLoading}
+                        onRefresh={refetchConversations}
+                        onEndReached={() => hasNextPage && fetchNextPage()}
+                        onEndReachedThreshold={0.5}
+                        ListFooterComponent={
+                            isFetchingNextPage ? (
+                                <View className="py-4">
+                                    <ActivityIndicator size="small" color="#4F46E5" />
+                                </View>
+                            ) : null
+                        }
+                        contentContainerStyle={{ paddingBottom: 20 }}
+                    />
+                ) : filteredFriends.length > 0 ? (
+                    <FlatList
+                        data={filteredFriends}
+                        renderItem={renderFriendItem}
+                        keyExtractor={item => item.id}
+                        contentContainerStyle={{ paddingBottom: 20 }}
+                        ListHeaderComponent={
+                            <View className="px-4 py-2">
+                                <Text className="text-gray-500 text-sm">
+                                    Start a conversation with a friend
+                                </Text>
+                            </View>
+                        }
+                    />
+                ) : (
+                    <View className="flex-1 items-center justify-center p-8">
+                        <View className="w-20 h-20 bg-gray-50 rounded-full items-center justify-center mb-4">
+                            <MessageCircle size={40} color="#94a3b8" />
+                        </View>
+                        <Text className="text-xl font-bold text-gray-900 mb-2">No messages yet</Text>
+                        <Text className="text-gray-500 text-center leading-6">
+                            {friends.length === 0 
+                                ? "Add some friends to start chatting!"
+                                : "Start a conversation with your travel buddies!"}
+                        </Text>
+                    </View>
+                )}
+            </View>
         );
     };
 
@@ -277,15 +472,7 @@ export default function ActivityScreen() {
                     }
                 />
             ) : (
-                <View className="flex-1 items-center justify-center p-8">
-                     <View className="w-20 h-20 bg-gray-50 rounded-full items-center justify-center mb-4">
-                        <MessageCircle size={40} color="#94a3b8" />
-                    </View>
-                    <Text className="text-xl font-bold text-gray-900 mb-2">No messages yet</Text>
-                     <Text className="text-gray-500 text-center leading-6">
-                        Start a conversation with your travel buddies to plan your next trip!
-                    </Text>
-                </View>
+                renderMessagesTab()
             )}
         </SafeAreaView>
     );

@@ -11,6 +11,7 @@ import webhooksRouter from './routes/webhooks';
 import usersRouter from './routes/users';
 import friendshipRouter from './routes/friendship';
 import notificationRouter from './routes/notifications';
+import messagingRouter from './routes/messaging';
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use('/api/webhooks', authenticate, webhooksRouter);
 app.use('/api/users', authenticate, usersRouter);
 app.use('/api/friends', authenticate, friendshipRouter);
 app.use('/api/notifications', authenticate, notificationRouter);
+app.use('/api/messages', authenticate, messagingRouter);
 
 // Health check
 app.get('/', (_req: Request, res: Response) => {

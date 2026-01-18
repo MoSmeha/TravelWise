@@ -108,6 +108,53 @@ model Notification {
   @@index([createdAt])
 }
 
+// MESSAGING MODELS
+
+enum ConversationType {
+  DIRECT    // 1:1 chat
+  GROUP     // Group chat (future)
+}
+
+model Conversation {
+  id            String           @id @default(cuid())
+  type          ConversationType @default(DIRECT)
+  name          String?          // For group chats (null for direct)
+  imageUrl      String?          // Group avatar (future)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  participants  ConversationParticipant[]
+  messages      Message[]
+  
+  @@index([updatedAt])
+}
+
+model ConversationParticipant {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId          String
+  role            String       @default("MEMBER")  // ADMIN, MEMBER (for group management later)
+  joinedAt        DateTime     @default(now())
+  lastReadAt      DateTime     @default(now())
+  
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+model Message {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId        String
+  content         String
+  createdAt       DateTime     @default(now())
+  
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
 enum LocationClassification {
   HIDDEN_GEM
   CONDITIONAL
