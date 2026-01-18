@@ -16,7 +16,6 @@ import {
 import { Search } from 'lucide-react-native';
 
 export default function ExploreScreen() {
-    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedQuery, setDebouncedQuery] = useState('');
 

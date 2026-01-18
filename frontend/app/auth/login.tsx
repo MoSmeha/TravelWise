@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, SafeAreaView } from 'react-native';
-import { useRouter, Link } from 'expo-router';
+import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useLoginMutation } from '../../hooks/mutations/useAuthMutations';
 
 export default function LoginScreen() {
-  const router = useRouter();
   const loginMutation = useLoginMutation();
   
   const [email, setEmail] = useState('');

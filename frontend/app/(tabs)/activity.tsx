@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Image } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Heart, 
@@ -111,28 +111,23 @@ export default function ActivityScreen() {
     const renderNotificationItem = ({ item }: { item: Notification }) => {
         let Icon = Bell;
         let iconColor = '#64748b'; // slate-500
-        let bgClass = 'bg-slate-50';
         let iconBgColor = '#f1f5f9'; // slate-100
 
         if (item.type === 'FRIEND_REQUEST') {
             Icon = UserPlus;
             iconColor = '#4F46E5'; // indigo-600
-            bgClass = 'bg-indigo-50';
             iconBgColor = '#e0e7ff'; // indigo-100
         } else if (item.type === 'FRIEND_ACCEPTED') {
             Icon = Users; // Or CheckCircle
             iconColor = '#10B981'; // emerald-500
-            bgClass = 'bg-emerald-50';
             iconBgColor = '#d1fae5'; // emerald-100
         } else if (item.title.toLowerCase().includes('liked')) {
              Icon = Heart;
              iconColor = '#ec4899'; // pink-500
-             bgClass = 'bg-pink-50';
              iconBgColor = '#fce7f3'; // pink-100
         } else if (item.title.toLowerCase().includes('commented')) {
              Icon = MessageCircle;
              iconColor = '#3b82f6'; // blue-500
-             bgClass = 'bg-blue-50';
              iconBgColor = '#dbeafe'; // blue-100
         }
 
@@ -279,7 +274,7 @@ export default function ActivityScreen() {
                                 <Bell size={32} color="#94a3b8" />
                             </View>
                             <Text className="text-gray-500 mt-2 text-center text-base font-medium">No notifications yet</Text>
-                            <Text className="text-gray-400 text-center text-sm mt-1">We'll let you know when something happens.</Text>
+                            <Text className="text-gray-400 text-center text-sm mt-1">We&apos;ll let you know when something happens.</Text>
                         </View>
                     }
                 />

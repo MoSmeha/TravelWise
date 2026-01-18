@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, Image } from 'react-native';
 import { User } from '../../types/auth';
 
 interface ProfileHeaderProps {
