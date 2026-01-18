@@ -1,12 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
-import path from 'path';
-import { generateEmbedding } from '../services/embedding.service';
-
-// Load environment variables
-dotenv.config({ path: path.join(__dirname, '../../.env') });
-
-const prisma = new PrismaClient();
+import 'dotenv/config';
+import prisma from '../lib/prisma.js';
+import { generateEmbedding } from '../services/embedding.service.js';
 
 /**
  * Generate Knowledge Embeddings Script

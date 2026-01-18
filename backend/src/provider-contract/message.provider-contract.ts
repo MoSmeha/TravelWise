@@ -3,7 +3,7 @@
  * Interface for messaging operations
  */
 
-import { Conversation, ConversationParticipant, Message } from '@prisma/client';
+import { Conversation, ConversationParticipant, Message } from '../generated/prisma/client.js';
 
 // Extended types with includes
 export interface ConversationWithDetails extends Conversation {

@@ -2,7 +2,7 @@
  * PostgreSQL Message Provider
  * Implements IMessageProvider using Prisma
  */
-import { ConversationType } from '@prisma/client';
+import { ConversationType } from '../generated/prisma/client.js';
 import prisma from '../lib/prisma';
 import {
   IMessageProvider,

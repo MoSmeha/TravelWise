@@ -1,4 +1,4 @@
-import { EmailVerificationToken } from '@prisma/client';
+import { EmailVerificationToken } from '../generated/prisma/client.js';
 import prisma from '../lib/prisma';
 import {
   CreateRefreshTokenData,

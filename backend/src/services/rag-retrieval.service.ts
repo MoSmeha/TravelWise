@@ -1,4 +1,4 @@
-import { ChunkType as PrismaChunkType } from '@prisma/client';
+import { ChunkType as PrismaChunkType } from '../generated/prisma/client.js';
 import prisma from '../lib/prisma';
 import { chunkItinerary, ItineraryData } from './chunking.service';
 import { batchGenerateEmbeddings, generateEmbedding } from './embedding.service';

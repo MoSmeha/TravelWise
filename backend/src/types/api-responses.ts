@@ -4,7 +4,7 @@
  * Ensures consistency across controllers and enables autocomplete
  */
 
-import { LocationCategory, LocationClassification } from '@prisma/client';
+import { LocationCategory, LocationClassification } from '../generated/prisma/client.js';
 
 // ============================================================================
 // Common Response Types

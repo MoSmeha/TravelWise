@@ -1,4 +1,4 @@
-import { User, Friendship, FriendshipStatus } from '@prisma/client';
+import { User, Friendship, FriendshipStatus } from '../generated/prisma/client.js';
 import prisma from '../lib/prisma';
 import { IFriendshipProvider, FriendRequestWithUser } from '../provider-contract/friendship.provider-contract';
 

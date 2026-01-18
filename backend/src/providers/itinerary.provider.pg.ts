@@ -1,4 +1,4 @@
-import { LocationCategory, LocationClassification } from '@prisma/client';
+import { LocationCategory, LocationClassification } from '../generated/prisma/client.js';
 import prisma from '../lib/prisma';
 import {
   CreateChecklistItemData,

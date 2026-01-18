@@ -1,4 +1,4 @@
-import { ChecklistCategory, ItineraryItemType, LocationCategory, Place, PriceLevel } from '@prisma/client';
+import { ChecklistCategory, ItineraryItemType, LocationCategory, Place, PriceLevel } from '../generated/prisma/client.js';
 import { BudgetLevel, TravelStyle, mapBudgetToPriceLevel } from '../utils/enum-mappers';
 import { v4 as uuidv4 } from 'uuid';
 import * as googlePlacesService from './google-places.service';

@@ -1,4 +1,4 @@
-import { ChecklistCategory } from '@prisma/client';
+import { ChecklistCategory } from '../generated/prisma/client.js';
 import { WeatherForecast } from './weather.service';
 import { checklistProvider } from '../providers/checklist.provider.pg';
 import {

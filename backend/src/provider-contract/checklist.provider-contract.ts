@@ -1,5 +1,5 @@
 
-import { ChecklistCategory } from '@prisma/client';
+import { ChecklistCategory } from '../generated/prisma/client.js';
 
 export interface CreateChecklistItemData {
   itineraryId: string;

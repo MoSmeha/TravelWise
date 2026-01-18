@@ -1,6 +1,6 @@
 import prisma from '../lib/prisma';
 import { socketService } from './socket.service';
-import { Notification, NotificationType } from '@prisma/client';
+import { Notification, NotificationType } from '../generated/prisma/client.js';
 
 class NotificationService {
   async createNotification(

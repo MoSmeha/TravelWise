@@ -3,7 +3,7 @@
  * Shared helpers for Prisma-related operations
  */
 
-import { PriceLevel } from '@prisma/client';
+import { PriceLevel } from '../generated/prisma/client.js';
 
 /**
  * Maps Google Places API price_level (integer 0-4) to PriceLevel enum
