@@ -4,8 +4,8 @@
  */
 
 import { NextFunction, Response } from 'express';
-import prisma from '../lib/prisma';
-import { AuthenticatedRequest } from './auth.middleware';
+import prisma from '../lib/prisma.js';
+import { AuthenticatedRequest } from './auth.middleware.js';
 
 /**
  * Result of an ownership lookup

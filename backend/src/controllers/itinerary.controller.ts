@@ -1,21 +1,21 @@
 import { Request, Response } from "express";
-import { AuthenticatedRequest } from "../middleware/auth.middleware";
+import { AuthenticatedRequest } from "../middleware/auth.middleware.js";
 import {
   getCountriesList,
   COUNTRIES,
   getAirportConfig,
-} from "../config/countries.config";
-import { GenerateItineraryInput } from "../schemas/itinerary.schema";
+} from "../config/countries.config.js";
+import { GenerateItineraryInput } from "../schemas/itinerary.schema.js";
 import {
   generateItinerary,
   saveItineraryToDb,
   enrichLocations,
   buildItineraryResponse,
   buildItineraryDetailsResponse,
-} from "../services/itinerary.service";
-import { storeItineraryEmbeddings } from "../services/rag-retrieval.service";
-import { parseBudgetLevel, parseTravelStyles } from "../utils/enum-mappers";
-import { itineraryProvider } from "../providers/itinerary.provider.pg";
+} from "../services/itinerary.service.js";
+import { storeItineraryEmbeddings } from "../services/rag-retrieval.service.js";
+import { parseBudgetLevel, parseTravelStyles } from "../utils/enum-mappers.js";
+import { itineraryProvider } from "../providers/itinerary.provider.pg.js";
 
 //GET /api/itinerary/countries
 //List all supported countries with airports

@@ -1,5 +1,5 @@
 
-import { haversineDistance } from '../utils/geo.utils';
+import { haversineDistance } from '../utils/geo.utils.js';
 
 interface Coordinate {
   lat: number;

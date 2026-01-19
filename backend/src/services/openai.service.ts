@@ -1,7 +1,7 @@
 import 'dotenv/config';
 
-import { Airport, CountryConfig } from '../config/countries.config';
-import { getOpenAIClient } from '../utils/openai.utils';
+import { Airport, CountryConfig } from '../config/countries.config.js';
+import { getOpenAIClient } from '../utils/openai.utils.js';
 
 
 export interface AIHotel {

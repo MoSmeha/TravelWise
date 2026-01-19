@@ -3,12 +3,12 @@
  * Delegates to message provider for all operations
  */
 
-import { messageProvider } from '../providers/message.provider.pg';
+import { messageProvider } from '../providers/message.provider.pg.js';
 import {
   ConversationWithDetails,
   MessageWithSender,
   PaginatedResult,
-} from '../provider-contract/message.provider-contract';
+} from '../provider-contract/message.provider-contract.js';
 
 class MessageService {
   /**

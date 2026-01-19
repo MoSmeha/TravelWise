@@ -1,5 +1,5 @@
 import { LocationCategory, LocationClassification } from '../generated/prisma/client.js';
-import prisma from '../lib/prisma';
+import prisma from '../lib/prisma.js';
 import {
   CreateChecklistItemData,
   CreateExternalHotelData,
@@ -14,7 +14,7 @@ import {
   UpdatePlaceEnrichmentData,
   UserItinerarySummary,
   UserItineraryWithDays,
-} from '../provider-contract/itinerary.provider-contract';
+} from '../provider-contract/itinerary.provider-contract.js';
 
 
 class ItineraryPgProvider implements IItineraryProvider {

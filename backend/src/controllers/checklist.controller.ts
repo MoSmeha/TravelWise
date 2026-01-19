@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema';
-import { checklistService } from '../services/checklist.service';
+import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema.js';
+import { checklistService } from '../services/checklist.service.js';
 
 //GET /api/checklist/:itineraryId
 //Get all checklist items for an itinerary

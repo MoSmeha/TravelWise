@@ -1,5 +1,5 @@
-import { authService } from '../services/auth.service';
-import prisma from '../lib/prisma';
+import { authService } from '../services/auth.service.js';
+
 import * as argon2 from 'argon2';
 
 async function testRegister() {

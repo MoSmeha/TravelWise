@@ -4,7 +4,7 @@
  * Uses the places provider for data access (provider-contract pattern)
  */
 
-import { placesProvider } from '../providers/places.provider.pg';
+import { placesProvider } from '../providers/places.provider.pg.js';
 import {
   IPlacesProvider,
   PlaceFilters,
@@ -13,15 +13,15 @@ import {
   CityCount,
   CategoryCount,
   PlaceEnrichmentData,
-} from '../provider-contract/places.provider-contract';
+} from '../provider-contract/places.provider-contract.js';
 import {
   isGooglePlacesConfigured,
   searchPlace as googleSearchPlace,
   getPlaceDetails as googleGetDetails,
   PlaceEnrichment
-} from './google-places.service';
-import { extractCityFromAddress } from '../utils/enum-mappers';
-import { mapGooglePriceLevel } from '../utils/prisma-helpers';
+} from './google-places.service.js';
+import { extractCityFromAddress } from '../utils/enum-mappers.js';
+import { mapGooglePriceLevel } from '../utils/prisma-helpers.js';
 
 // ============================================================================
 // Configuration

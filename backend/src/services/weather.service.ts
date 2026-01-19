@@ -1,5 +1,5 @@
-import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/circuit-breaker';
-import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from './cache.service';
+import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/circuit-breaker.js';
+import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from './cache.service.js';
 
 
 const OPENWEATHERMAP_API_KEY = process.env.OPENWEATHERMAP_API_KEY;

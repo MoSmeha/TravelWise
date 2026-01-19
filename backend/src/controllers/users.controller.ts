@@ -1,7 +1,7 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
-import { friendshipService } from '../services/friendship.service';
-import { socketService } from '../services/socket.service';
+import { AuthRequest } from '../middleware/auth.middleware.js';
+import { friendshipService } from '../services/friendship.service.js';
+import { socketService } from '../services/socket.service.js';
 
 export class UsersController {
   

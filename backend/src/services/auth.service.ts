@@ -8,9 +8,9 @@ import argon2 from 'argon2';
 import * as crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { RegisterInput, LoginInput } from '../schemas/auth.schema';
-import { authProvider } from '../providers/auth.provider.pg';
-import { IAuthProvider, UserResponse, UserWithPassword } from '../provider-contract/auth.provider-contract';
+import { RegisterInput, LoginInput } from '../schemas/auth.schema.js';
+import { authProvider } from '../providers/auth.provider.pg.js';
+import { IAuthProvider, UserResponse, UserWithPassword } from '../provider-contract/auth.provider-contract.js';
 
 
 const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-in-production';
@@ -143,9 +143,16 @@ export class AuthService {
   async rotateRefreshToken(oldToken: string): Promise<TokenPair | null> {
     try {
       // Verify the old token
-      const payload = jwt.verify(oldToken, JWT_SECRET) as { tokenId: string; userId: string; type: string };
+      let payload;
+      try {
+        payload = jwt.verify(oldToken, JWT_SECRET) as { tokenId: string; userId: string; type: string };
+      } catch (err: any) {
+        console.error('[AUTH] Refresh token verification failed:', err.message);
+        return null;
+      }
 
       if (payload.type !== 'refresh') {
+        console.error('[AUTH] Invalid token type:', payload.type);
         return null;
       }
 
@@ -155,7 +162,13 @@ export class AuthService {
       // Find the token
       const existingToken = await this.provider.findRefreshToken(oldTokenHash);
 
-      if (!existingToken || existingToken.expiresAt < new Date()) {
+      if (!existingToken) {
+        console.error('[AUTH] Refresh token not found in DB (hash mismatch or deleted)');
+        return null;
+      }
+
+      if (existingToken.expiresAt < new Date()) {
+        console.error('[AUTH] Refresh token expired at:', existingToken.expiresAt);
         // Token not found or expired - delete if exists
         if (existingToken) {
           await this.provider.deleteRefreshToken(existingToken.id);
@@ -174,7 +187,8 @@ export class AuthService {
       const refreshToken = await this.generateRefreshToken(existingToken.userId);
 
       return { accessToken, refreshToken };
-    } catch {
+    } catch (error: any) {
+      console.error('[AUTH] Unexpected error in rotateRefreshToken:', error.message);
       return null;
     }
   }

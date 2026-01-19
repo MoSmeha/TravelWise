@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import * as placesController from '../controllers/places.controller';
-import { validate } from '../middleware/validate';
-import { getPhotosSchema, listPlacesSchema, searchPlaceSchema } from '../schemas/places.schema';
+import * as placesController from '../controllers/places.controller.js';
+import { validate } from '../middleware/validate.js';
+import { getPhotosSchema, listPlacesSchema, searchPlaceSchema } from '../schemas/places.schema.js';
 
 const router = Router();
 

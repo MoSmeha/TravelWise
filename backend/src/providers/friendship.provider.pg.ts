@@ -1,6 +1,6 @@
 import { User, Friendship, FriendshipStatus } from '../generated/prisma/client.js';
-import prisma from '../lib/prisma';
-import { IFriendshipProvider, FriendRequestWithUser } from '../provider-contract/friendship.provider-contract';
+import prisma from '../lib/prisma.js';
+import { IFriendshipProvider, FriendRequestWithUser } from '../provider-contract/friendship.provider-contract.js';
 
 export class PostgresFriendshipProvider implements IFriendshipProvider {
   async createFriendship(requesterId: string, addresseeId: string): Promise<Friendship> {

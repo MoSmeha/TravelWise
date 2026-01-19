@@ -1,14 +1,14 @@
 import { ChecklistCategory, ItineraryItemType, LocationCategory, Place, PriceLevel } from '../generated/prisma/client.js';
-import { BudgetLevel, TravelStyle, mapBudgetToPriceLevel } from '../utils/enum-mappers';
+import { BudgetLevel, TravelStyle, mapBudgetToPriceLevel } from '../utils/enum-mappers.js';
 import { v4 as uuidv4 } from 'uuid';
-import * as googlePlacesService from './google-places.service';
-import * as routeOptimizer from './route-optimizer.service';
-import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils';
+import * as googlePlacesService from './google-places.service.js';
+import * as routeOptimizer from './route-optimizer.service.js';
+import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils.js';
 import * as fs from 'fs';
 import * as path from 'path';
-import { itineraryProvider } from '../providers/itinerary.provider.pg';
-import { IItineraryProvider } from '../provider-contract/itinerary.provider-contract';
-import { mapPlaceForGenerateResponse } from '../utils/response-mappers';
+import { itineraryProvider } from '../providers/itinerary.provider.pg.js';
+import { IItineraryProvider } from '../provider-contract/itinerary.provider-contract.js';
+import { mapPlaceForGenerateResponse, mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } from '../utils/response-mappers.js';
 
 // Local type extension if needed, but primarily use Prisma Place
 // We use intersection to add arbitrary keys if needed (for enrichments)
@@ -922,8 +922,6 @@ export function buildItineraryDetailsResponse(
   _countryConfig: any,  // kept for API consistency with buildItineraryResponse
   airportConfig: any
 ) {
-  // Import mappers inline to avoid circular dependency
-  const { mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } = require('../utils/response-mappers');
   
   // Build response from ItineraryDay structure
   const days = itinerary.days.map((day: any) => {

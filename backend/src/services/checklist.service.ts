@@ -1,12 +1,12 @@
 import { ChecklistCategory } from '../generated/prisma/client.js';
-import { WeatherForecast } from './weather.service';
-import { checklistProvider } from '../providers/checklist.provider.pg';
+import { WeatherForecast } from './weather.service.js';
+import { checklistProvider } from '../providers/checklist.provider.pg.js';
 import {
   IChecklistProvider,
   ChecklistItemRecord,
   CreateChecklistItemData,
-} from '../provider-contract/checklist.provider-contract';
-import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema';
+} from '../provider-contract/checklist.provider-contract.js';
+import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema.js';
 
 
 export class ChecklistService {

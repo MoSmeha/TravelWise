@@ -4,8 +4,8 @@
  */
 
 import { NextFunction, Request, Response } from 'express';
-import prisma from '../lib/prisma';
-import { authService } from '../services/auth.service';
+import prisma from '../lib/prisma.js';
+import { authService } from '../services/auth.service.js';
 
 /**
  * Extended Request interface with user data

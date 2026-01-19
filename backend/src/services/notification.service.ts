@@ -1,5 +1,5 @@
-import prisma from '../lib/prisma';
-import { socketService } from './socket.service';
+import prisma from '../lib/prisma.js';
+import { socketService } from './socket.service.js';
 import { Notification, NotificationType } from '../generated/prisma/client.js';
 
 class NotificationService {

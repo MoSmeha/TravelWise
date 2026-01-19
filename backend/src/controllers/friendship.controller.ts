@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
-import { friendshipService } from '../services/friendship.service';
+import { AuthRequest } from '../middleware/auth.middleware.js';
+import { friendshipService } from '../services/friendship.service.js';
 import { z } from 'zod';
 
 // Input validation schemas

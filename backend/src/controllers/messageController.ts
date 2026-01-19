@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
-import { messageService } from '../services/message.service';
-import { socketService } from '../services/socket.service';
+import { messageService } from '../services/message.service.js';
+import { socketService } from '../services/socket.service.js';
 import {
   createConversationSchema,
   sendMessageSchema,
   paginationSchema,
   messagePaginationSchema,
   conversationIdSchema,
-} from '../schemas/message.schema';
+} from '../schemas/message.schema.js';
 
 interface AuthRequest extends Request {
   user?: { userId: string };

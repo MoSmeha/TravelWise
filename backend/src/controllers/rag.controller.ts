@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { AskQuestionInput } from '../schemas/itinerary.schema';
-import { askAboutItinerary } from '../services/rag-retrieval.service';
-import { ragProvider } from '../providers/rag.provider.pg';
+import { AskQuestionInput } from '../schemas/itinerary.schema.js';
+import { askAboutItinerary } from '../services/rag-retrieval.service.js';
+import { ragProvider } from '../providers/rag.provider.pg.js';
 
 //POST /api/itinerary/:id/ask
 //Ask a question about an itinerary

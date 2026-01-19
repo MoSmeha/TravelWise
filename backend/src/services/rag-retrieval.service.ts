@@ -1,8 +1,8 @@
 import { ChunkType as PrismaChunkType } from '../generated/prisma/client.js';
-import prisma from '../lib/prisma';
-import { chunkItinerary, ItineraryData } from './chunking.service';
-import { batchGenerateEmbeddings, generateEmbedding } from './embedding.service';
-import { getOpenAIClient } from '../utils/openai.utils';
+import prisma from '../lib/prisma.js';
+import { chunkItinerary, ItineraryData } from './chunking.service.js';
+import { batchGenerateEmbeddings, generateEmbedding } from './embedding.service.js';
+import { getOpenAIClient } from '../utils/openai.utils.js';
 
 
 // Configuration
