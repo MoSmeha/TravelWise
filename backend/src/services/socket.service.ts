@@ -1,6 +1,6 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import { authService } from './auth.service';
+import { authService } from './auth.service.js';
 
 interface AuthSocket extends Socket {
   userId?: string;

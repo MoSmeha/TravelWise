@@ -1,16 +1,17 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express, NextFunction, Request, Response } from 'express';
-import { authenticate } from './middleware/auth.middleware';
-import authRouter from './routes/auth';
-import checklistRouter from './routes/checklist';
-import itineraryRouter from './routes/itinerary';
-import placesRouter from './routes/places';
-import ragRouter from './routes/rag';
-import webhooksRouter from './routes/webhooks';
-import usersRouter from './routes/users';
-import friendshipRouter from './routes/friendship';
-import notificationRouter from './routes/notifications';
+import { authenticate } from './middleware/auth.middleware.js';
+import authRouter from './routes/auth.js';
+import checklistRouter from './routes/checklist.js';
+import itineraryRouter from './routes/itinerary.js';
+import placesRouter from './routes/places.js';
+import ragRouter from './routes/rag.js';
+import webhooksRouter from './routes/webhooks.js';
+import usersRouter from './routes/users.js';
+import friendshipRouter from './routes/friendship.js';
+import notificationRouter from './routes/notifications.js';
+import messagingRouter from './routes/messaging.js';
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use('/api/webhooks', authenticate, webhooksRouter);
 app.use('/api/users', authenticate, usersRouter);
 app.use('/api/friends', authenticate, friendshipRouter);
 app.use('/api/notifications', authenticate, notificationRouter);
+app.use('/api/messages', authenticate, messagingRouter);
 
 // Health check
 app.get('/', (_req: Request, res: Response) => {
@@ -66,7 +68,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 import { createServer } from 'http';
-import { socketService } from './services/socket.service';
+import { socketService } from './services/socket.service.js';
 
 const server = createServer(app);
 

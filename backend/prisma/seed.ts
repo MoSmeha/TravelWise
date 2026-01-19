@@ -1,9 +1,15 @@
-import { LocationCategory, LocationClassification, PriceLevel, PrismaClient } from "@prisma/client";
+import 'dotenv/config';
+import { LocationCategory, LocationClassification, PriceLevel, PrismaClient } from "../src/generated/prisma/client";
 import * as argon2 from "argon2";
 import fs from "fs";
 import path from "path";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 // Helper to map string to LocationCategory enum
 // Helper to map string to LocationCategory enum
@@ -41,7 +47,7 @@ async function main() {
   console.log("🚀 Seeding database from data_to_seed.json...");
 
   // Load data from JSON file
-  const dataPath = path.join(__dirname, "../../frontend/data/data_to_seed.json");
+  const dataPath = path.join(process.cwd(), "../frontend/data/data_to_seed.json");
   
   if (!fs.existsSync(dataPath)) {
     console.error(`❌ Data file not found at ${dataPath}`);

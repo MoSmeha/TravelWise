@@ -56,7 +56,7 @@ export function parseTravelStyles(values: string[] | undefined): TravelStyle[] {
   return values.slice(0, 3).map(v => parseTravelStyle(v));
 }
 
-import { PriceLevel } from '@prisma/client';
+import { PriceLevel } from '../generated/prisma/client.js';
 
 /**
  * Map BudgetLevel to PriceLevel for database filtering

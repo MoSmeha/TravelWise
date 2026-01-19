@@ -1,13 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
-import { generateEmbedding } from '../services/embedding.service';
-
-// Load environment variables from backend root
-dotenv.config({ path: path.join(__dirname, '../../.env') });
-
-const prisma = new PrismaClient();
+import prisma from '../lib/prisma.js';
+import { generateEmbedding } from '../services/embedding.service.js';
 
 async function main() {
   console.log('>>> Starting Reddit Data Ingestion...');

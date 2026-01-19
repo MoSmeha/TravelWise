@@ -1,4 +1,4 @@
-import { ChunkType } from '@prisma/client';
+import { ChunkType } from '../generated/prisma/client.js';
 
 
 export interface ItineraryChunk {

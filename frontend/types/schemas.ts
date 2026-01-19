@@ -210,3 +210,69 @@ export const RAGResponseSchema = z.object({
   confidence: z.number(),
   staleWarning: z.string().optional(),
 });
+
+// ============ MESSAGING ============
+
+export const ConversationTypeSchema = z.enum(['DIRECT', 'GROUP']);
+
+export const MessageUserInfoSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  username: z.string(),
+  avatarUrl: z.string(),
+});
+
+export const ConversationParticipantSchema = z.object({
+  userId: z.string(),
+  role: z.string(),
+  lastReadAt: z.string(),
+  user: MessageUserInfoSchema.optional(),
+});
+
+export const MessageSchema = z.object({
+  id: z.string(),
+  content: z.string(),
+  senderId: z.string(),
+  conversationId: z.string(),
+  createdAt: z.string(),
+  sender: MessageUserInfoSchema.optional(),
+});
+
+export const ConversationSchema = z.object({
+  id: z.string(),
+  type: ConversationTypeSchema,
+  name: z.string().nullable(),
+  imageUrl: z.string().nullable(),
+  updatedAt: z.string(),
+  participants: z.array(ConversationParticipantSchema),
+  lastMessage: MessageSchema.nullable().optional(),
+  unreadCount: z.number().optional(),
+});
+
+export const PaginationSchema = z.object({
+  page: z.number(),
+  limit: z.number(),
+  total: z.number(),
+  hasMore: z.boolean(),
+});
+
+export const PaginatedConversationsSchema = z.object({
+  data: z.array(ConversationSchema),
+  pagination: PaginationSchema,
+});
+
+export const PaginatedMessagesSchema = z.object({
+  data: z.array(MessageSchema),
+  pagination: PaginationSchema,
+});
+
+// Export types
+export type ConversationType = z.infer<typeof ConversationTypeSchema>;
+export type MessageUserInfo = z.infer<typeof MessageUserInfoSchema>;
+export type ConversationParticipant = z.infer<typeof ConversationParticipantSchema>;
+export type Message = z.infer<typeof MessageSchema>;
+export type Conversation = z.infer<typeof ConversationSchema>;
+export type Pagination = z.infer<typeof PaginationSchema>;
+export type PaginatedConversations = z.infer<typeof PaginatedConversationsSchema>;
+export type PaginatedMessages = z.infer<typeof PaginatedMessagesSchema>;
+

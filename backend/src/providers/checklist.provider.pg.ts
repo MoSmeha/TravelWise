@@ -1,9 +1,9 @@
-import prisma from '../lib/prisma';
+import prisma from '../lib/prisma.js';
 import {
   ChecklistItemRecord,
   CreateChecklistItemData,
   IChecklistProvider,
-} from '../provider-contract/checklist.provider-contract';
+} from '../provider-contract/checklist.provider-contract.js';
 
 class ChecklistPgProvider implements IChecklistProvider {
   async findByItineraryId(itineraryId: string): Promise<ChecklistItemRecord[]> {

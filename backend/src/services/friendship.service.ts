@@ -1,7 +1,7 @@
-import { Friendship, User } from '@prisma/client';
-import { friendshipProvider } from '../providers/friendship.provider.pg';
-import { notificationService } from './notification.service';
-import { IFriendshipProvider } from '../provider-contract/friendship.provider-contract';
+import { Friendship, User } from '../generated/prisma/client.js';
+import { friendshipProvider } from '../providers/friendship.provider.pg.js';
+import { notificationService } from './notification.service.js';
+import { IFriendshipProvider } from '../provider-contract/friendship.provider-contract.js';
 
 class FriendshipService {
   private provider: IFriendshipProvider;

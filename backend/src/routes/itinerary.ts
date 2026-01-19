@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import * as itineraryController from '../controllers/itinerary.controller';
-import { requireOwnership } from '../middleware/ownership.middleware';
-import { validate } from '../middleware/validate';
-import { generateItinerarySchema } from '../schemas/itinerary.schema';
+import * as itineraryController from '../controllers/itinerary.controller.js';
+import { requireOwnership } from '../middleware/ownership.middleware.js';
+import { validate } from '../middleware/validate.js';
+import { generateItinerarySchema } from '../schemas/itinerary.schema.js';
 
 const router = Router();
 

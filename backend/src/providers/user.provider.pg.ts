@@ -1,4 +1,4 @@
-// import { UserProviderContract } from "../provider-contract/user.provider-contract";
+// import { UserProviderContract } from "../provider-contract/user.provider-contract.js";
 
 // export class UserPgProvider implements UserProviderContract {
 //   createUser(firstName: string, lastName: string): void {

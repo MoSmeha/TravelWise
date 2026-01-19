@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import * as ragController from '../controllers/rag.controller';
-import { requireOwnership } from '../middleware/ownership.middleware';
-import { validate } from '../middleware/validate';
-import { askQuestionSchema } from '../schemas/itinerary.schema';
+import * as ragController from '../controllers/rag.controller.js';
+import { requireOwnership } from '../middleware/ownership.middleware.js';
+import { validate } from '../middleware/validate.js';
+import { askQuestionSchema } from '../schemas/itinerary.schema.js';
 
 const router = Router();
 

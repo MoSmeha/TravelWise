@@ -1,5 +1,5 @@
 
-import { LocationCategory, LocationClassification, ItineraryItemType, ChecklistCategory, PriceLevel } from '@prisma/client';
+import { LocationCategory, LocationClassification, ItineraryItemType, ChecklistCategory, PriceLevel } from '../generated/prisma/client.js';
 
 
 export interface FetchPlacesParams {

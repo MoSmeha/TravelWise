@@ -1,11 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
-import path from 'path';
-import { askAboutItinerary } from '../services/rag-retrieval.service';
-
-dotenv.config({ path: path.join(__dirname, '../../.env') });
-
-const prisma = new PrismaClient();
+import 'dotenv/config';
+import prisma from '../lib/prisma.js';
+import { askAboutItinerary } from '../services/rag-retrieval.service.js';
 
 async function main() {
   console.log('[TEST] Testing RAG System with Global Knowledge...');

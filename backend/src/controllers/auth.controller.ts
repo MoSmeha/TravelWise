@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
-import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
 import {
   LoginInput,
   RefreshTokenInput,
   RegisterInput,
   ResendVerificationInput,
   VerifyEmailInput,
-} from '../schemas/auth.schema';
-import { authService } from '../services/auth.service';
-import { sendVerificationEmail, sendWelcomeEmail } from '../services/email.service';
+} from '../schemas/auth.schema.js';
+import { authService } from '../services/auth.service.js';
+import { sendVerificationEmail, sendWelcomeEmail } from '../services/email.service.js';
 
 //POST /api/auth/register
 

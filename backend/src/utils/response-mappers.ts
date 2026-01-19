@@ -4,7 +4,7 @@
  * Follows DRY principle - used across multiple controllers
  */
 
-import { LocationCategory, LocationClassification } from '@prisma/client';
+import { LocationCategory, LocationClassification } from '../generated/prisma/client.js';
 
 // ============================================================================
 // Photo URL Helpers

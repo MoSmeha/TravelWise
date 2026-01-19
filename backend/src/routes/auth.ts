@@ -4,22 +4,22 @@
  */
 
 import { Router } from 'express';
-import * as authController from '../controllers/auth.controller';
-import { authenticate } from '../middleware/auth.middleware';
+import * as authController from '../controllers/auth.controller.js';
+import { authenticate } from '../middleware/auth.middleware.js';
 import {
   loginRateLimiter,
   refreshRateLimiter,
   registerRateLimiter,
   resendVerificationRateLimiter,
-} from '../middleware/rate-limit.middleware';
-import { validate } from '../middleware/validate';
+} from '../middleware/rate-limit.middleware.js';
+import { validate } from '../middleware/validate.js';
 import {
   loginSchema,
   refreshTokenSchema,
   registerSchema,
   resendVerificationSchema,
   verifyEmailSchema,
-} from '../schemas/auth.schema';
+} from '../schemas/auth.schema.js';
 
 const router = Router();
 
