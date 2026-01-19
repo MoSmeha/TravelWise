@@ -220,8 +220,8 @@ export default function ItineraryScreen() {
               <Text className="text-xs text-sky-700 px-4 pb-3 italic">🗺️ {day.routeDescription}</Text>
             )}
 
-            {day.locations.map((location, index) => (
-              <LocationItem key={location.id} location={location} index={index} />
+            {day.locations.map((location, locIndex) => (
+              <LocationItem key={`${day.id || `day-${index}`}-${location.id}-${locIndex}`} location={location} index={locIndex} />
             ))}
           </View>
         ))}

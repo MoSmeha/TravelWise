@@ -10,7 +10,7 @@ import { z } from 'zod';
  * POST /api/friends/request
  */
 export const sendFriendRequestSchema = z.object({
-  addresseeId: z.string().uuid('Invalid user ID format'),
+  addresseeId: z.string().cuid('Invalid user ID format'),
 });
 
 /**
@@ -18,7 +18,7 @@ export const sendFriendRequestSchema = z.object({
  * Used for accept/reject endpoints
  */
 export const friendshipIdParamSchema = z.object({
-  id: z.string().uuid('Invalid friendship ID format'),
+  id: z.string().cuid('Invalid friendship ID format'),
 });
 
 // Type exports for use in controllers

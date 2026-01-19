@@ -499,6 +499,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   // Use route optimizer to order activities within each day
   // Each day starts from previous day's hotel (or airport for Day 1)
   const days: ItineraryDayResult[] = [];
+  const globalUsedLocationIds = new Set<string>(); // Track locations across all days
   
   for (let i = 0; i < structuredDays.length; i++) {
     const sd = structuredDays[i];
@@ -520,7 +521,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     }
     
     // Collect all places for the day for route optimization
-    const dayPlaces = [
+    const dayPlacesRaw = [
       sd.activities.anchor,
       sd.meals.breakfast,
       sd.activities.medium,
@@ -529,6 +530,16 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       sd.meals.dinner,
       sd.activities.evening,
     ].filter((p): p is PlaceExtended => p !== null);
+    
+    // Deduplicate by id - prevent same location appearing twice in itinerary (within or across days)
+    const dayPlaces = dayPlacesRaw.filter(p => {
+      if (globalUsedLocationIds.has(p.id)) {
+        console.warn(`[DUPLICATE] Skipping duplicate location "${p.name}" (${p.id}) in Day ${sd.dayNumber}`);
+        return false;
+      }
+      globalUsedLocationIds.add(p.id);
+      return true;
+    });
     
     // Optimize route within the day from start point
     const placesWithCoords = dayPlaces.map(p => ({
