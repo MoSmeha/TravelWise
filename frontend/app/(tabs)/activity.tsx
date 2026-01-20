@@ -423,14 +423,14 @@ export default function ActivityScreen() {
             <View className="flex-1">
                 {/* Search Bar */}
                 <View className="px-4 py-2">
-                    <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2.5">
-                        <Search size={20} color="#9ca3af" />
+                    <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-1">
+                        <Search size={15} color="#9ca3af" />
                         <TextInput
                             placeholder="Search friends..."
                             placeholderTextColor="#9ca3af"
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            className="flex-1 ml-2 text-gray-900 text-base"
+                            className="flex-1 ml-2 text-gray-900 text-sm"
                         />
                     </View>
                 </View>
@@ -465,26 +465,21 @@ export default function ActivityScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-            {/* Header */}
-            <View className="px-5 pt-2 pb-4">
-                <Text className="text-3xl font-bold text-gray-900">Activity</Text>
-            </View>
-
             {/* Tabs */}
-            <View className="flex-row px-5 mb-2">
+            <View className="flex-row items-center px-4 pt-4 pb-2 gap-4">
                 <TouchableOpacity 
                     onPress={() => setActiveTab('notifications')}
-                    className={`mr-6 pb-2 border-b-2 ${activeTab === 'notifications' ? 'border-[#0f172a]' : 'border-transparent'}`}
+                    className={`flex-1 py-2.5 rounded-xl items-center justify-center ${activeTab === 'notifications' ? 'bg-[#094772]' : 'bg-gray-100'}`}
                 >
-                    <Text className={`text-base font-semibold ${activeTab === 'notifications' ? 'text-gray-900' : 'text-gray-500'}`}>
+                    <Text className={`text-base font-semibold ${activeTab === 'notifications' ? 'text-white' : 'text-gray-500'}`}>
                         Notifications
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                     onPress={() => setActiveTab('messages')}
-                    className={`pb-2 border-b-2 ${activeTab === 'messages' ? 'border-[#0f172a]' : 'border-transparent'}`}
+                    className={`flex-1 py-2.5 rounded-xl items-center justify-center ${activeTab === 'messages' ? 'bg-[#094772]' : 'bg-gray-100'}`}
                 >
-                    <Text className={`text-base font-semibold ${activeTab === 'messages' ? 'text-gray-900' : 'text-gray-500'}`}>
+                    <Text className={`text-base font-semibold ${activeTab === 'messages' ? 'text-white' : 'text-gray-500'}`}>
                         Messages
                     </Text>
                 </TouchableOpacity>
