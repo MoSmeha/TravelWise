@@ -61,7 +61,7 @@ export default function TripsScreen() {
     const dateString = new Date(item.createdAt).toLocaleDateString();
 
     return (
-      <View className="mb-5 mx-1 rounded-2xl bg-white overflow-hidden shadow-sm elevation-2"> 
+      <View className="mb-5 mx-1 rounded-2xl bg-[#f5f5f5] overflow-hidden shadow-sm elevation-2"> 
         {/* Image Section */}
         <View className="h-[180px] w-full relative">
           <Image 
@@ -129,7 +129,7 @@ export default function TripsScreen() {
                <Text className="text-gray-400 text-xs">Created {dateString}</Text>
                <TouchableOpacity 
                   onPress={() => handlePress(item.id, item)}
-                  className="bg-[#0f172a] px-4 py-2 rounded-xl"
+                  className="bg-[#094772] px-4 py-2 rounded-xl"
                >
                    <Text className="text-white font-bold text-xs">View Details</Text>
                </TouchableOpacity>
@@ -141,10 +141,10 @@ export default function TripsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-[#F3F0E9] px-5 pt-16">
+    <View className="flex-1 bg-gray-50 px-5 pt-16">
       <View className="flex-row justify-between items-start mb-6">
         <View>
-          <Text className="text-[#0f172a] text-3xl font-extrabold tracking-tight">My Trips</Text>
+          <Text className="text-[#094772] text-3xl font-extrabold tracking-tight">My Trips</Text>
           <Text className="text-gray-500 text-base mt-0.5">{itineraries ? itineraries.length : 0} saved itineraries</Text>
         </View>
         
@@ -152,7 +152,7 @@ export default function TripsScreen() {
 
             <TouchableOpacity 
                 onPress={() => router.push('/new-trip')}
-                className="bg-[#0f172a] w-10 h-10 rounded-full items-center justify-center shadow-sm"
+                className="bg-[#094772] w-10 h-10 rounded-full items-center justify-center shadow-sm"
             >
                 <Text className="text-white font-bold text-xl leading-none pb-0.5">+</Text>
             </TouchableOpacity>
