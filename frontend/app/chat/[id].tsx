@@ -260,7 +260,7 @@ export default function ChatScreen() {
                 />
 
                 {/* Input */}
-                <View className="flex-row items-center px-4 py-3 border-t border-gray-100 bg-white">
+                <View className="flex-row items-center px-4 py-3 pb-6 border-t border-gray-100 bg-white">
                     <TextInput
                         value={message}
                         onChangeText={setMessage}
