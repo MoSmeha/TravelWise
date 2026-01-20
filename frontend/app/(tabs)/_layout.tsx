@@ -137,13 +137,7 @@ export default function TabLayout() {
         }}
       />
       
-      {/* Hidden Screens */}
-      <Tabs.Screen 
-        name="checklist" 
-        options={{ 
-            href: null,
-        }} 
-      />
+
     </Tabs>
   );
 }

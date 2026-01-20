@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
@@ -11,6 +11,8 @@ import type { Hotel, ItineraryResponse, Location } from '../types/api';
 
 const HOTEL_COLOR = '#8b5cf6';
 const AIRPORT_COLOR = '#0ea5e9';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Bot, MessageCircle } from 'lucide-react-native';
 
 export default function MapScreen() {
   const params = useLocalSearchParams();
@@ -29,6 +31,7 @@ export default function MapScreen() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [locationPhotos, setLocationPhotos] = useState<Record<string, { photos: string[], reviews: any[], loading: boolean }>>({});
+  const [isNavigatingToItinerary, setIsNavigatingToItinerary] = useState(false);
 
   // Combine data sources: prefer passed, then fetched
   const data = passedData || (fetchedData as ItineraryResponse | undefined) || null;
@@ -331,7 +334,40 @@ export default function MapScreen() {
   };
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 bg-white">
+      <Stack.Screen options={{ headerShown: false }} />
+      {/* Custom Header */}
+      <SafeAreaView edges={['top']} className="bg-white shadow-sm z-10 pb-2">
+        <View className="flex-row items-center justify-between px-4 pt-2">
+          
+          <TouchableOpacity
+            className="w-10 h-10 items-center justify-center mr-2"
+            onPress={() => router.back()}
+          >
+           <ArrowLeft size={28} color="#000" />
+          </TouchableOpacity>
+
+          <View className="flex-1">
+             <Text className="text-xl font-extrabold text-gray-900" numberOfLines={1}>
+                {`${data.country?.name || 'Trip'} Adventure`}
+             </Text>
+             <Text className="text-sm text-gray-500 font-medium">
+                {data.itinerary.numberOfDays} days • {allLocations.length} places
+             </Text>
+          </View>
+
+          <TouchableOpacity
+            className="bg-[#004e89] px-4 py-2 rounded-lg shadow-sm"
+            onPress={() => router.push({
+              pathname: '/checklist',
+              params: { itineraryId: data.itinerary.id }
+            })}
+          >
+            <Text className="text-white text-sm font-bold">Checklist</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+
       <MapView
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
@@ -454,57 +490,51 @@ export default function MapScreen() {
         </View>
       )}
 
-      {/* Legend */}
-      <View className="absolute top-12 left-4 right-4 bg-white/95 rounded-2xl p-3 flex-row justify-around shadow-sm border border-gray-100/50 backdrop-blur-sm">
-        <View className="flex-row items-center gap-2">
-          <View className="w-3 h-3 rounded-full bg-sky-500 shadow-sm" />
-          <Text className="text-xs text-gray-600 font-medium">Airport</Text>
-        </View>
-        <View className="flex-row items-center gap-2">
-          <View className="w-3 h-3 rounded-full bg-green-500 shadow-sm" />
-          <Text className="text-xs text-gray-600 font-medium">Gem</Text>
-        </View>
-        <View className="flex-row items-center gap-2">
-          <View className="w-3 h-3 rounded-full bg-orange-500 shadow-sm" />
-          <Text className="text-xs text-gray-600 font-medium">Spot</Text>
-        </View>
-        <View className="flex-row items-center gap-2">
-          <View className="w-3 h-3 rounded-full bg-violet-500 shadow-sm" />
-          <Text className="text-xs text-gray-600 font-medium">Hotel</Text>
-        </View>
-      </View>
+
 
       {/* Bottom Navigation */}
-      <View className="absolute bottom-0 left-0 right-0 flex-row bg-white px-6 py-5 border-t border-gray-100 gap-4 shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.1)]">
+      <View className="absolute bottom-0 left-0 right-0 flex-row bg-white px-6 py-5 border-t border-gray-100 gap-4 shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.1)] pb-8">
         <TouchableOpacity
-          className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center border border-gray-200"
-          onPress={() => router.back()}
-        >
-          <ArrowLeft size={24} color="#374151" strokeWidth={2.5} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-1 bg-violet-600 rounded-2xl flex-row items-center justify-center gap-2 shadow-lg shadow-violet-200"
+          className="flex-1 bg-[#8b5cf6] rounded-2xl flex-row items-center justify-center gap-2 shadow-lg shadow-violet-200 h-14"
           onPress={() => router.push({
-            pathname: '/checklist',
+            pathname: '/chat/new',
             params: { itineraryId: data.itinerary.id }
           })}
         >
-          <List size={20} color="#fff" strokeWidth={2.5} />
-          <Text className="text-white text-base font-bold tracking-wide">Checklist</Text>
+          <Bot size={24} color="#fff" strokeWidth={2.5} />
+          <Text className="text-white text-base font-bold tracking-wide">AI Assistant</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="flex-1 bg-blue-600 rounded-2xl flex-row items-center justify-center gap-2 shadow-lg shadow-blue-200"
-          onPress={() =>
-            router.push({
-              pathname: '/itinerary',
-              params: { data: JSON.stringify(data) },
-            })
-          }
+          className={`flex-1 bg-gray-100 rounded-2xl flex-row items-center justify-center gap-2 border border-gray-200 h-14 ${isNavigatingToItinerary ? 'opacity-50' : ''}`}
+          onPress={() => {
+            if (isNavigatingToItinerary) return;
+            setIsNavigatingToItinerary(true);
+            
+            // Small delay to let the UI update (loader) before freezing on transition
+            requestAnimationFrame(() => {
+                router.push({
+                    pathname: '/itinerary',
+                    params: { data: JSON.stringify(data) },
+                });
+                
+                // Reset state after a delay to ensure we can navigate again if we come back
+                // or if the navigation "animation" completes
+                setTimeout(() => {
+                    setIsNavigatingToItinerary(false);
+                }, 1000);
+            });
+          }}
+          disabled={isNavigatingToItinerary}
         >
-          <MapPin size={20} color="#fff" strokeWidth={2.5} />
-          <Text className="text-white text-base font-bold tracking-wide">Itinerary</Text>
+          {isNavigatingToItinerary ? (
+            <ActivityIndicator size="small" color="#374151" />
+          ) : (
+            <>
+              <MapPin size={22} color="#374151" strokeWidth={2.5} />
+              <Text className="text-gray-700 text-base font-bold tracking-wide">Itinerary</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </View>

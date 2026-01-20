@@ -13,7 +13,7 @@ import {
 import { LocationItem } from '../components/itinerary/LocationItem';
 import { useAskQuestion } from '../hooks/mutations/useItinerary';
 import { useItineraryStore } from '../store/itineraryStore';
-import type { Hotel, ItineraryResponse, RAGResponse } from '../types/api';
+import type { Hotel, ItineraryResponse } from '../types/api';
 
 export default function ItineraryScreen() {
   const params = useLocalSearchParams();
@@ -23,13 +23,7 @@ export default function ItineraryScreen() {
   // Itinerary store for persisting active itinerary
   const setActiveItinerary = useItineraryStore((state) => state.setActiveItinerary);
   
-  // RAG Chatbot state
-  const [chatQuestion, setChatQuestion] = useState('');
-  const [chatAnswer, setChatAnswer] = useState<RAGResponse | null>(null);
-  const [showChat, setShowChat] = useState(false);
-  
   // React Query Hooks
-  const askQuestionMutation = useAskQuestion();
 
 
   useEffect(() => {
@@ -49,24 +43,7 @@ export default function ItineraryScreen() {
     }
   }, [params.data, setActiveItinerary]);
   
-  // Ask question using RAG
-  const askQuestion = async () => {
-    if (!chatQuestion.trim() || !data?.itinerary.id) return;
-    
-    try {
-      setChatAnswer(null);
-      const response = await askQuestionMutation.mutateAsync({
-        itineraryId: data.itinerary.id,
-        question: chatQuestion,
-      });
-      setChatAnswer(response);
-    } catch (err: any) {
-      Alert.alert(
-        'Error', 
-        err.response?.data?.message || 'Failed to get answer. Embeddings may not be generated yet.'
-      );
-    }
-  };
+
 
   const handleHotelBook = (url: string) => {
     Linking.openURL(url).catch(() => {
@@ -243,59 +220,7 @@ export default function ItineraryScreen() {
           </View>
         </View>
 
-        {/* RAG Chatbot Section */}
-        <View className="m-4 mt-0">
-          <TouchableOpacity 
-            className="bg-purple-500 p-3.5 rounded-xl items-center"
-            onPress={() => setShowChat(!showChat)}
-          >
-            <Text className="text-white text-base font-semibold">
-              💬 {showChat ? 'Hide' : 'Ask Questions About Your Trip'}
-            </Text>
-          </TouchableOpacity>
-          
-          {showChat && (
-            <View className="bg-purple-50 p-4 rounded-xl mt-3">
-              <Text className="text-sm text-purple-800 mb-3">
-                Ask anything about your itinerary, places, or recommendations:
-              </Text>
-              <View className="flex-row gap-2">
-                <TextInput
-                  className="flex-1 bg-white border border-purple-300 rounded-lg p-3 text-sm max-h-20"
-                  value={chatQuestion}
-                  onChangeText={setChatQuestion}
-                  placeholder="e.g., What's the best time to visit Jeita Grotto?"
-                  multiline
-                />
-                <TouchableOpacity
-                  className={`bg-purple-500 px-4 py-2 rounded-lg justify-center items-center ${askQuestionMutation.isPending ? 'opacity-60' : ''}`}
-                  onPress={askQuestion}
-                  disabled={askQuestionMutation.isPending}
-                >
-                  {askQuestionMutation.isPending ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                  ) : (
-                    <Text className="text-white font-semibold">Ask</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-              
-              {chatAnswer && (
-                <View className="mt-4 bg-white p-3 rounded-lg border-l-4 border-l-purple-500">
-                  <Text className="text-base text-gray-800 leading-6">{chatAnswer.answer}</Text>
-                  <View className="flex-row mt-3 gap-3">
-                    <Text className="text-xs text-purple-800">
-                      Confidence: {Math.round(chatAnswer.confidence * 100)}%
-                    </Text>
-                    {chatAnswer.staleWarning && (
-                      <Text className="text-xs text-orange-600">⚠️ {chatAnswer.staleWarning}</Text>
-                    )}
-                  </View>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
+
       </ScrollView>
 
       {/* Bottom Navigation */}

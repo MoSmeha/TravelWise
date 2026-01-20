@@ -1,4 +1,3 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
@@ -14,10 +13,13 @@ import {
     UIManager,
     View
 } from 'react-native';
-import { useChecklist } from '../../hooks/queries/useChecklist';
-import { useAddChecklistItem, useToggleChecklistItem } from '../../hooks/mutations/useChecklist';
-import { useItineraryStore } from '../../store/itineraryStore';
-import type { ChecklistItem } from '../../types/api';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft } from 'lucide-react-native';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import { useChecklist } from '../hooks/queries/useChecklist';
+import { useAddChecklistItem, useToggleChecklistItem } from '../hooks/mutations/useChecklist';
+import { useItineraryStore } from '../store/itineraryStore';
+import type { ChecklistItem } from '../types/api';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android') {
@@ -118,6 +120,21 @@ export default function ChecklistScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      {/* Header */}
+      <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff', zIndex: 10 }}>
+        <View style={styles.header}>
+             <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => router.back()}
+             >
+                <ArrowLeft size={24} color="#374151" />
+             </TouchableOpacity>
+             <Text style={styles.headerTitle}>Trip Checklist</Text>
+             <View style={{ width: 40 }} /> 
+        </View>
+      </SafeAreaView>
+
       {/* Progress Bar */}
       <View style={styles.progressSection}>
         <View style={styles.progressHeader}>
@@ -374,6 +391,27 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#fff',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
   },
 });
 
