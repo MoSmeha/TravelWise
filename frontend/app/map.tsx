@@ -2,7 +2,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-import { AlertTriangle, ArrowLeft, Clock, DollarSign, List, MapPin, Star, X } from 'lucide-react-native';
+import { AlertTriangle, ArrowLeft, Clock, DollarSign, List, MapPin, Star, X, Gem } from 'lucide-react-native';
 import { placesService } from '../services/api';
 import { CLASSIFICATION_COLORS, DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
@@ -400,22 +400,34 @@ export default function MapScreen() {
         )}
 
         {/* Location markers */}
-        {allLocations.map((location, index) => (
-          <Marker
-            key={`${location.id}-${index}`}
-            coordinate={{
-              latitude: location.latitude,
-              longitude: location.longitude,
-            }}
-            pinColor={CLASSIFICATION_COLORS[location.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF'}
-            title={location.name}
-            description={location.category}
-            onPress={() => {
-              setSelectedLocation(location);
-              setSelectedHotel(null);
-            }}
-          />
-        ))}
+        {allLocations.map((location, index) => {
+          const isHiddenGem = location.classification === 'HIDDEN_GEM';
+          return (
+            <Marker
+              key={`${location.id}-${index}`}
+              coordinate={{
+                latitude: location.latitude,
+                longitude: location.longitude,
+              }}
+              pinColor={!isHiddenGem ? (CLASSIFICATION_COLORS[location.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF') : undefined}
+              title={location.name}
+              description={location.category}
+              onPress={() => {
+                setSelectedLocation(location);
+                setSelectedHotel(null);
+              }}
+            >
+              {isHiddenGem && (
+                <View className="items-center justify-center">
+                   <View className="bg-[#22c55e] p-2 rounded-full border-2 border-white shadow-sm">
+                      <Gem size={18} color="white" strokeWidth={2.5} />
+                   </View>
+                   <View className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#22c55e] -mt-[1px]" />
+                </View>
+              )}
+            </Marker>
+          );
+        })}
 
         {/* Hotel markers */}
         {hotels.map((hotel) => (
