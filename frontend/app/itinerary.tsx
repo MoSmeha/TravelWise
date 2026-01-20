@@ -1,4 +1,16 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { 
+    AlertTriangle, 
+    ArrowLeft, 
+    DollarSign, 
+    Hotel, 
+    Lightbulb, 
+    Plane, 
+    ShieldAlert,
+    Utensils,
+    Car,
+    Ticket
+} from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -6,25 +18,22 @@ import {
     Linking,
     ScrollView,
     Text,
-    TextInput,
     TouchableOpacity,
     View
 } from 'react-native';
-import { LocationItem } from '../components/itinerary/LocationItem';
-import { useAskQuestion } from '../hooks/mutations/useItinerary';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DayAccordion } from '../components/itinerary/DayAccordion';
 import { useItineraryStore } from '../store/itineraryStore';
-import type { Hotel, ItineraryResponse } from '../types/api';
+import type { Hotel as HotelType, ItineraryResponse } from '../types/api';
 
 export default function ItineraryScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [data, setData] = useState<ItineraryResponse | null>(null);
   
   // Itinerary store for persisting active itinerary
   const setActiveItinerary = useItineraryStore((state) => state.setActiveItinerary);
-  
-  // React Query Hooks
-
 
   useEffect(() => {
     if (params.data) {
@@ -42,8 +51,6 @@ export default function ItineraryScreen() {
       }
     }
   }, [params.data, setActiveItinerary]);
-  
-
 
   const handleHotelBook = (url: string) => {
     Linking.openURL(url).catch(() => {
@@ -53,97 +60,133 @@ export default function ItineraryScreen() {
 
   if (!data) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="mt-2 text-gray-500">Loading itinerary...</Text>
+      <View className="flex-1 items-center justify-center bg-gray-50">
+        <ActivityIndicator size="large" color="#094772" />
+        <Text className="mt-3 text-gray-500">Loading itinerary...</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-gray-100">
-      <ScrollView className="flex-1">
-        {/* Header */}
-        <View className="bg-white p-5 border-b border-gray-200">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-2xl font-bold text-gray-900">{data.country?.name || 'Your'} Trip</Text>
-            <View className="bg-purple-500 px-2.5 py-1 rounded-md">
-              <Text className="text-white text-xs font-semibold">🤖 AI</Text>
+    <View className="flex-1 bg-gray-50">
+      {/* Header - White with proper capitalization */}
+      <View 
+        className="bg-white border-b border-gray-200"
+        style={{ paddingTop: insets.top }}
+      >
+        <View className="flex-row items-center px-4 py-3">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="mr-3 p-1"
+          >
+            <ArrowLeft size={24} color="#374151" />
+          </TouchableOpacity>
+          <Text className="text-lg font-semibold text-gray-900">Itinerary</Text>
+        </View>
+      </View>
+
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* Trip Summary Card */}
+        <View className="bg-white mx-4 mt-4 p-5 rounded-2xl">
+          <View className="flex-row items-start justify-between">
+            <View className="flex-1">
+              <Text className="text-2xl font-bold text-gray-900">
+                {data.country?.name || 'Your'} Trip
+              </Text>
+              <Text className="text-base text-gray-500 mt-1">
+                {data.itinerary.numberOfDays} days - ${data.itinerary.budgetUSD} budget
+              </Text>
+            </View>
+            <View className="bg-[#094772] px-3 py-1.5 rounded-full">
+              <Text className="text-white text-xs font-semibold">AI Generated</Text>
             </View>
           </View>
-          <Text className="text-base text-gray-600 mt-1">
-            {data.itinerary.numberOfDays} days • ${data.itinerary.budgetUSD} budget
-          </Text>
-          <Text className="text-sm text-sky-500 mt-1.5">
-            ✈️ Arriving at {data.airport.name} ({data.airport.code})
-          </Text>
-          {data.itinerary.totalEstimatedCostUSD && (
-            <Text className="text-lg font-semibold text-green-500 mt-2">
-              💰 Est. Total: ${data.itinerary.totalEstimatedCostUSD} USD
+          
+          <View className="flex-row items-center mt-3">
+            <Plane size={16} color="#0284C7" />
+            <Text className="text-sm text-sky-600 ml-2">
+              Arriving at {data.airport.name} ({data.airport.code})
             </Text>
+          </View>
+          
+          {data.itinerary.totalEstimatedCostUSD && (
+            <View className="flex-row items-center mt-2 pt-3 border-t border-gray-100">
+              <DollarSign size={18} color="#22C55E" />
+              <Text className="text-lg font-bold text-green-600 ml-1">
+                Est. Total: ${data.itinerary.totalEstimatedCostUSD} USD
+              </Text>
+            </View>
           )}
         </View>
 
         {/* Budget Breakdown */}
         {data.itinerary.budgetBreakdown && (
-          <View className="bg-white m-4 p-4 rounded-xl">
-            <Text className="text-lg font-bold mb-3 text-gray-800">Budget Breakdown</Text>
-            <View className="flex-row justify-between mb-1.5">
-              <Text className="text-sm text-gray-800">🍽️ Food:</Text>
-              <Text className="text-sm font-semibold text-green-500">${data.itinerary.budgetBreakdown.food}</Text>
+          <View className="bg-white mx-4 mt-3 p-4 rounded-2xl">
+            <Text className="text-base font-bold mb-3 text-gray-800">Budget Breakdown</Text>
+            <View className="flex-row justify-between py-2 border-b border-gray-100">
+              <View className="flex-row items-center">
+                <Utensils size={16} color="#6B7280" />
+                <Text className="text-sm text-gray-700 ml-2">Food</Text>
+              </View>
+              <Text className="text-sm font-semibold text-green-600">${data.itinerary.budgetBreakdown.food}</Text>
             </View>
-            <View className="flex-row justify-between mb-1.5">
-              <Text className="text-sm text-gray-800">🎯 Activities:</Text>
-              <Text className="text-sm font-semibold text-green-500">${data.itinerary.budgetBreakdown.activities}</Text>
+            <View className="flex-row justify-between py-2 border-b border-gray-100">
+              <View className="flex-row items-center">
+                <Ticket size={16} color="#6B7280" />
+                <Text className="text-sm text-gray-700 ml-2">Activities</Text>
+              </View>
+              <Text className="text-sm font-semibold text-green-600">${data.itinerary.budgetBreakdown.activities}</Text>
             </View>
-            <View className="flex-row justify-between mb-1.5">
-              <Text className="text-sm text-gray-800">🚗 Transport:</Text>
-              <Text className="text-sm font-semibold text-green-500">${data.itinerary.budgetBreakdown.transport}</Text>
+            <View className="flex-row justify-between py-2 border-b border-gray-100">
+              <View className="flex-row items-center">
+                <Car size={16} color="#6B7280" />
+                <Text className="text-sm text-gray-700 ml-2">Transport</Text>
+              </View>
+              <Text className="text-sm font-semibold text-green-600">${data.itinerary.budgetBreakdown.transport}</Text>
             </View>
-            <View className="flex-row justify-between mb-1.5">
-              <Text className="text-sm text-gray-800">🏨 Accommodation:</Text>
-              <Text className="text-sm font-semibold text-green-500">${data.itinerary.budgetBreakdown.accommodation}</Text>
+            <View className="flex-row justify-between py-2">
+              <View className="flex-row items-center">
+                <Hotel size={16} color="#6B7280" />
+                <Text className="text-sm text-gray-700 ml-2">Accommodation</Text>
+              </View>
+              <Text className="text-sm font-semibold text-green-600">${data.itinerary.budgetBreakdown.accommodation}</Text>
             </View>
-          </View>
-        )}
-
-        {/* Route Summary */}
-        {data.routeSummary && (
-          <View className="bg-sky-100 m-4 mt-0 p-4 rounded-xl">
-            <Text className="text-lg font-bold mb-3 text-gray-800">🗺️ Route Overview</Text>
-            <Text className="text-sm text-sky-700 leading-5">{data.routeSummary}</Text>
           </View>
         )}
 
         {/* Hotels Section */}
         {data.hotels && data.hotels.length > 0 && (
-          <View className="m-4 mt-0">
-            <Text className="text-lg font-bold mb-3 text-gray-800">🏨 Recommended Hotels</Text>
-            {data.hotels.map((hotel: Hotel) => (
-              <View key={hotel.id} className="bg-white p-4 rounded-xl mb-3 border-l-4 border-l-purple-500">
+          <View className="mx-4 mt-4">
+            <View className="flex-row items-center mb-3">
+              <Hotel size={18} color="#374151" />
+              <Text className="text-base font-bold text-gray-800 ml-2">Recommended Hotels</Text>
+            </View>
+            {data.hotels.map((hotel: HotelType) => (
+              <View key={hotel.id} className="bg-white p-4 rounded-2xl mb-3">
                 <Text className="text-lg font-bold text-gray-900">{hotel.name}</Text>
-                <Text className="text-xs text-gray-600 mt-0.5">{hotel.neighborhood}</Text>
+                <Text className="text-sm text-gray-500 mt-0.5">{hotel.neighborhood}</Text>
 
-                <Text className="text-base font-semibold text-green-500 mt-2">
+                <Text className="text-base font-bold text-green-600 mt-2">
                   ${hotel.pricePerNightUSD.min}-${hotel.pricePerNightUSD.max}/night
                 </Text>
-                <View className="flex-row flex-wrap gap-1.5 mt-2.5">
+                <View className="flex-row flex-wrap gap-1.5 mt-2">
                   {hotel.amenities.slice(0, 4).map((amenity, idx) => (
-                    <View key={idx} className="bg-indigo-100 px-2 py-1 rounded-md">
-                      <Text className="text-xs text-indigo-700">{amenity}</Text>
+                    <View key={idx} className="bg-gray-100 px-2.5 py-1 rounded-full">
+                      <Text className="text-xs text-gray-700">{amenity}</Text>
                     </View>
                   ))}
                 </View>
                 {hotel.warnings && (
-                  <View className="mt-2.5 p-2 bg-yellow-100 rounded-md">
-                    <Text className="text-xs text-yellow-800">⚠️ {hotel.warnings}</Text>
+                  <View className="mt-3 p-3 bg-amber-50 rounded-xl flex-row items-start">
+                    <AlertTriangle size={16} color="#D97706" />
+                    <Text className="text-sm text-amber-800 ml-2 flex-1">{hotel.warnings}</Text>
                   </View>
                 )}
                 <TouchableOpacity
-                  className="bg-purple-500 p-3 rounded-lg items-center mt-3"
+                  className="bg-[#094772] p-3.5 rounded-xl items-center mt-3"
                   onPress={() => handleHotelBook(hotel.bookingUrl)}
                 >
-                  <Text className="text-white text-sm font-semibold">Book on Booking.com →</Text>
+                  <Text className="text-white text-sm font-semibold">Book on Booking.com</Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -152,12 +195,15 @@ export default function ItineraryScreen() {
 
         {/* Tourist Traps to Avoid */}
         {data.touristTraps && data.touristTraps.length > 0 && (
-          <View className="bg-red-100 m-4 mt-0 p-4 rounded-xl">
-            <Text className="text-lg font-bold mb-3 text-gray-800">🚫 Tourist Traps to Avoid</Text>
+          <View className="bg-red-50 mx-4 mt-3 p-4 rounded-2xl">
+            <View className="flex-row items-center mb-3">
+              <ShieldAlert size={18} color="#DC2626" />
+              <Text className="text-base font-bold text-gray-800 ml-2">Tourist Traps to Avoid</Text>
+            </View>
             {data.touristTraps.map((trap) => (
-              <View key={trap.id} className="mb-2.5 pb-2.5 border-b border-red-200 last:border-0 last:mb-0 last:pb-0">
-                <Text className="text-base font-semibold text-red-800">{trap.name}</Text>
-                <Text className="text-xs text-red-700 mt-0.5">{trap.reason}</Text>
+              <View key={trap.id} className="mb-3 last:mb-0">
+                <Text className="text-sm font-semibold text-red-800">{trap.name}</Text>
+                <Text className="text-sm text-red-700 mt-0.5">{trap.reason}</Text>
               </View>
             ))}
           </View>
@@ -165,90 +211,49 @@ export default function ItineraryScreen() {
 
         {/* Local Tips */}
         {data.localTips && data.localTips.length > 0 && (
-          <View className="bg-blue-100 m-4 mt-0 p-4 rounded-xl">
-            <Text className="text-lg font-bold mb-3 text-gray-800">💡 Local Tips</Text>
+          <View className="bg-blue-50 mx-4 mt-3 p-4 rounded-2xl">
+            <View className="flex-row items-center mb-3">
+              <Lightbulb size={18} color="#2563EB" />
+              <Text className="text-base font-bold text-gray-800 ml-2">Local Tips</Text>
+            </View>
             {data.localTips.map((tip, idx) => (
-              <Text key={idx} className="text-sm text-blue-800 mb-1.5 last:mb-0">• {tip}</Text>
+              <Text key={idx} className="text-sm text-blue-800 mb-2 last:mb-0 leading-5">{tip}</Text>
             ))}
           </View>
         )}
 
         {/* Warnings */}
         {data.warnings && data.warnings.length > 0 && (
-          <View className="bg-yellow-100 m-4 mt-0 p-4 rounded-xl">
-            <Text className="text-lg font-bold mb-3 text-gray-800">⚠️ Important Warnings</Text>
+          <View className="bg-amber-50 mx-4 mt-3 p-4 rounded-2xl">
+            <View className="flex-row items-center mb-3">
+              <AlertTriangle size={18} color="#D97706" />
+              <Text className="text-base font-bold text-gray-800 ml-2">Important Warnings</Text>
+            </View>
             {data.warnings.map((warning) => (
-              <View key={warning.id} className="mb-2.5 last:mb-0">
-                <Text className="text-sm font-semibold text-yellow-800">{warning.title}</Text>
-                <Text className="text-xs text-yellow-700 mt-0.5">{warning.description}</Text>
+              <View key={warning.id} className="mb-3 last:mb-0">
+                <Text className="text-sm font-semibold text-amber-800">{warning.title}</Text>
+                <Text className="text-sm text-amber-700 mt-0.5">{warning.description}</Text>
               </View>
             ))}
           </View>
         )}
 
-        {/* Daily Itinerary */}
-        {data.days.map((day, index) => (
-          <View key={day.id || `day-${index}`} className="mb-4">
-            <Text className="text-xl font-bold px-4 pt-4 pb-1 text-gray-900">Day {day.dayNumber}</Text>
-            {day.description && (
-              <Text className="text-base text-gray-600 px-4 pb-1">{day.description}</Text>
-            )}
-            {day.routeDescription && (
-              <Text className="text-xs text-sky-700 px-4 pb-3 italic">🗺️ {day.routeDescription}</Text>
-            )}
-
-            {day.locations.map((location, locIndex) => (
-              <LocationItem key={`${day.id || `day-${index}`}-${location.id}-${locIndex}`} location={location} index={locIndex} />
-            ))}
-          </View>
-        ))}
-
-        {/* Legend */}
-        <View className="bg-white m-4 p-4 rounded-xl">
-          <Text className="text-base font-bold mb-3">Legend</Text>
-          <View className="flex-row items-center mb-2">
-            <View className="w-3 h-3 rounded-full mr-3 bg-green-500" />
-            <Text className="text-sm text-gray-600">Hidden Gem - Authentic local spot</Text>
-          </View>
-          <View className="flex-row items-center mb-2">
-            <View className="w-3 h-3 rounded-full mr-3 bg-orange-500" />
-            <Text className="text-sm text-gray-600">Conditional - Good at specific times</Text>
-          </View>
-          <View className="flex-row items-center">
-            <View className="w-3 h-3 rounded-full mr-3 bg-red-500" />
-            <Text className="text-sm text-gray-600">Tourist Trap - Avoid</Text>
-          </View>
+        {/* Daily Itinerary - Using DayAccordion */}
+        <View className="mt-4">
+          {data.days.map((day, index) => (
+            <DayAccordion
+              key={day.id || `day-${index}`}
+              day={day}
+              dayIndex={index}
+              defaultExpanded={index === 0}
+            />
+          ))}
         </View>
 
+        {/* Bottom Padding */}
+        <View style={{ height: insets.bottom + 20 }} />
 
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View className="flex-row bg-white p-4 border-t border-gray-200 gap-3">
-        <TouchableOpacity
-          className="flex-1 p-3.5 bg-blue-500 rounded-xl items-center"
-          onPress={() => router.back()}
-        >
-          <Text className="text-white text-base font-semibold">← Back to Map</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-1 p-3.5 bg-blue-500 rounded-xl items-center"
-          onPress={() => router.push({
-            pathname: '/checklist',
-            params: { itineraryId: data.itinerary.id }
-          })}
-        >
-          <Text className="text-white text-base font-semibold">📋 Checklist</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          className="flex-1 p-3.5 bg-gray-500 rounded-xl items-center"
-          onPress={() => router.push('/')}
-        >
-          <Text className="text-white text-base font-semibold">New Search</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
