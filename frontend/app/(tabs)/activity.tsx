@@ -167,7 +167,7 @@ export default function ActivityScreen() {
             // Create or get existing conversation
             const conversation = await createConversationMutation.mutateAsync(friend.id);
             // Navigate to chat screen
-            router.push(`/chat/${conversation.id}`);
+            router.push(`/chat/conversationId?id=${conversation.id}`);
         } catch (error: any) {
             Toast.show({
                 type: 'error',
@@ -178,7 +178,7 @@ export default function ActivityScreen() {
     };
 
     const handleConversationPress = (conversation: Conversation) => {
-        router.push(`/chat/${conversation.id}`);
+        router.push(`/chat/conversationId?id=${conversation.id}`);
     };
 
     const formatTime = (dateString: string) => {
