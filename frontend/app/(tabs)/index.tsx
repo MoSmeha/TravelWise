@@ -12,18 +12,61 @@ import {
   User,
   FriendRequest
 } from '../../hooks/queries/useFriends';
-import { Search } from 'lucide-react-native';
+import { useFriendsFeed, useDiscoverFeed, useLikePost, useUnlikePost } from '../../hooks/queries/usePosts';
+import { Search, Image as ImageIcon, Users, Globe } from 'lucide-react-native';
+import { PostCard } from '../../components/post/PostCard';
+import { CommentsSheet } from '../../components/post/CommentsSheet';
+import type { Post } from '../../types/post';
+
+type FeedMode = 'friends' | 'discover';
 
 export default function ExploreScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedQuery, setDebouncedQuery] = useState('');
+    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [feedMode, setFeedMode] = useState<FeedMode>('friends');
 
-    // Query hooks
+    // Friend search hooks
     const { data: searchResults = [], isLoading: searchLoading } = useSearchUsers(debouncedQuery);
     const { data: friends = [] } = useFriends();
     const { data: sentRequests = [] } = useSentRequests();
     const { data: pendingRequests = [] } = usePendingRequests();
     const sendRequestMutation = useSendFriendRequest();
+
+    // Friends feed hooks
+    const {
+        data: friendsFeedData,
+        isLoading: friendsFeedLoading,
+        fetchNextPage: fetchNextFriendsPage,
+        hasNextPage: hasNextFriendsPage,
+        isFetchingNextPage: isFetchingNextFriendsPage,
+        refetch: refetchFriendsFeed,
+    } = useFriendsFeed();
+
+    // Discover feed hooks
+    const {
+        data: discoverFeedData,
+        isLoading: discoverFeedLoading,
+        fetchNextPage: fetchNextDiscoverPage,
+        hasNextPage: hasNextDiscoverPage,
+        isFetchingNextPage: isFetchingNextDiscoverPage,
+        refetch: refetchDiscoverFeed,
+    } = useDiscoverFeed();
+
+    const likePostMutation = useLikePost();
+    const unlikePostMutation = useUnlikePost();
+
+    // Select active feed based on mode
+    const posts = feedMode === 'friends' 
+        ? (friendsFeedData?.pages.flatMap(page => page.data) || [])
+        : (discoverFeedData?.pages.flatMap(page => page.data) || []);
+    const feedLoading = feedMode === 'friends' ? friendsFeedLoading : discoverFeedLoading;
+    const hasNextPage = feedMode === 'friends' ? hasNextFriendsPage : hasNextDiscoverPage;
+    const fetchNextPage = feedMode === 'friends' ? fetchNextFriendsPage : fetchNextDiscoverPage;
+    const isFetchingNextPage = feedMode === 'friends' ? isFetchingNextFriendsPage : isFetchingNextDiscoverPage;
+    const refetchFeed = feedMode === 'friends' ? refetchFriendsFeed : refetchDiscoverFeed;
+
+    const isSearching = debouncedQuery.length >= 2;
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -68,7 +111,7 @@ export default function ExploreScreen() {
                 {!isFriend && !isPending && (
                     <TouchableOpacity 
                         onPress={() => handleSendRequest(item.id)}
-                        className="px-4 py-2 bg-indigo-600 rounded-full"
+                        className="px-4 py-2 bg-[#004e89] rounded-full"
                         disabled={sendRequestMutation.isPending}
                     >
                         <Text className="text-white font-medium text-sm">Add</Text>
@@ -88,60 +131,141 @@ export default function ExploreScreen() {
         );
     };
 
-    return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-            <View className="px-5 pt-2 pb-4">
-                <Text className="text-3xl font-bold text-gray-900 mb-4">Explore</Text>
-                
-                <View className="flex-row items-center bg-gray-100 rounded-xl px-4 py-3">
-                    <Search size={20} color="#64748b" />
-                    <TextInput
-                        placeholder="Search for friends..."
-                        className="flex-1 ml-3 text-base text-gray-900"
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        autoCapitalize="none"
-                        placeholderTextColor="#94a3b8"
-                    />
-                    {searchQuery.length > 0 && (
-                        <TouchableOpacity onPress={() => setSearchQuery('')}>
-                            <Ionicons name="close-circle" size={20} color="#94a3b8" />
-                        </TouchableOpacity>
-                    )}
-                </View>
-            </View>
+    const renderPostItem = ({ item }: { item: Post }) => (
+        <PostCard
+            post={item}
+            onLike={() => likePostMutation.mutate(item.id)}
+            onUnlike={() => unlikePostMutation.mutate(item.id)}
+            onCommentPress={() => setSelectedPost(item)}
+        />
+    );
 
-            <View className="flex-1 bg-gray-50">
-                {searchLoading ? (
-                    <View className="flex-1 items-center justify-center">
-                        <ActivityIndicator size="large" color="#4F46E5" />
-                    </View>
-                ) : (
-                    <FlatList
-                        data={searchResults}
-                        renderItem={renderSearchItem}
-                        keyExtractor={item => item.id}
-                        contentContainerStyle={{ paddingBottom: 20 }}
-                        ListEmptyComponent={
-                            debouncedQuery.length >= 2 ? (
-                                <View className="items-center justify-center py-20">
-                                    <Text className="text-gray-400">No users found</Text>
-                                </View>
-                            ) : (
-                                <View className="items-center justify-center py-20 px-10">
-                                   <View className="w-16 h-16 bg-gray-100 rounded-full items-center justify-center mb-4">
-                                        <Search size={32} color="#94a3b8" />
-                                   </View>
-                                   <Text className="text-gray-500 font-medium text-lg">Find your friends</Text>
-                                   <Text className="text-gray-400 text-center mt-1">
-                                       Search for users by name or username to add them to your network.
-                                   </Text>
-                                </View>
-                            )
-                        }
-                    />
+    const renderSearchHeader = () => (
+        <View className="px-5 pt-1 pb-2 bg-white">
+            <Text className="text-3xl font-bold text-gray-900 mb-4">Explore</Text>
+            
+            <View className="flex-row items-center bg-gray-100 rounded-xl px-4 py-1 mb-4">
+                <Search size={20} color="#64748b" />
+                <TextInput
+                    placeholder="Search for friends..."
+                    className="flex-1 ml-3 text-base text-gray-900"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    autoCapitalize="none"
+                    placeholderTextColor="#94a3b8"
+                />
+                {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchQuery('')}>
+                        <Ionicons name="close-circle" size={20} color="#94a3b8" />
+                    </TouchableOpacity>
                 )}
             </View>
+
+            {/* Feed Toggle */}
+            {!isSearching && (
+                <View className="flex-row bg-gray-100 rounded-xl p-1">
+                    <TouchableOpacity
+                        onPress={() => setFeedMode('friends')}
+                        className={`flex-1 flex-row items-center justify-center py-2.5 rounded-lg ${feedMode === 'friends' ? 'bg-[#004e89]' : ''}`}
+                    >
+                        <Users size={16} color={feedMode === 'friends' ? '#ffffff' : '#6b7280'} />
+                        <Text className={`ml-2 font-semibold ${feedMode === 'friends' ? 'text-white' : 'text-gray-500'}`}>
+                            Friends
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => setFeedMode('discover')}
+                        className={`flex-1 flex-row items-center justify-center py-2.5 rounded-lg ${feedMode === 'discover' ? 'bg-[#004e89]' : ''}`}
+                    >
+                        <Globe size={16} color={feedMode === 'discover' ? '#ffffff' : '#6b7280'} />
+                        <Text className={`ml-2 font-semibold ${feedMode === 'discover' ? 'text-white' : 'text-gray-500'}`}>
+                            Discover
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+        </View>
+    );
+
+    const renderFeedEmpty = () => (
+        <View className="items-center justify-center py-20 px-10">
+            <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+                <ImageIcon size={40} color="#94a3b8" />
+            </View>
+            <Text className="text-gray-500 font-medium text-lg">
+                {feedMode === 'friends' ? 'No posts yet' : 'No public posts yet'}
+            </Text>
+            <Text className="text-gray-400 text-center mt-1">
+                {feedMode === 'friends' 
+                    ? 'Add some friends to see their posts here!'
+                    : 'Be the first to share a public post!'
+                }
+            </Text>
+        </View>
+    );
+
+    return (
+        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+            {isSearching ? (
+                // Show search results
+                <FlatList
+                    data={searchResults}
+                    renderItem={renderSearchItem}
+                    keyExtractor={item => item.id}
+                    ListHeaderComponent={renderSearchHeader}
+                    stickyHeaderIndices={[0]}
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                    ListEmptyComponent={
+                        searchLoading ? (
+                            <View className="items-center justify-center py-20">
+                                <ActivityIndicator size="large" color="#004e89" />
+                            </View>
+                        ) : (
+                            <View className="items-center justify-center py-20">
+                                <Text className="text-gray-400">No users found</Text>
+                            </View>
+                        )
+                    }
+                />
+            ) : (
+                // Show posts feed (friends or discover based on toggle)
+                <FlatList
+                    data={posts}
+                    renderItem={renderPostItem}
+                    keyExtractor={item => item.id}
+                    ListHeaderComponent={renderSearchHeader}
+                    stickyHeaderIndices={[0]}
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                    onEndReached={() => hasNextPage && fetchNextPage()}
+                    onEndReachedThreshold={0.5}
+                    ListFooterComponent={
+                        isFetchingNextPage ? (
+                            <ActivityIndicator size="small" color="#004e89" className="py-4" />
+                        ) : null
+                    }
+                    ListEmptyComponent={
+                        feedLoading ? (
+                            <View className="items-center justify-center py-20">
+                                <ActivityIndicator size="large" color="#004e89" />
+                            </View>
+                        ) : (
+                            renderFeedEmpty()
+                        )
+                    }
+                    refreshing={feedLoading}
+                    onRefresh={refetchFeed}
+                />
+            )}
+
+            {/* Comments Sheet */}
+            {selectedPost && (
+                <CommentsSheet
+                    visible={!!selectedPost}
+                    postId={selectedPost.id}
+                    postAuthorId={selectedPost.authorId}
+                    onClose={() => setSelectedPost(null)}
+                />
+            )}
         </SafeAreaView>
     );
 }

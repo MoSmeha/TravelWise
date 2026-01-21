@@ -392,7 +392,7 @@ export default function ActivityScreen() {
                         keyExtractor={item => item.id}
                         refreshing={conversationsLoading}
                         onRefresh={refetchConversations}
-                        contentContainerStyle={{ paddingBottom: 20 }}
+                    contentContainerStyle={{ paddingBottom: 20 }}
                     />
                 ) : (
                     <View className="flex-1 items-center justify-center p-8">
