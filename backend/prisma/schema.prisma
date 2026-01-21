@@ -32,6 +32,11 @@ model User {
   receivedFriendRequests Friendship[]   @relation("FriendshipAddressee")
   notifications          Notification[]
   conversationParticipants ConversationParticipant[]
+  
+  // Posts features
+  posts    Post[]
+  likes    Like[]
+  comments Comment[]
 
   @@index([email])
   @@index([username])
@@ -86,11 +91,8 @@ model Friendship {
 enum NotificationType {
   FRIEND_REQUEST
   FRIEND_ACCEPTED
-  // Future types:
-  // GROUP_INVITE
-  // ITINERARY_INVITE
-  // NEW_MESSAGE
-  // POST_LIKE
+  POST_LIKE
+  POST_COMMENT
 }
 
 model Notification {
@@ -100,6 +102,13 @@ model Notification {
   type        NotificationType
   title       String
   message     String
+  
+  // Proper relations for post notifications
+  postId      String?
+  post        Post?            @relation("PostNotifications", fields: [postId], references: [id], onDelete: Cascade)
+  commentId   String?
+  comment     Comment?         @relation("CommentNotifications", fields: [commentId], references: [id], onDelete: Cascade)
+  
   data        Json?            // Flexible payload (friendshipId, senderId, etc.)
   read        Boolean          @default(false)
   createdAt   DateTime         @default(now())
@@ -107,6 +116,8 @@ model Notification {
   @@index([userId])
   @@index([userId, read])
   @@index([createdAt])
+  @@index([postId])
+  @@index([commentId])
 }
 
 // MESSAGING MODELS
@@ -441,3 +452,72 @@ enum ChunkType {
   ROUTE_OVERVIEW
 }
 
+// POST/SOCIAL MODELS
+
+enum PostVisibility {
+  PUBLIC
+  FRIENDS
+  PRIVATE
+}
+
+model Post {
+  id            String         @id @default(cuid())
+  authorId      String
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  imageUrl      String
+  description   String?
+  visibility    PostVisibility @default(FRIENDS)
+  
+  // Counter fields for performance (avoid heavy joins)
+  likesCount    Int            @default(0)
+  commentsCount Int            @default(0)
+  
+  // Soft delete for moderation
+  deletedAt     DateTime?
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  likes         Like[]
+  comments      Comment[]
+  notifications Notification[] @relation("PostNotifications")
+  
+  // Performance indexes for feed queries
+  @@index([authorId, createdAt])
+  @@index([visibility, createdAt])
+  @@index([deletedAt])
+}
+
+model Like {
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  // Composite primary key prevents double likes and race conditions
+  @@id([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model Comment {
+  id            String         @id @default(cuid())
+  postId        String
+  post          Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content       String
+  
+  // Soft delete for moderation
+  deletedAt     DateTime?
+  
+  createdAt     DateTime       @default(now())
+  
+  notifications Notification[] @relation("CommentNotifications")
+  
+  // Performance indexes
+  @@index([postId, createdAt])
+  @@index([authorId])
+  @@index([deletedAt])
+}
