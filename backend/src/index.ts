@@ -12,6 +12,8 @@ import usersRouter from './routes/users.js';
 import friendshipRouter from './routes/friendship.js';
 import notificationRouter from './routes/notifications.js';
 import messagingRouter from './routes/messaging.js';
+import { createServer } from 'http';
+import { socketService } from './services/socket.service.js';
 
 dotenv.config();
 
@@ -66,9 +68,6 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('[ERROR] Error:', err);
   res.status(500).json({ error: 'Internal server error', message: err.message });
 });
-
-import { createServer } from 'http';
-import { socketService } from './services/socket.service.js';
 
 const server = createServer(app);
 

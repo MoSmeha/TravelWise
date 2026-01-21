@@ -17,7 +17,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ user }) => {
       </View>
       <View className="h-[1px] bg-gray-100 mb-4" />
       <View className="flex-row items-center">
-        <Ionicons name="checkmark-circle-outline" size={20} color={user?.emailVerified ? "#10B981" : "#F59E0B"} />
+        <Ionicons name="checkmark-circle-outline" size={20} color="#6B7280" />
         <Text className="text-gray-600 ml-3">Status</Text>
         <Text className={`font-medium ml-auto ${user?.emailVerified ? "text-green-600" : "text-amber-500"}`}>
           {user?.emailVerified ? "Verified" : "Unverified"}

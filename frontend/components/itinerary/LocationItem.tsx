@@ -1,108 +1,141 @@
+import { Navigation, Star } from 'lucide-react-native';
 import React from 'react';
-import {
-  Image as RNImage,
-  Text,
-  View
-} from 'react-native';
+import { Image as RNImage, Linking, Text, TouchableOpacity, View } from 'react-native';
 import { CLASSIFICATION_COLORS } from '../../constants/theme';
-import { Location } from '../../types/api';
+import type { Location } from '../../types/api';
 
 interface LocationItemProps {
   location: Location;
   index: number;
+  showConnector?: boolean;
 }
 
-export const LocationItem: React.FC<LocationItemProps> = ({ location, index }) => {
+const CLASSIFICATION_LABELS: Record<string, { label: string; bgColor: string; textColor: string }> = {
+  HIDDEN_GEM: { label: 'Hidden Gem', bgColor: 'bg-emerald-500', textColor: 'text-white' },
+  MUST_SEE: { label: 'Must See', bgColor: 'bg-blue-500', textColor: 'text-white' },
+  CONDITIONAL: { label: 'Conditional', bgColor: 'bg-amber-500', textColor: 'text-white' },
+  TOURIST_TRAP: { label: 'Tourist Trap', bgColor: 'bg-red-500', textColor: 'text-white' },
+};
 
-
+export const LocationItem: React.FC<LocationItemProps> = ({ 
+  location, 
+  index, 
+  showConnector = false 
+}) => {
   const formatCost = (loc: Location) => {
     if (loc.costMinUSD && loc.costMaxUSD) {
       return `$${loc.costMinUSD}-$${loc.costMaxUSD}`;
     }
-    return 'Cost varies';
+    if (loc.costMinUSD) return `$${loc.costMinUSD}+`;
+    if (loc.costMaxUSD) return `$${loc.costMaxUSD}`;
+    return null;
+  };
+
+  const classificationInfo = CLASSIFICATION_LABELS[location.classification] || null;
+  
+  const imageUrl = location.imageUrl || (location.imageUrls && location.imageUrls.length > 0 ? location.imageUrls[0] : null);
+
+  const handleGetDirections = () => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
+    Linking.openURL(url);
   };
 
   return (
-    <View className="bg-white mx-4 mb-2.5 p-4 rounded-xl border-l-4 border-l-blue-500">
-      <View className="flex-row items-center mb-2">
-        <View
-          className="w-3 h-3 rounded-full mr-2"
-          style={{ backgroundColor: CLASSIFICATION_COLORS[location.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF' }}
-        />
-        <Text className="text-base font-bold text-blue-500 mr-2">{index + 1}</Text>
-        <Text className="text-lg font-bold flex-1 text-gray-900">{location.name}</Text>
-      </View>
-
-      {/* Primary image - use imageUrl or first of imageUrls */}
-      {(location.imageUrl || (location.imageUrls && location.imageUrls.length > 0)) && (
-        <RNImage
-          source={{ uri: location.imageUrl || location.imageUrls![0] }}
-          className="w-full h-48 rounded-lg mb-3"
-          resizeMode="cover"
-        />
-      )}
-
-      <Text className="text-sm text-gray-500 mb-1.5">{location.category}</Text>
-
-
-      <View className="gap-1">
-        {(location.costMinUSD || location.costMaxUSD) && (
-          <View className="flex-row">
-            <Text className="text-sm w-28 font-medium text-gray-700">💰 Cost:</Text>
-            <Text className="text-sm text-gray-600 flex-1">{formatCost(location)}</Text>
+    <View className="mx-4 mb-0">
+      <View className="flex-row">
+        {/* Left: Thread Line and Marker */}
+        <View className="items-center mr-3 w-8">
+          {/* Circle Marker */}
+          <View
+            className="w-8 h-8 rounded-full items-center justify-center"
+            style={{
+              backgroundColor: CLASSIFICATION_COLORS[location.classification as keyof typeof CLASSIFICATION_COLORS] || '#094772',
+            }}
+          >
+            <Text className="text-white text-xs font-bold">{index + 1}</Text>
           </View>
-        )}
-        
-        {location.bestTimeToVisit && (
-          <View className="flex-row">
-            <Text className="text-sm w-28 font-medium text-gray-700">⏰ Best time:</Text>
-            <Text className="text-sm text-gray-600 flex-1">
-              {location.bestTimeToVisit}
-            </Text>
-          </View>
-        )}
-        
-        {location.crowdLevel && (
-          <View className="flex-row">
-            <Text className="text-sm w-28 font-medium text-gray-700">👥 Crowd:</Text>
-            <Text className="text-sm text-gray-600 flex-1">{location.crowdLevel.toLowerCase().replace('_', ' ')}</Text>
-          </View>
-        )}
-        
-        {location.rating && (
-          <View className="flex-row">
-            <Text className="text-sm w-28 font-medium text-gray-700">⭐ Rating:</Text>
-            <Text className="text-sm text-gray-600 flex-1">
-              {location.rating} ({location.totalRatings || 0} reviews)
-            </Text>
-          </View>
-        )}
-        
-        {location.travelTimeFromPrevious && (
-          <View className="flex-row">
-            <Text className="text-sm w-28 font-medium text-gray-700">🚗 Travel:</Text>
-            <Text className="text-sm text-gray-600 flex-1">{location.travelTimeFromPrevious}</Text>
-          </View>
-        )}
-      </View>
-
-      {location.aiReasoning && (
-        <View className="mt-3 p-3 bg-purple-50 rounded-lg">
-          <Text className="text-sm text-purple-800">
-            🤖 {location.aiReasoning}
-          </Text>
+          
+          {/* Connector Line */}
+          {showConnector && (
+            <View className="flex-1 w-0.5 bg-gray-300 min-h-[60px]" />
+          )}
         </View>
-      )}
 
-      {location.scamWarning && (
-        <View className="mt-2 p-3 bg-red-100 rounded-lg">
-          <Text className="text-sm text-red-800">
-            🚨 {location.scamWarning}
-          </Text>
+        {/* Main Card Content */}
+        <View className="flex-1 bg-white rounded-xl p-4 mb-3">
+          {/* Top Row: Name + Badge */}
+          <View className="flex-row items-start mb-2">
+            <View className="flex-1">
+              <Text className="text-base font-bold text-gray-900" numberOfLines={2}>
+                {location.name}
+              </Text>
+              <Text className="text-sm text-gray-500 mt-0.5">
+                {typeof location.category === 'string' 
+                  ? location.category.replace(/_/g, ' ').split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')
+                  : location.category}
+              </Text>
+            </View>
+            {classificationInfo && (
+              <View className={`${classificationInfo.bgColor} px-2 py-1 rounded ml-2`}>
+                <Text className={`text-xs font-semibold ${classificationInfo.textColor}`}>
+                  {classificationInfo.label}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Stats Row */}
+          <View className="flex-row items-center gap-4 mb-3">
+            {location.rating && (
+              <View className="flex-row items-center">
+                <Star size={14} color="#F59E0B" fill="#F59E0B" />
+                <Text className="text-sm text-gray-700 ml-1 font-medium">{location.rating}</Text>
+              </View>
+            )}
+            
+            {formatCost(location) && (
+              <Text className="text-sm text-gray-600">{formatCost(location)}</Text>
+            )}
+          </View>
+
+          {/* Image - Full width below stats */}
+          {imageUrl && (
+            <RNImage
+              source={{ uri: imageUrl }}
+              className="w-full h-40 rounded-lg mb-3"
+              resizeMode="cover"
+            />
+          )}
+
+          {/* Tips Section (from aiReasoning) */}
+          {location.aiReasoning && (
+            <View className="p-3 bg-purple-50 rounded-lg mb-3">
+              <Text className="text-sm text-purple-800 leading-5">
+                {location.aiReasoning}
+              </Text>
+            </View>
+          )}
+
+          {/* Scam Warning */}
+          {location.scamWarning && (
+            <View className="p-3 bg-red-50 rounded-lg mb-3">
+              <Text className="text-sm text-red-800 leading-5">
+                {location.scamWarning}
+              </Text>
+            </View>
+          )}
+
+          {/* Get Directions Button */}
+          <TouchableOpacity 
+            className="flex-row items-center justify-center py-3 border border-gray-200 rounded-lg bg-gray-50"
+            activeOpacity={0.7}
+            onPress={handleGetDirections}
+          >
+            <Navigation size={16} color="#374151" />
+            <Text className="text-sm font-medium text-gray-700 ml-2">Get Directions</Text>
+          </TouchableOpacity>
         </View>
-      )}
-      
-
+      </View>
     </View>
   );
 };

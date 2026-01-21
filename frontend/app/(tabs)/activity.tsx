@@ -58,9 +58,6 @@ export default function ActivityScreen() {
     const { 
         data: conversationsData, 
         isLoading: conversationsLoading,
-        fetchNextPage,
-        hasNextPage,
-        isFetchingNextPage,
         refetch: refetchConversations
     } = useInfiniteConversations();
     const createConversationMutation = useCreateConversation();
@@ -167,7 +164,7 @@ export default function ActivityScreen() {
             // Create or get existing conversation
             const conversation = await createConversationMutation.mutateAsync(friend.id);
             // Navigate to chat screen
-            router.push(`/chat/${conversation.id}`);
+            router.push(`/chat/conversationId?id=${conversation.id}`);
         } catch (error: any) {
             Toast.show({
                 type: 'error',
@@ -178,7 +175,7 @@ export default function ActivityScreen() {
     };
 
     const handleConversationPress = (conversation: Conversation) => {
-        router.push(`/chat/${conversation.id}`);
+        router.push(`/chat/conversationId?id=${conversation.id}`);
     };
 
     const formatTime = (dateString: string) => {
@@ -302,58 +299,7 @@ export default function ActivityScreen() {
         );
     };
 
-    const renderConversationItem = ({ item }: { item: Conversation }) => {
-        const otherUser = getOtherParticipant(item);
-        const displayName = item.type === 'GROUP' ? item.name : otherUser?.name;
-        const avatarUrl = item.type === 'GROUP' ? item.imageUrl : otherUser?.avatarUrl;
-        
-        return (
-            <TouchableOpacity 
-                activeOpacity={0.7}
-                onPress={() => handleConversationPress(item)}
-                className="flex-row p-4 items-center border-b border-gray-100"
-            >
-                {avatarUrl ? (
-                    <Image 
-                        source={{ uri: avatarUrl }} 
-                        className="w-12 h-12 rounded-full mr-4"
-                    />
-                ) : (
-                    <View className="w-12 h-12 rounded-full bg-indigo-100 items-center justify-center mr-4">
-                        <Text className="text-indigo-600 font-bold text-lg">
-                            {displayName?.charAt(0).toUpperCase() || '?'}
-                        </Text>
-                    </View>
-                )}
-                
-                <View className="flex-1 mr-2">
-                    <Text className="text-gray-900 font-semibold text-base">
-                        {displayName || 'Unknown'}
-                    </Text>
-                    {item.lastMessage && (
-                        <Text className="text-gray-500 text-sm mt-0.5" numberOfLines={1}>
-                            {item.lastMessage.content}
-                        </Text>
-                    )}
-                </View>
 
-                <View className="items-end">
-                    {item.lastMessage && (
-                        <Text className="text-gray-400 text-xs">
-                            {formatTime(item.lastMessage.createdAt)}
-                        </Text>
-                    )}
-                    {(item.unreadCount || 0) > 0 && (
-                        <View className="bg-indigo-600 rounded-full min-w-[20px] h-5 items-center justify-center mt-1 px-1.5">
-                            <Text className="text-white text-xs font-bold">
-                                {item.unreadCount}
-                            </Text>
-                        </View>
-                    )}
-                </View>
-            </TouchableOpacity>
-        );
-    };
 
     // Unified friend item renderer (shows friend with optional conversation data)
     const renderFriendWithConversation = ({ item }: { item: typeof friendsWithConversations[0] }) => {
@@ -423,14 +369,14 @@ export default function ActivityScreen() {
             <View className="flex-1">
                 {/* Search Bar */}
                 <View className="px-4 py-2">
-                    <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-2.5">
-                        <Search size={20} color="#9ca3af" />
+                    <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-1">
+                        <Search size={15} color="#9ca3af" />
                         <TextInput
                             placeholder="Search friends..."
                             placeholderTextColor="#9ca3af"
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            className="flex-1 ml-2 text-gray-900 text-base"
+                            className="flex-1 ml-2 text-gray-900 text-sm"
                         />
                     </View>
                 </View>
@@ -465,26 +411,23 @@ export default function ActivityScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-            {/* Header */}
-            <View className="px-5 pt-2 pb-4">
-                <Text className="text-3xl font-bold text-gray-900">Activity</Text>
-            </View>
-
             {/* Tabs */}
-            <View className="flex-row px-5 mb-2">
+            <View className="flex-row items-center px-4 pt-4 pb-2 gap-4">
                 <TouchableOpacity 
                     onPress={() => setActiveTab('notifications')}
-                    className={`mr-6 pb-2 border-b-2 ${activeTab === 'notifications' ? 'border-[#0f172a]' : 'border-transparent'}`}
+                    className={`flex-1 py-2.5 rounded-xl flex-row items-center justify-center gap-2 ${activeTab === 'notifications' ? 'bg-[#094772]' : 'bg-gray-100'}`}
                 >
-                    <Text className={`text-base font-semibold ${activeTab === 'notifications' ? 'text-gray-900' : 'text-gray-500'}`}>
+                    <Bell size={18} color={activeTab === 'notifications' ? 'white' : '#6b7280'} strokeWidth={2} />
+                    <Text className={`text-base font-semibold ${activeTab === 'notifications' ? 'text-white' : 'text-gray-500'}`}>
                         Notifications
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                     onPress={() => setActiveTab('messages')}
-                    className={`pb-2 border-b-2 ${activeTab === 'messages' ? 'border-[#0f172a]' : 'border-transparent'}`}
+                    className={`flex-1 py-2.5 rounded-xl flex-row items-center justify-center gap-2 ${activeTab === 'messages' ? 'bg-[#094772]' : 'bg-gray-100'}`}
                 >
-                    <Text className={`text-base font-semibold ${activeTab === 'messages' ? 'text-gray-900' : 'text-gray-500'}`}>
+                    <MessageCircle size={18} color={activeTab === 'messages' ? 'white' : '#6b7280'} strokeWidth={2} />
+                    <Text className={`text-base font-semibold ${activeTab === 'messages' ? 'text-white' : 'text-gray-500'}`}>
                         Messages
                     </Text>
                 </TouchableOpacity>
