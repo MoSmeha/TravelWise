@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware.js';
 import { friendshipService } from '../services/friendship.service.js';
+import { usersService } from '../services/users.service.js';
 import { socketService } from '../services/socket.service.js';
 
 export class UsersController {
@@ -53,6 +54,49 @@ export class UsersController {
       return res.json(onlineStatus);
     } catch (error: any) {
       console.error('[UsersController] Error getting online status:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  /**
+   * Update user's avatar/profile picture
+   * Expects multipart/form-data with 'avatar' field
+   */
+  static async updateAvatar(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user!.userId;
+      
+      if (!req.file) {
+        return res.status(400).json({ error: 'No image file provided' });
+      }
+
+      const updatedUser = await usersService.updateAvatar(userId, req.file.buffer);
+      
+      return res.json({
+        message: 'Avatar updated successfully',
+        avatarUrl: updatedUser.avatarUrl,
+      });
+    } catch (error: any) {
+      console.error('[UsersController] Error updating avatar:', error);
+      return res.status(500).json({ error: 'Failed to update avatar' });
+    }
+  }
+
+  /**
+   * Get current user's profile
+   */
+  static async getMe(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user!.userId;
+      const user = await usersService.getUserById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      return res.json(usersService.sanitizeUser(user));
+    } catch (error: any) {
+      console.error('[UsersController] Error getting user:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   }
