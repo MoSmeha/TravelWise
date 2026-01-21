@@ -324,11 +324,6 @@ export const userService = {
     });
     return response.data;
   },
-
-  async getMe(): Promise<any> {
-    const response = await api.get('/users/me');
-    return response.data;
-  },
 };
 
 export default api;

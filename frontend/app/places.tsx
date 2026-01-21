@@ -4,7 +4,6 @@ import {
     Image,
     Modal,
     ScrollView,
-    StyleSheet,
     Text,
     TouchableOpacity,
     View,
@@ -13,11 +12,6 @@ import MapView, { Callout, Marker } from 'react-native-maps';
 import { CLASSIFICATION_COLORS, getClassificationLabel } from '../constants/theme';
 import { usePlaces, usePlacePhotos } from '../hooks/queries/usePlaces';
 import type { Place } from '../types/api';
-
-// ==========================================
-// PLACES PAGE - Map View
-// ==========================================
-
 
 export default function PlacesScreen() {
   // Places state
@@ -83,61 +77,61 @@ export default function PlacesScreen() {
   
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View className="flex-1 justify-center items-center bg-gray-100">
         <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading places from database...</Text>
+        <Text className="mt-4 text-gray-500">Loading places from database...</Text>
       </View>
     );
   }
   
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorIcon}>⚠️</Text>
-        <Text style={styles.errorTitle}>Connection Error</Text>
-        <Text style={styles.errorText}>{error}</Text>
-        <Text style={styles.errorHint}>
+      <View className="flex-1 justify-center items-center bg-gray-100 p-6">
+        <Text className="text-5xl mb-4">⚠️</Text>
+        <Text className="text-xl font-semibold text-gray-900 mb-2">Connection Error</Text>
+        <Text className="text-gray-500 text-center mb-4">{error}</Text>
+        <Text className="text-sm text-gray-400 text-center mb-6">
           Make sure the backend is running and the database migration has been applied.
         </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+        <TouchableOpacity className="bg-primary px-6 py-3 rounded-lg" onPress={() => refetch()}>
+          <Text className="text-white font-semibold">Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
+  const filterOptions = [
+    { key: 'all', label: 'All', color: '#007AFF' },
+    { key: 'HIDDEN_GEM', label: '💎 Hidden Gems', color: '#22c55e' },
+    { key: 'CONDITIONAL', label: '⚠️ Conditional', color: '#f97316' },
+    { key: 'TOURIST_TRAP', label: '🚫 Tourist Traps', color: '#ef4444' },
+  ];
+
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-gray-100">
       {/* Header with filter */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>
+      <View className="bg-white p-4 border-b border-gray-200">
+        <Text className="text-lg font-bold text-gray-900">
           📍 {validPlaces.length} Places with Coordinates
         </Text>
-        <Text style={styles.headerSubtitle}>
+        <Text className="text-xs text-gray-500 mt-0.5 mb-3">
           Total: {places.length} places loaded
         </Text>
         
         {/* Filter chips */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-          <View style={styles.filterRow}>
-            {[
-              { key: 'all', label: 'All', color: '#007AFF' },
-              { key: 'HIDDEN_GEM', label: '💎 Hidden Gems', color: '#22c55e' },
-              { key: 'CONDITIONAL', label: '⚠️ Conditional', color: '#f97316' },
-              { key: 'TOURIST_TRAP', label: '🚫 Tourist Traps', color: '#ef4444' },
-            ].map((f) => (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
+          <View className="flex-row gap-2">
+            {filterOptions.map((f) => (
               <TouchableOpacity
                 key={f.key}
-                style={[
-                  styles.filterChip,
-                  { backgroundColor: filter === f.key ? f.color : '#e5e7eb' }
-                ]}
+                className="px-4 py-2 rounded-full"
+                style={{ backgroundColor: filter === f.key ? f.color : '#e5e7eb' }}
                 onPress={() => setFilter(f.key as any)}
               >
-                <Text style={[
-                  styles.filterChipText,
-                  { color: filter === f.key ? '#fff' : '#374151' }
-                ]}>
+                <Text 
+                  className="text-sm font-medium"
+                  style={{ color: filter === f.key ? '#fff' : '#374151' }}
+                >
                   {f.label}
                 </Text>
               </TouchableOpacity>
@@ -148,7 +142,7 @@ export default function PlacesScreen() {
       
       {/* Map View */}
       <MapView
-        style={styles.map}
+        className="flex-1"
         initialRegion={getMapRegion()}
         showsUserLocation
       >
@@ -163,10 +157,10 @@ export default function PlacesScreen() {
             onPress={() => openPlaceModal(place)}
           >
             <Callout tooltip>
-              <View style={styles.callout}>
-                <Text style={styles.calloutTitle}>{place.name}</Text>
-                <Text style={styles.calloutCity}>{place.city}</Text>
-                <Text style={styles.calloutHint}>Tap for details & photos →</Text>
+              <View className="bg-white p-3 rounded-lg w-[200px] shadow-lg">
+                <Text className="font-bold text-gray-900">{place.name}</Text>
+                <Text className="text-xs text-gray-500">{place.city}</Text>
+                <Text className="text-xs text-primary mt-1">Tap for details & photos →</Text>
               </View>
             </Callout>
           </Marker>
@@ -174,19 +168,19 @@ export default function PlacesScreen() {
       </MapView>
       
       {/* Legend */}
-      <View style={styles.legend}>
-        <Text style={styles.legendTitle}>Legend</Text>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#22c55e' }]} />
-          <Text style={styles.legendText}>Hidden Gem</Text>
+      <View className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg">
+        <Text className="text-xs font-semibold mb-2">Legend</Text>
+        <View className="flex-row items-center mb-1">
+          <View className="w-3 h-3 rounded-full bg-green-500 mr-2" />
+          <Text className="text-xs text-gray-500">Hidden Gem</Text>
         </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#f97316' }]} />
-          <Text style={styles.legendText}>Conditional</Text>
+        <View className="flex-row items-center mb-1">
+          <View className="w-3 h-3 rounded-full bg-orange-500 mr-2" />
+          <Text className="text-xs text-gray-500">Conditional</Text>
         </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} />
-          <Text style={styles.legendText}>Tourist Trap</Text>
+        <View className="flex-row items-center">
+          <View className="w-3 h-3 rounded-full bg-red-500 mr-2" />
+          <Text className="text-xs text-gray-500">Tourist Trap</Text>
         </View>
       </View>
       
@@ -197,34 +191,34 @@ export default function PlacesScreen() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-3xl p-6 max-h-[80%]">
             <ScrollView showsVerticalScrollIndicator={false}>
               {selectedPlace && (
                 <>
                   {/* Close button */}
                   <TouchableOpacity 
-                    style={styles.closeButton}
+                    className="absolute right-0 top-0 p-2 z-10"
                     onPress={() => setModalVisible(false)}
                   >
-                    <Text style={styles.closeButtonText}>✕</Text>
+                    <Text className="text-2xl text-gray-500">✕</Text>
                   </TouchableOpacity>
                   
                   {/* Google Places Photos */}
                   {loadingPhotos && (
-                    <View style={styles.photoLoading}>
+                    <View className="flex-row items-center justify-center p-4">
                       <ActivityIndicator color="#007AFF" />
-                      <Text style={styles.photoLoadingText}>Loading photos...</Text>
+                      <Text className="ml-2 text-gray-500">Loading photos...</Text>
                     </View>
                   )}
                   
                   {placePhotos.length > 0 && (
-                    <ScrollView horizontal style={styles.photoScroll} showsHorizontalScrollIndicator={false}>
+                    <ScrollView horizontal className="mb-4" showsHorizontalScrollIndicator={false}>
                       {placePhotos.map((photoUrl, idx) => (
                         <Image 
                           key={idx}
                           source={{ uri: photoUrl }}
-                          style={styles.photo}
+                          className="w-[250px] h-[180px] rounded-xl mr-3"
                           resizeMode="cover"
                         />
                       ))}
@@ -232,40 +226,40 @@ export default function PlacesScreen() {
                   )}
                   
                   {/* Header */}
-                  <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>{selectedPlace.name}</Text>
-                    <View style={[
-                      styles.classificationBadge,
-                      { backgroundColor: (CLASSIFICATION_COLORS[selectedPlace.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF') + '20' }
-                    ]}>
-                      <Text style={[
-                        styles.classificationText,
-                        { color: CLASSIFICATION_COLORS[selectedPlace.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF' }
-                      ]}>
+                  <View className="flex-row justify-between items-start mb-3 pr-10">
+                    <Text className="text-xl font-bold text-gray-900 flex-1">{selectedPlace.name}</Text>
+                    <View 
+                      className="px-2 py-1 rounded-xl"
+                      style={{ backgroundColor: (CLASSIFICATION_COLORS[selectedPlace.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF') + '20' }}
+                    >
+                      <Text 
+                        className="text-xs font-medium"
+                        style={{ color: CLASSIFICATION_COLORS[selectedPlace.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF' }}
+                      >
                         {getClassificationLabel(selectedPlace.classification as keyof typeof CLASSIFICATION_COLORS)}
                       </Text>
                     </View>
                   </View>
                   
                   {/* Location & Category */}
-                  <View style={styles.tagsRow}>
-                    <View style={styles.categoryTag}>
-                      <Text style={styles.categoryTagText}>{selectedPlace.category}</Text>
+                  <View className="flex-row gap-2 mb-3">
+                    <View className="bg-blue-100 px-2 py-1 rounded">
+                      <Text className="text-xs text-blue-700">{selectedPlace.category}</Text>
                     </View>
-                    <View style={styles.cityTag}>
-                      <Text style={styles.cityTagText}>📍 {selectedPlace.city}</Text>
+                    <View className="bg-gray-100 px-2 py-1 rounded">
+                      <Text className="text-xs text-gray-600">📍 {selectedPlace.city}</Text>
                     </View>
                   </View>
                   
                   {/* Description */}
-                  <Text style={styles.description}>{selectedPlace.description}</Text>
+                  <Text className="text-gray-600 mb-4 leading-6">{selectedPlace.description}</Text>
                   
                   {/* Sources */}
-                  <Text style={styles.sourcesTitle}>Data Sources:</Text>
-                  <View style={styles.sourcesRow}>
+                  <Text className="text-sm font-semibold text-gray-700 mb-2">Data Sources:</Text>
+                  <View className="flex-row flex-wrap gap-2 mb-4">
                     {selectedPlace.sources.map((source, idx) => (
-                      <View key={idx} style={styles.sourceTag}>
-                        <Text style={styles.sourceTagText}>
+                      <View key={idx} className="bg-purple-100 px-3 py-1.5 rounded-full">
+                        <Text className="text-sm text-purple-700">
                           {source === 'reddit' ? '🤖 Reddit Reviews' : 
                            source === 'tripadvisor' ? '📝 TripAdvisor' : '📱 TikTok'}
                         </Text>
@@ -275,8 +269,8 @@ export default function PlacesScreen() {
                   
                   {/* Rating if available */}
                   {selectedPlace.rating && (
-                    <View style={styles.ratingBox}>
-                      <Text style={styles.ratingText}>
+                    <View className="bg-amber-100 p-3 rounded-lg mb-3">
+                      <Text className="text-amber-800">
                         ⭐ {selectedPlace.rating.toFixed(1)}/5 ({selectedPlace.popularity} reviews)
                       </Text>
                     </View>
@@ -284,17 +278,17 @@ export default function PlacesScreen() {
                   
                   {/* Local tip if available */}
                   {selectedPlace.localTip && (
-                    <View style={styles.tipBox}>
-                      <Text style={styles.tipText}>💡 {selectedPlace.localTip}</Text>
+                    <View className="bg-orange-50 p-3 rounded-lg mb-3">
+                      <Text className="text-orange-700">💡 {selectedPlace.localTip}</Text>
                     </View>
                   )}
                   
                   {/* Close button */}
                   <TouchableOpacity 
-                    style={styles.modalCloseButton}
+                    className="bg-primary p-4 rounded-lg items-center mt-2"
                     onPress={() => setModalVisible(false)}
                   >
-                    <Text style={styles.modalCloseButtonText}>Close</Text>
+                    <Text className="text-white font-semibold">Close</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -305,296 +299,3 @@ export default function PlacesScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 16,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 24,
-  },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginBottom: 8,
-  },
-  errorText: {
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  errorHint: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  retryButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  header: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-    marginBottom: 12,
-  },
-  filterScroll: {
-    marginTop: 8,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  filterChipText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  map: {
-    flex: 1,
-  },
-  callout: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    width: 200,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  calloutTitle: {
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-  },
-  calloutCity: {
-    fontSize: 12,
-    color: '#666',
-  },
-  calloutHint: {
-    fontSize: 11,
-    color: '#007AFF',
-    marginTop: 4,
-  },
-  legend: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  legendTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  legendText: {
-    fontSize: 11,
-    color: '#666',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    maxHeight: '80%',
-  },
-  closeButton: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    padding: 8,
-    zIndex: 10,
-  },
-  closeButtonText: {
-    fontSize: 24,
-    color: '#666',
-  },
-  photoLoading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-  },
-  photoLoadingText: {
-    marginLeft: 8,
-    color: '#666',
-  },
-  photoScroll: {
-    marginBottom: 16,
-  },
-  photo: {
-    width: 250,
-    height: 180,
-    borderRadius: 12,
-    marginRight: 12,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-    paddingRight: 40,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    flex: 1,
-  },
-  classificationBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  classificationText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  tagsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-  categoryTag: {
-    backgroundColor: '#dbeafe',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  categoryTagText: {
-    fontSize: 12,
-    color: '#1d4ed8',
-  },
-  cityTag: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  cityTagText: {
-    fontSize: 12,
-    color: '#4b5563',
-  },
-  description: {
-    color: '#4b5563',
-    marginBottom: 16,
-    lineHeight: 22,
-  },
-  sourcesTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  sourcesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  sourceTag: {
-    backgroundColor: '#ede9fe',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  sourceTagText: {
-    fontSize: 13,
-    color: '#6d28d9',
-  },
-  ratingBox: {
-    backgroundColor: '#fef3c7',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  ratingText: {
-    color: '#92400e',
-  },
-  tipBox: {
-    backgroundColor: '#fff7ed',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  tipText: {
-    color: '#c2410c',
-  },
-  modalCloseButton: {
-    backgroundColor: '#007AFF',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  modalCloseButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-});

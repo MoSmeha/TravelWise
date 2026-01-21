@@ -6,7 +6,6 @@ const router = Router();
 
 router.get('/search', UsersController.searchUsers);
 router.get('/online-status', UsersController.getOnlineStatus);
-router.get('/me', UsersController.getMe);
 router.put('/avatar', avatarUpload, UsersController.updateAvatar);
 
 export default router;

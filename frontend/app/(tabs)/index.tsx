@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
@@ -13,9 +13,12 @@ import {
   FriendRequest
 } from '../../hooks/queries/useFriends';
 import { useFriendsFeed, useDiscoverFeed, useLikePost, useUnlikePost } from '../../hooks/queries/usePosts';
-import { Search, Image as ImageIcon, Users, Globe } from 'lucide-react-native';
+import { Search } from 'lucide-react-native';
 import { PostCard } from '../../components/post/PostCard';
 import { CommentsSheet } from '../../components/post/CommentsSheet';
+import { UserSearchItem } from '../../components/explore/UserSearchItem';
+import { FeedModeToggle } from '../../components/explore/FeedModeToggle';
+import { EmptyFeedState } from '../../components/explore/EmptyFeedState';
 import type { Post } from '../../types/post';
 
 type FeedMode = 'friends' | 'discover';
@@ -99,35 +102,13 @@ export default function ExploreScreen() {
         const isPending = isPendingSent || isPendingReceived;
 
         return (
-            <View className="flex-row items-center p-4 bg-white border-b border-gray-100">
-                <Image 
-                    source={{ uri: item.avatarUrl || 'https://via.placeholder.com/50' }} 
-                    className="w-12 h-12 rounded-full bg-gray-200"
-                />
-                <View className="ml-4 flex-1">
-                    <Text className="text-base font-semibold text-gray-800">{item.name}</Text>
-                    <Text className="text-sm text-gray-500">@{item.username}</Text>
-                </View>
-                {!isFriend && !isPending && (
-                    <TouchableOpacity 
-                        onPress={() => handleSendRequest(item.id)}
-                        className="px-4 py-2 bg-[#004e89] rounded-full"
-                        disabled={sendRequestMutation.isPending}
-                    >
-                        <Text className="text-white font-medium text-sm">Add</Text>
-                    </TouchableOpacity>
-                )}
-                {!isFriend && isPending && (
-                     <View className="px-4 py-2 bg-gray-100 rounded-full">
-                        <Text className="text-gray-500 font-medium text-sm">Pending</Text>
-                    </View>
-                )}
-                {isFriend && (
-                    <View className="px-4 py-2 bg-gray-100 rounded-full">
-                        <Text className="text-gray-500 font-medium text-sm">Friends</Text>
-                    </View>
-                )}
-            </View>
+            <UserSearchItem
+                user={item}
+                isFriend={isFriend}
+                isPending={isPending}
+                onSendRequest={handleSendRequest}
+                isLoading={sendRequestMutation.isPending}
+            />
         );
     };
 
@@ -163,44 +144,8 @@ export default function ExploreScreen() {
 
             {/* Feed Toggle */}
             {!isSearching && (
-                <View className="flex-row bg-gray-100 rounded-xl p-1">
-                    <TouchableOpacity
-                        onPress={() => setFeedMode('friends')}
-                        className={`flex-1 flex-row items-center justify-center py-2.5 rounded-lg ${feedMode === 'friends' ? 'bg-[#004e89]' : ''}`}
-                    >
-                        <Users size={16} color={feedMode === 'friends' ? '#ffffff' : '#6b7280'} />
-                        <Text className={`ml-2 font-semibold ${feedMode === 'friends' ? 'text-white' : 'text-gray-500'}`}>
-                            Friends
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => setFeedMode('discover')}
-                        className={`flex-1 flex-row items-center justify-center py-2.5 rounded-lg ${feedMode === 'discover' ? 'bg-[#004e89]' : ''}`}
-                    >
-                        <Globe size={16} color={feedMode === 'discover' ? '#ffffff' : '#6b7280'} />
-                        <Text className={`ml-2 font-semibold ${feedMode === 'discover' ? 'text-white' : 'text-gray-500'}`}>
-                            Discover
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                <FeedModeToggle feedMode={feedMode} onModeChange={setFeedMode} />
             )}
-        </View>
-    );
-
-    const renderFeedEmpty = () => (
-        <View className="items-center justify-center py-20 px-10">
-            <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
-                <ImageIcon size={40} color="#94a3b8" />
-            </View>
-            <Text className="text-gray-500 font-medium text-lg">
-                {feedMode === 'friends' ? 'No posts yet' : 'No public posts yet'}
-            </Text>
-            <Text className="text-gray-400 text-center mt-1">
-                {feedMode === 'friends' 
-                    ? 'Add some friends to see their posts here!'
-                    : 'Be the first to share a public post!'
-                }
-            </Text>
         </View>
     );
 
@@ -249,7 +194,7 @@ export default function ExploreScreen() {
                                 <ActivityIndicator size="large" color="#004e89" />
                             </View>
                         ) : (
-                            renderFeedEmpty()
+                            <EmptyFeedState feedMode={feedMode} />
                         )
                     }
                     refreshing={feedLoading}
