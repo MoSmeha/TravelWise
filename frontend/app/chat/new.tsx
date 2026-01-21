@@ -24,7 +24,7 @@ export default function ChatScreen() {
   const itineraryId = typeof params.itineraryId === 'string' ? params.itineraryId : '';
 
   const [chatQuestion, setChatQuestion] = useState('');
-  const [chatAnswer, setChatAnswer] = useState<RAGResponse | null>(null);
+
   
   const askQuestionMutation = useAskQuestion();
 
@@ -57,7 +57,7 @@ export default function ChatScreen() {
     setConversation(prev => [...prev, { role: 'user', content: currentQuestion }]);
 
     try {
-      setChatAnswer(null); // Clear previous single answer if any
+      // Clear previous single answer if any
       const response = await askQuestionMutation.mutateAsync({
         itineraryId,
         question: currentQuestion,

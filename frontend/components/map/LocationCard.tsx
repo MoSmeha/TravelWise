@@ -6,12 +6,12 @@ import type { Location } from '../../types/api';
 
 interface LocationPhotosData {
   photos: string[];
-  reviews: Array<{
+  reviews: {
     author?: string;
     author_name?: string;
     rating: number;
     text: string;
-  }>;
+  }[];
   loading: boolean;
 }
 

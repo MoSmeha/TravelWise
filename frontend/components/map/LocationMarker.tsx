@@ -62,3 +62,5 @@ export const LocationMarker = memo(({ location, index, onPress }: LocationMarker
     </Marker>
   );
 });
+
+LocationMarker.displayName = 'LocationMarker';

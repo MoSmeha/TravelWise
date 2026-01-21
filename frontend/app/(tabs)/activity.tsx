@@ -58,9 +58,6 @@ export default function ActivityScreen() {
     const { 
         data: conversationsData, 
         isLoading: conversationsLoading,
-        fetchNextPage,
-        hasNextPage,
-        isFetchingNextPage,
         refetch: refetchConversations
     } = useInfiniteConversations();
     const createConversationMutation = useCreateConversation();
@@ -302,58 +299,7 @@ export default function ActivityScreen() {
         );
     };
 
-    const renderConversationItem = ({ item }: { item: Conversation }) => {
-        const otherUser = getOtherParticipant(item);
-        const displayName = item.type === 'GROUP' ? item.name : otherUser?.name;
-        const avatarUrl = item.type === 'GROUP' ? item.imageUrl : otherUser?.avatarUrl;
-        
-        return (
-            <TouchableOpacity 
-                activeOpacity={0.7}
-                onPress={() => handleConversationPress(item)}
-                className="flex-row p-4 items-center border-b border-gray-100"
-            >
-                {avatarUrl ? (
-                    <Image 
-                        source={{ uri: avatarUrl }} 
-                        className="w-12 h-12 rounded-full mr-4"
-                    />
-                ) : (
-                    <View className="w-12 h-12 rounded-full bg-indigo-100 items-center justify-center mr-4">
-                        <Text className="text-indigo-600 font-bold text-lg">
-                            {displayName?.charAt(0).toUpperCase() || '?'}
-                        </Text>
-                    </View>
-                )}
-                
-                <View className="flex-1 mr-2">
-                    <Text className="text-gray-900 font-semibold text-base">
-                        {displayName || 'Unknown'}
-                    </Text>
-                    {item.lastMessage && (
-                        <Text className="text-gray-500 text-sm mt-0.5" numberOfLines={1}>
-                            {item.lastMessage.content}
-                        </Text>
-                    )}
-                </View>
 
-                <View className="items-end">
-                    {item.lastMessage && (
-                        <Text className="text-gray-400 text-xs">
-                            {formatTime(item.lastMessage.createdAt)}
-                        </Text>
-                    )}
-                    {(item.unreadCount || 0) > 0 && (
-                        <View className="bg-indigo-600 rounded-full min-w-[20px] h-5 items-center justify-center mt-1 px-1.5">
-                            <Text className="text-white text-xs font-bold">
-                                {item.unreadCount}
-                            </Text>
-                        </View>
-                    )}
-                </View>
-            </TouchableOpacity>
-        );
-    };
 
     // Unified friend item renderer (shows friend with optional conversation data)
     const renderFriendWithConversation = ({ item }: { item: typeof friendsWithConversations[0] }) => {

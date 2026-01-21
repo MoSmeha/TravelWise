@@ -97,7 +97,7 @@ export default function ChatScreen() {
             hasMarkedRead.current = true;
             markReadMutation.mutate(id);
         }
-    }, [id]);
+    }, [id, markReadMutation]);
 
     const handleSend = async () => {
         if (!message.trim() || !id) return;

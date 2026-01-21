@@ -20,12 +20,12 @@ const AIRPORT_COLOR = '#0ea5e9';
 
 interface LocationPhotosData {
   photos: string[];
-  reviews: Array<{
+  reviews: {
     author?: string;
     author_name?: string;
     rating: number;
     text: string;
-  }>;
+  }[];
   loading: boolean;
 }
 
