@@ -8,7 +8,9 @@ class NotificationService {
     type: NotificationType,
     title: string,
     message: string,
-    data?: any
+    data?: any,
+    postId?: string,
+    commentId?: string
   ): Promise<Notification> {
     const notification = await prisma.notification.create({
       data: {
@@ -17,6 +19,8 @@ class NotificationService {
         title,
         message,
         data: data || {},
+        postId,
+        commentId,
       },
     });
 
@@ -26,6 +30,7 @@ class NotificationService {
 
     return notification;
   }
+
 
   async getNotifications(userId: string, unreadOnly = false): Promise<Notification[]> {
     return prisma.notification.findMany({
