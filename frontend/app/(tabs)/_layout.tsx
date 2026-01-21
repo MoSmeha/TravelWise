@@ -10,7 +10,7 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   
   return (
     <View 
-        className="absolute bottom-0 left-0 right-0 bg-[#f5f5f5] border-t border-gray-200 flex-row px-2 items-center justify-between"
+        className="bg-[#f5f5f5] border-t border-gray-200 flex-row px-2 items-center justify-between"
         style={{ paddingBottom: insets.bottom + 10, paddingTop: 12, height: 70 + insets.bottom }}
     >
       {state.routes.map((route, index) => {
