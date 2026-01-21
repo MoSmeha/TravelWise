@@ -1,26 +1,27 @@
-// import { UserProviderContract } from "../provider-contract/user.provider-contract.js";
+import { User } from '../generated/prisma/client.js';
+import prisma from '../lib/prisma.js';
+import { IUserProvider } from '../provider-contract/user.provider-contract.js';
 
-// export class UserPgProvider implements UserProviderContract {
-//   createUser(firstName: string, lastName: string): void {
-//     // call prisma ,
-//     // const user = await prisma.user.create({
-//     //   data: {
-//     //     email: input.email,
-//     //     passwordHash,
-//     //     name: input.name,
-//     //     username: input.username.toLowerCase(),
-//     //     avatarUrl,
-//     //     emailVerified: false,
-//     //   },
-//     //   select: {
-//     //     id: true,
-//     //     email: true,
-//     //     name: true,
-//     //     username: true,
-//     //     avatarUrl: true,
-//     //     emailVerified: true,
-//     //     createdAt: true,
-//     //   },
-//     // });
-//   }
-// }
+export class PostgresUserProvider implements IUserProvider {
+  async findById(userId: string): Promise<User | null> {
+    return prisma.user.findUnique({
+      where: { id: userId },
+    });
+  }
+
+  async updateAvatar(userId: string, avatarUrl: string): Promise<User> {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+    });
+  }
+
+  async updateUser(userId: string, data: Partial<Pick<User, 'name' | 'avatarUrl'>>): Promise<User> {
+    return prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+  }
+}
+
+export const userProvider = new PostgresUserProvider();
