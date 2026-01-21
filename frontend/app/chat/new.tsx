@@ -10,7 +10,8 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View
+    View,
+    Keyboard
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Send, Sparkles } from 'lucide-react-native';
@@ -28,6 +29,23 @@ export default function ChatScreen() {
   const askQuestionMutation = useAskQuestion();
 
   const [conversation, setConversation] = useState<{role: 'user' | 'assistant', content: string, confidence?: number, warning?: string}[]>([]);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  React.useEffect(() => {
+      if (Platform.OS === 'android') {
+          const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
+              setKeyboardHeight(e.endCoordinates.height);
+          });
+          const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+              setKeyboardHeight(0);
+          });
+
+          return () => {
+              showSubscription.remove();
+              hideSubscription.remove();
+          };
+      }
+  }, []);
 
   const askQuestion = async () => {
     if (!chatQuestion.trim() || !itineraryId) return;
@@ -78,6 +96,7 @@ export default function ChatScreen() {
         </View>
       </View>
 
+      <View style={{ flex: 1, paddingBottom: Platform.OS === 'android' ? keyboardHeight : 0 }}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
@@ -90,8 +109,8 @@ export default function ChatScreen() {
           >
             {conversation.length === 0 ? (
                 <View className="items-center justify-center mt-20 opacity-50">
-                    <View className="w-16 h-16 bg-violet-100 rounded-full items-center justify-center mb-4">
-                        <Sparkles size={32} color="#8b5cf6" />
+                    <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: '#e6f0f7' }}>
+                        <Sparkles size={32} color="#004e89" />
                     </View>
                     <Text className="text-gray-500 text-center px-10">
                         Ask me anything about your trip! specialized recommendations, timings, or hidden gems.
@@ -101,14 +120,15 @@ export default function ChatScreen() {
                 conversation.map((msg, idx) => (
                     <View key={idx} className={`mb-4 flex-row ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         {msg.role === 'assistant' && (
-                            <View className="w-8 h-8 rounded-full bg-violet-100 items-center justify-center mr-2 self-end mb-1">
-                                <Sparkles size={14} color="#8b5cf6" />
+                            <View className="w-8 h-8 rounded-full items-center justify-center mr-2 self-end mb-1" style={{ backgroundColor: '#e6f0f7' }}>
+                                <Sparkles size={14} color="#004e89" />
                             </View>
                         )}
                         <View 
+                            style={msg.role === 'user' ? { backgroundColor: '#004e89' } : undefined}
                             className={`p-4 rounded-2xl max-w-[85%] ${
                                 msg.role === 'user' 
-                                ? 'bg-violet-600 rounded-br-none' 
+                                ? 'rounded-br-none' 
                                 : 'bg-white border border-gray-200 rounded-bl-none shadow-sm'
                             }`}
                         >
@@ -131,8 +151,8 @@ export default function ChatScreen() {
             
             {askQuestionMutation.isPending && (
                  <View className="mb-4 flex-row justify-start">
-                    <View className="w-8 h-8 rounded-full bg-violet-100 items-center justify-center mr-2 self-end mb-1">
-                         <ActivityIndicator size="small" color="#8b5cf6" />
+                    <View className="w-8 h-8 rounded-full items-center justify-center mr-2 self-end mb-1" style={{ backgroundColor: '#e6f0f7' }}>
+                         <ActivityIndicator size="small" color="#004e89" />
                     </View>
                     <View className="p-3 bg-white border border-gray-200 rounded-2xl rounded-bl-none">
                         <Text className="text-gray-500 text-sm">Thinking...</Text>
@@ -145,15 +165,17 @@ export default function ChatScreen() {
           <View className="p-4 bg-white border-t border-gray-100">
              <View className="flex-row items-end gap-2">
                  <TextInput
-                    className="flex-1 bg-gray-100 rounded-2xl px-4 py-3 text-base text-gray-900 border border-transparent focus:border-violet-200"
-                    placeholder="Ask about locatons, costs, or tips..."
+                    className="flex-1 bg-gray-100 rounded-2xl px-4 py-3 text-base text-gray-900 border border-transparent"
+                    style={{ borderColor: 'transparent' }}
+                    placeholder="Ask about locations, costs, or tips..."
                     multiline
                     value={chatQuestion}
                     onChangeText={setChatQuestion}
                     maxLength={500}
                  />
                  <TouchableOpacity 
-                    className={`w-12 h-12 rounded-full items-center justify-center ${!chatQuestion.trim() || askQuestionMutation.isPending ? 'bg-gray-200' : 'bg-violet-600'}`}
+                    style={!chatQuestion.trim() || askQuestionMutation.isPending ? undefined : { backgroundColor: '#004e89' }}
+                    className={`w-12 h-12 rounded-full items-center justify-center ${!chatQuestion.trim() || askQuestionMutation.isPending ? 'bg-gray-200' : ''}`}
                     disabled={!chatQuestion.trim() || askQuestionMutation.isPending}
                     onPress={askQuestion}
                  >
@@ -162,6 +184,7 @@ export default function ChatScreen() {
              </View>
           </View>
       </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }

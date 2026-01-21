@@ -8,7 +8,8 @@ import {
     KeyboardAvoidingView, 
     Platform,
     Image,
-    ActivityIndicator
+    ActivityIndicator,
+    Keyboard
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -32,6 +33,23 @@ export default function ChatScreen() {
     const [message, setMessage] = useState('');
     const flatListRef = useRef<FlatList>(null);
     const hasMarkedRead = useRef(false);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+    useEffect(() => {
+        if (Platform.OS === 'android') {
+            const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
+                setKeyboardHeight(e.endCoordinates.height);
+            });
+            const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+                setKeyboardHeight(0);
+            });
+
+            return () => {
+                showSubscription.remove();
+                hideSubscription.remove();
+            };
+        }
+    }, []);
 
     // Fetch conversation and messages
     const { data: conversation, isLoading: conversationLoading } = useConversation(id || '');
@@ -138,9 +156,10 @@ export default function ChatScreen() {
                 )}
                 <View className={`flex-row mb-2 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
                     <View 
+                        style={isOwnMessage ? { backgroundColor: '#004e89' } : undefined}
                         className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
                             isOwnMessage 
-                                ? 'bg-indigo-600 rounded-br-sm' 
+                                ? 'rounded-br-sm' 
                                 : 'bg-gray-100 rounded-bl-sm'
                         }`}
                     >
@@ -148,8 +167,9 @@ export default function ChatScreen() {
                             {item.content}
                         </Text>
                         <Text 
+                            style={isOwnMessage ? { color: '#7eb8e3' } : undefined}
                             className={`text-xs mt-1 ${
-                                isOwnMessage ? 'text-indigo-200' : 'text-gray-400'
+                                isOwnMessage ? '' : 'text-gray-400'
                             }`}
                         >
                             {formatMessageTime(item.createdAt)}
@@ -163,13 +183,13 @@ export default function ChatScreen() {
     if (conversationLoading || !conversation) {
         return (
             <SafeAreaView className="flex-1 bg-white items-center justify-center">
-                <ActivityIndicator size="large" color="#4F46E5" />
+                <ActivityIndicator size="large" color="#004e89" />
             </SafeAreaView>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        <SafeAreaView className="flex-1 bg-white py-4" edges={['top']}>
             {/* Header */}
             <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
                 <TouchableOpacity 
@@ -186,8 +206,8 @@ export default function ChatScreen() {
                             className="w-10 h-10 rounded-full"
                         />
                     ) : (
-                        <View className="w-10 h-10 rounded-full bg-indigo-100 items-center justify-center">
-                            <Text className="text-indigo-600 font-bold text-lg">
+                        <View className="w-10 h-10 rounded-full items-center justify-center" style={{ backgroundColor: '#e6f0f7' }}>
+                            <Text className="font-bold text-lg" style={{ color: '#004e89' }}>
                                 {displayName?.charAt(0).toUpperCase() || '?'}
                             </Text>
                         </View>
@@ -210,11 +230,14 @@ export default function ChatScreen() {
             </View>
 
             {/* Messages */}
-            <KeyboardAvoidingView 
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                className="flex-1"
-                keyboardVerticalOffset={0}
+            <View 
+                style={{ flex: 1, paddingBottom: Platform.OS === 'android' ? keyboardHeight : 0 }}
             >
+                <KeyboardAvoidingView 
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    className="flex-1"
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+                >
                 <FlatList
                     ref={flatListRef}
                     data={messages}
@@ -239,16 +262,16 @@ export default function ChatScreen() {
                                 className="items-center py-2 mb-2"
                             >
                                 {isFetchingNextPage ? (
-                                    <ActivityIndicator size="small" color="#4F46E5" />
+                                    <ActivityIndicator size="small" color="#004e89" />
                                 ) : (
-                                    <Text className="text-indigo-600 text-sm">Load earlier messages</Text>
+                                    <Text className="text-sm" style={{ color: '#004e89' }}>Load earlier messages</Text>
                                 )}
                             </TouchableOpacity>
                         ) : null
                     }
                     ListEmptyComponent={
                         messagesLoading ? (
-                            <ActivityIndicator size="large" color="#4F46E5" />
+                            <ActivityIndicator size="large" color="#004e89" />
                         ) : (
                             <View className="items-center">
                                 <Text className="text-gray-400 text-center">
@@ -273,8 +296,9 @@ export default function ChatScreen() {
                     <TouchableOpacity 
                         onPress={handleSend}
                         disabled={!message.trim() || sendMessageMutation.isPending}
+                        style={message.trim() ? { backgroundColor: '#004e89' } : undefined}
                         className={`w-10 h-10 rounded-full items-center justify-center ${
-                            message.trim() ? 'bg-indigo-600' : 'bg-gray-200'
+                            message.trim() ? '' : 'bg-gray-200'
                         }`}
                     >
                         {sendMessageMutation.isPending ? (
@@ -284,7 +308,8 @@ export default function ChatScreen() {
                         )}
                     </TouchableOpacity>
                 </View>
-            </KeyboardAvoidingView>
+                </KeyboardAvoidingView>
+            </View>
         </SafeAreaView>
     );
 }
