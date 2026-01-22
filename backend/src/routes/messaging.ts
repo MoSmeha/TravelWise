@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { messageController } from '../controllers/message.controller.js';
+import {
+  getConversations,
+  getConversation,
+  createConversation,
+  getMessages,
+  sendMessage,
+  markConversationRead,
+} from '../controllers/message.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { validate, validateMultiple } from '../middleware/validate.js';
 import {
@@ -16,9 +23,9 @@ const router = Router();
 router.use(authenticate);
 
 // Conversations
-router.get('/conversations', validate(paginationSchema, 'query'), messageController.getConversations);
-router.get('/conversations/:id', validate(conversationIdSchema, 'params'), messageController.getConversation);
-router.post('/conversations', validate(createConversationSchema), messageController.createConversation);
+router.get('/conversations', validate(paginationSchema, 'query'), getConversations);
+router.get('/conversations/:id', validate(conversationIdSchema, 'params'), getConversation);
+router.post('/conversations', validate(createConversationSchema), createConversation);
 
 // Messages within a conversation
 router.get(
@@ -27,7 +34,7 @@ router.get(
     { schema: conversationIdSchema, target: 'params' },
     { schema: messagePaginationSchema, target: 'query' },
   ]),
-  messageController.getMessages
+  getMessages
 );
 router.post(
   '/conversations/:id/messages',
@@ -35,11 +42,11 @@ router.post(
     { schema: conversationIdSchema, target: 'params' },
     { schema: sendMessageSchema, target: 'body' },
   ]),
-  messageController.sendMessage
+  sendMessage
 );
 
 // Mark as read
-router.put('/conversations/:id/read', validate(conversationIdSchema, 'params'), messageController.markConversationRead);
+router.put('/conversations/:id/read', validate(conversationIdSchema, 'params'), markConversationRead);
 
 export default router;
 

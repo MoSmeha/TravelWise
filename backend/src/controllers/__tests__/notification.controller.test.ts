@@ -15,7 +15,7 @@ vi.mock('../../services/notification.service.js', () => ({
   getUnreadCount: vi.fn(),
 }));
 
-import { NotificationController } from '../../controllers/notification.controller.js';
+import * as NotificationController from '../../controllers/notification.controller.js';
 import * as notificationService from '../../services/notification.service.js';
 
 const mockNotification = {
