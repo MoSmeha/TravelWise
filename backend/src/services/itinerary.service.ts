@@ -1,14 +1,13 @@
-import { ChecklistCategory, ItineraryItemType, LocationCategory, Place, PriceLevel } from '../generated/prisma/client.js';
+import { ChecklistCategory, ItineraryItemType, LocationCategory, Place, PriceLevel, LocationClassification } from '../generated/prisma/client.js';
 import { BudgetLevel, TravelStyle, mapBudgetToPriceLevel } from '../utils/enum-mappers.js';
 import { v4 as uuidv4 } from 'uuid';
-import { searchNearbyHotels, getPlaceDetails, enrichPlaceWithGoogleData } from './google-places.service.js';
-import { nearestNeighborRoute } from './route-optimizer.service.js';
+import { searchNearbyHotels, enrichPlaceWithGoogleData, searchPlacesByText } from './google-places.service.js';
+import { nearestNeighborRoute, kMeansClustering, orderClustersByProximity } from './route-optimizer.service.js';
 import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils.js';
-import { appendFileSync } from 'fs';
-import { join } from 'path';
 import { itineraryProvider } from '../providers/itinerary.provider.pg.js';
 import { IItineraryProvider } from '../provider-contract/itinerary.provider-contract.js';
 import { mapPlaceForGenerateResponse, mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } from '../utils/response-mappers.js';
+import { calculateCentroid, haversineDistance } from '../utils/geo.utils.js';
 
 // Local type extension if needed, but primarily use Prisma Place
 // We use intersection to add arbitrary keys if needed (for enrichments)
@@ -24,25 +23,8 @@ interface GenerateItineraryParams {
   countryId?: string;
 }
 
-// Structured day with activities, meals, and hotel
-interface StructuredDay {
-  dayNumber: number;
-  startingHotel: PlaceExtended | null;  // For Day 1: hotel near airport
-  endingHotel: PlaceExtended | null;    // Hotel near last activity (null for last day)
-  meals: {
-    breakfast: PlaceExtended | null;
-    lunch: PlaceExtended | null;
-    dinner: PlaceExtended | null;
-  };
-  activities: {
-    anchor: PlaceExtended | null;    // 3-4 hours, main attraction
-    medium: PlaceExtended | null;    // 2 hours, secondary
-    light: PlaceExtended | null;     // 30-60 min, quick stop
-    evening: PlaceExtended | null;   // Optional night activity
-  };
-  theme?: string;
-  isLastDay?: boolean;
-}
+// Hotel categories
+const HOTEL_CATEGORIES: LocationCategory[] = [LocationCategory.HOTEL, LocationCategory.ACCOMMODATION];
 
 interface ItineraryDayResult {
   id: string;
@@ -86,15 +68,6 @@ const ACTIVITY_CATEGORIES: Record<TravelStyle, LocationCategory[]> = {
   URBAN_CITY: [LocationCategory.SHOPPING, LocationCategory.MARKET, LocationCategory.VIEWPOINT],
   FAMILY_GROUP: [LocationCategory.MUSEUM, LocationCategory.PARK, LocationCategory.ACTIVITY, LocationCategory.SHOPPING],
 };
-
-// Meal categories
-const MEAL_CATEGORIES: LocationCategory[] = [LocationCategory.RESTAURANT, LocationCategory.CAFE];
-
-// Night activity categories  
-const NIGHT_CATEGORIES: LocationCategory[] = [LocationCategory.BAR, LocationCategory.NIGHTCLUB, LocationCategory.RESTAURANT];
-
-// Hotel categories
-const HOTEL_CATEGORIES: LocationCategory[] = [LocationCategory.HOTEL, LocationCategory.ACCOMMODATION];
 
 // Generate AI Polish: warnings, tourist traps, and local tips
 async function generateAIPolish(
@@ -143,7 +116,7 @@ Format as JSON:
 
   try {
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5.2',
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.7,
@@ -288,346 +261,388 @@ async function findHotelNearLocation(
   return null;
 }
 
-/**
- * Get the last activity location for a day (for determining end-of-day hotel position)
- */
-function getLastActivityLocation(sd: StructuredDay): { lat: number; lng: number } | null {
-  // Priority: evening -> light -> medium -> anchor -> dinner -> lunch -> breakfast
-  const places = [
-    sd.activities.evening,
-    sd.activities.light,
-    sd.activities.medium,
-    sd.activities.anchor,
-    sd.meals.dinner,
-    sd.meals.lunch,
-    sd.meals.breakfast,
-  ];
-  
-  for (const place of places) {
-    if (place) {
-      return { lat: place.latitude, lng: place.longitude };
-    }
+
+
+// Helper to check if data is limited
+function checkLimitedData(fetched: number, requested: number, context: string) {
+  if (fetched < requested) {
+    console.warn(`[LIMITED DATA] ${context}: Requested ${requested}, but only found ${fetched}. Itinerary quality may degrade.`);
   }
-  
-  return null;
 }
 
 export async function generateItinerary(params: GenerateItineraryParams): Promise<ItineraryResult> {
   const { cityId, numberOfDays, budgetLevel, travelStyles, budgetUSD } = params;
   
-  // Parse cityId - could be city name or country. Default to Lebanon for MVP
-  const country = 'Lebanon';
-  const cityName = cityId; // Treat as city filter hint
-  
-  console.log(`[ITINERARY] Generating structured itinerary: ${cityName}, ${numberOfDays} days, styles: ${travelStyles.join(', ')}...`);
-  
-  // Calculate how many places we need
-  const activitiesPerDay = 4; // anchor + medium + light + optional evening
-  const mealsPerDay = 3;      // breakfast + lunch + dinner
-  const totalActivitiesNeeded = numberOfDays * activitiesPerDay;
-  const totalMealsNeeded = numberOfDays * mealsPerDay;
-  
-  // Get activity categories based on travel styles
-  const activityCategories = getActivityCategories(travelStyles);
-  
-  // Log if no categories match
-  if (activityCategories.length === 0) {
-    const logPath = join(__dirname, '../../logs/missing-data.log');
-    const logEntry = `[${new Date().toISOString()}] No categories for styles: ${travelStyles.join(', ')}\n`;
-    appendFileSync(logPath, logEntry);
-    console.warn(`[WARN] No categories match travel styles: ${travelStyles.join(', ')}`);
+  // Parse cityId - could be city name or country.
+  // IMPROVEMENT: Flexible country support, defaulting to input but robust fallback
+  let country = 'Lebanon'; 
+  let cityName = cityId;
+
+  // Basic heuristic: if cityId looks like a country, use it as country
+  const commonCountries = ['Lebanon', 'France', 'Italy', 'Spain', 'Germany', 'Japan', 'UAE', 'United Arab Emirates'];
+  if (commonCountries.some(c => c.toLowerCase() === cityId.toLowerCase())) {
+    country = cityId;
+    cityName = ''; // Wide search
   }
   
-  // Fetch activities with proper filtering (limited to what we need + buffer)
-  const usedIds: string[] = [];
+  console.log(`[ITINERARY] Generating clustered itinerary: ${cityName || country}, ${numberOfDays} days, styles: ${travelStyles.join(', ')}...`);
   
-  // Map budget level to price level for filtering
+  // 1. Determine "Personality" of the trip
+  const activityCategories = getActivityCategories(travelStyles);
+  if (activityCategories.length === 0) {
+     console.warn(`[WARN] No categories match travel styles: ${travelStyles.join(', ')}. Defaulting to general interest.`);
+     activityCategories.push(LocationCategory.HISTORICAL_SITE, LocationCategory.VIEWPOINT, LocationCategory.ACTIVITY);
+  }
+
+  // 2. Fetch Activity Pool (Geometry-First: Get a BIG pool first, then cluster)
+  // We need enough activities to form clusters. 
+  // Target: 4 per day, plus 50% buffer.
+  const activitiesPerDay = 4;
+  const targetPoolSize = Math.ceil(numberOfDays * activitiesPerDay * 2.0); // Double buffer for better clustering
   const priceLevel = mapBudgetToPriceLevel(budgetLevel);
-  console.log(`[FETCH] Fetching ${totalActivitiesNeeded} activities for ${numberOfDays} days, budget: ${budgetLevel} -> ${priceLevel}...`);
   
-  // Don't filter activities by price - hiking, museums, parks have fixed/no fees unrelated to budget
-  const activities = await fetchPlaces(
-    activityCategories.length > 0 ? activityCategories : [LocationCategory.OTHER],
+  console.log(`[FETCH] Fetching up to ${targetPoolSize} candidate activities (Strict Categories: ${activityCategories.join(', ')})...`);
+  
+  const activityPool = await fetchPlaces(
+    activityCategories,
     country,
-    cityName,
-    Math.ceil(totalActivitiesNeeded * 1.5), // 50% buffer for variety
+    cityName || null, 
+    targetPoolSize,
     [],
-    undefined  // No price filter for activities
+    undefined // Ignore price for activities (often free or fixed)
   );
-  usedIds.push(...activities.map(a => a.id));
+
+  checkLimitedData(activityPool.length, targetPoolSize, 'Activity Pool');
+
+  // AUGMENTATION: If pool is too small, use Google Places to find and save new places
+  // This fulfills the "self-healing" requirement.
+  if (activityPool.length < targetPoolSize) {
+     const missingCount = targetPoolSize - activityPool.length;
+     console.log(`[AUGMENT] Pool too small (${activityPool.length} < ${targetPoolSize}). Attempting to fetch ${missingCount} new places from Google...`);
+     
+     // Determine which categories are under-represented
+     // For simplicity, cycle through all requested categories
+     
+     for (const cat of activityCategories) {
+         // Create a natural language query
+         // e.g. "Best Hiking spots in Lebanon" or "Top Museums in Beirut"
+         const query = `Best ${cat.replace('_', ' ').toLowerCase()} in ${cityName || country}`;
+         console.log(`[AUGMENT] Searching: "${query}"`);
+         
+         const { places } = await searchPlacesByText(query, 4.0);
+         
+         for (const gp of places) {
+             // Avoid adding if already in pool
+             if (activityPool.some(p => p.googlePlaceId === gp.googlePlaceId)) continue;
+             
+             // Check if already in DB (to avoid creating duplicates if excluded)
+             const existing = await itineraryProvider.findPlaceByGoogleId(gp.googlePlaceId);
+             if (existing) {
+                 // It exists but wasn't picked (maybe low rating or excluded). Skip for now.
+                 continue;
+             }
+
+             // Save to DB!
+             // Map Google result to PlaceExtended
+             const newPlace = await itineraryProvider.createPlace({
+                 googlePlaceId: gp.googlePlaceId,
+                 name: gp.name,
+                 latitude: gp.latitude,
+                 longitude: gp.longitude,
+                 country: country,
+                 city: cityName || country,
+                 address: gp.formattedAddress,
+                 category: cat,
+                 description: `${gp.rating}★ ${cat.replace('_', ' ')} found via Google Search`,
+                 rating: gp.rating,
+                 totalRatings: gp.totalRatings,
+                 priceLevel: gp.priceLevel !== null ? (gp.priceLevel >= 3 ? PriceLevel.EXPENSIVE : gp.priceLevel >= 2 ? PriceLevel.MODERATE : PriceLevel.INEXPENSIVE) : null,
+                 imageUrl: gp.photos[0] || null,
+                 imageUrls: gp.photos,
+                 websiteUrl: gp.websiteUrl,
+                 classification: LocationClassification.MUST_SEE // Assume top Google results are must-see
+             });
+             
+             // Add to current pool as a partial PlaceExtended (enough for usage)
+             activityPool.push({
+                 id: newPlace.id,
+                 name: gp.name,
+                 latitude: gp.latitude,
+                 longitude: gp.longitude,
+                 category: cat,
+                 googlePlaceId: gp.googlePlaceId,
+                 rating: gp.rating,
+                 priceLevel: gp.priceLevel !== null ? (gp.priceLevel >= 3 ? PriceLevel.EXPENSIVE : gp.priceLevel >= 2 ? PriceLevel.MODERATE : PriceLevel.INEXPENSIVE) : null,
+                 costMinUSD: 20, // Default assumption
+                 createdAt: new Date(),
+                 usageCount: 0,
+                 // Double cast to bypass overlap check (we are mocking a DB object)
+             } as unknown as PlaceExtended);
+         }
+         
+         if (activityPool.length >= targetPoolSize) break;
+     }
+  }
+
+  // 3. Cluster Activities into Days (K-Means)
+  // We convert to the simpler Coordinate interface for the clustering algo
+  const placesForClustering = activityPool.map(p => ({
+    id: p.id,
+    name: p.name,
+    latitude: p.latitude,
+    longitude: p.longitude,
+    category: p.category,
+    suggestedDuration: 90 // Default
+  }));
+
+  // If we have extremely limited data (less than days), we just have 1 cluster
+  let clusters = activityPool.length > 0 
+    ? kMeansClustering(placesForClustering, Math.min(numberOfDays, activityPool.length))
+    : [];
+
+  // FIX: Order clusters geographically starting from Airport/Beirut
+  const startCoords = { lat: 33.8209, lng: 35.4913 }; 
+  clusters = orderClustersByProximity(clusters, startCoords);
+
+  // FIX: Balance Clusters (Steal from rich, give to poor)
+  const MIN_PER_DAY = 2;
+  const MAX_ATTEMPTS = 10;
+  let attempts = 0;
+  let rebalanced = true;
+
+  while(rebalanced && attempts < MAX_ATTEMPTS) {
+      rebalanced = false;
+      attempts++;
+      
+      let minLen = Infinity, maxLen = -Infinity;
+      let minIdx = -1, maxIdx = -1;
+
+      clusters.forEach((c, idx) => {
+          if (c.length < minLen) { minLen = c.length; minIdx = idx; }
+          if (c.length > maxLen) { maxLen = c.length; maxIdx = idx; }
+      });
+
+      if (minIdx !== -1 && maxIdx !== -1 && minLen < MIN_PER_DAY && maxLen > MIN_PER_DAY + 1) {
+           const receiverCentroid = clusters[minIdx].length > 0 ? calculateCentroid(clusters[minIdx]) : startCoords;
+           
+           let bestTransferIdx = -1;
+           let bestTransferDist = Infinity;
+
+           clusters[maxIdx].forEach((p, pIdx) => {
+               const d = haversineDistance(p.latitude, p.longitude, receiverCentroid.lat, receiverCentroid.lng);
+               if (d < bestTransferDist) {
+                   bestTransferDist = d;
+                   bestTransferIdx = pIdx;
+               }
+           });
+
+           if (bestTransferIdx !== -1) {
+               const item = clusters[maxIdx].splice(bestTransferIdx, 1)[0];
+               clusters[minIdx].push(item);
+               rebalanced = true; 
+           }
+      }
+  }
+
+  // 4. Assign Clusters to Days (and fill gaps if needed)
+  const days: ItineraryDayResult[] = [];
+  const globalUsedIds = new Set<string>();
+
+  // Helper to get actual PlaceExtended objects from simplified cluster points
+  const getFullPlaces = (simplePlaces: any[]) => {
+    return simplePlaces.map(sp => activityPool.find(ap => ap.id === sp.id)).filter(p => p !== undefined) as PlaceExtended[];
+  };
+
+  // 5. Select Base Hotel (Geometry-First: Center of all activities)
+  // Instead of hotel hopping, we find ONE good base location.
+  // Ideally, this is near the centroid of the largest cluster or the overall centroid.
+  console.log('[HOTEL] Finding optimal base hotel...');
   
-  console.log(`[FETCH] Fetching ${totalMealsNeeded} meal spots...`);
-  const restaurants = await fetchPlaces(
-    MEAL_CATEGORIES,
+  let baseHotel: PlaceExtended | null = null;
+  const overallCentroid = activityPool.length > 0 
+    ? calculateCentroid(activityPool) 
+    : { lat: 33.8938, lng: 35.5018 }; // Default to Beirut if empty
+
+  // Fetch hotels near the centroid
+  const candidateHotels = await findHotelNearLocation(
+    overallCentroid.lat,
+    overallCentroid.lng,
+    await fetchPlaces(HOTEL_CATEGORIES, country, cityName || null, 20, []), // Fetch broad hotel list first
     country,
-    cityName,
-    Math.ceil(totalMealsNeeded * 1.2),
-    usedIds,
-    priceLevel
+    15 // 15km Radius
   );
-  usedIds.push(...restaurants.map(r => r.id));
+
+  baseHotel = candidateHotels; // This function returns one hotel or null
   
-  console.log(`[FETCH] Fetching evening options...`);
-  // Night spots selected by quality, not price
-  const nightSpots = await fetchPlaces(
-    NIGHT_CATEGORIES,
-    country,
-    cityName,
-    numberOfDays, // 1 per day max
-    usedIds,
-    undefined  // No price filter for evening activities
-  );
-  usedIds.push(...nightSpots.map(n => n.id));
-  
-  console.log(`[FETCH] Fetching hotels...`);
-  const hotels = await fetchPlaces(
-    HOTEL_CATEGORIES,
-    country,
-    cityName,
-    3, // Fetch a few options
-    usedIds
-  );
-  
-  console.log(`[STATS] Fetched: ${activities.length} activities, ${restaurants.length} restaurants, ${nightSpots.length} night spots, ${hotels.length} hotels`);
-  
-  // Airport coordinates (Beirut Airport default)
-  const airportCoords = { lat: 33.8209, lng: 35.4913 };
-  
-  // Build structured days first (without hotels)
-  const structuredDays: StructuredDay[] = [];
-  let activityIdx = 0;
-  let restaurantIdx = 0;
-  let nightIdx = 0;
-  
-  for (let dayNum = 1; dayNum <= numberOfDays; dayNum++) {
-    // Get activities for this day, optimized by route
-    const dayActivities = activities.slice(activityIdx, activityIdx + 3);
-    activityIdx += 3;
-    
-    // Get meals for this day
-    const dayMeals = restaurants.slice(restaurantIdx, restaurantIdx + 3);
-    restaurantIdx += 3;
-    
-    // Optional night activity
-    const nightActivity = nightSpots[nightIdx] || null;
-    if (nightActivity) nightIdx++;
-    
-    // Categorize activities by expected duration (using category as heuristic)
-    // Anchor: Museums, Historical Sites, Hiking (3-4 hours)
-    // Medium: Parks, Markets, Beaches (2 hours)
-    // Light: Viewpoints, Cafes, Shopping (30-60 min)
-    const anchorCats: string[] = ['MUSEUM', 'HISTORICAL_SITE', 'HIKING'];
-    const lightCats: string[] = ['VIEWPOINT', 'SHOPPING'];
-    
-    let anchor = dayActivities.find(a => anchorCats.includes(a.category as string)) || dayActivities[0] || null;
-    let light = dayActivities.find(a => lightCats.includes(a.category as string) && a !== anchor) || null;
-    let medium = dayActivities.find(a => a !== anchor && a !== light) || null;
-    
-    // If we didn't find distinct activities, just use what we have
-    if (!anchor && dayActivities.length > 0) anchor = dayActivities[0];
-    if (!medium && dayActivities.length > 1) medium = dayActivities[1];
-    if (!light && dayActivities.length > 2) light = dayActivities[2];
-    
+  // If no hotel found near centroid (e.g. centroid is in the mountains), try nearest city center
+  if (!baseHotel && activityPool.length > 0) {
+      console.log('[HOTEL] optimizing: taking first activity location as fallback hotel anchor');
+      baseHotel = await findHotelNearLocation(
+          activityPool[0].latitude,
+          activityPool[0].longitude,
+          [], 
+          country,
+          20
+      );
+  }
+
+  // Track previous end point for continuity
+  let previousEndLocation = baseHotel 
+    ? { lat: baseHotel.latitude, lng: baseHotel.longitude }
+    : { lat: 33.8209, lng: 35.4913 }; // Default airport
+
+  // 6. Build Daily Itineraries
+  for (let i = 0; i < numberOfDays; i++) {
+    const dayNum = i + 1;
     const isLastDay = dayNum === numberOfDays;
     
-    structuredDays.push({
-      dayNumber: dayNum,
-      startingHotel: null, // Will be assigned for Day 1
-      endingHotel: null,   // Will be assigned for non-last days
-      meals: {
-        breakfast: dayMeals[0] || null,
-        lunch: dayMeals[1] || null,
-        dinner: dayMeals[2] || null,
-      },
-      activities: {
-        anchor,
-        medium,
-        light,
-        evening: nightActivity,
-      },
-      theme: anchor?.category?.toString() || 'Mixed',
-      isLastDay,
-    });
-  }
-  
-  // Assign hotels per day based on last activity location
-  console.log('[HOTEL] Assigning hotels for each day...');
-  
-  // Day 1: Find hotel near airport (for check-in after arrival)
-  if (structuredDays.length > 0) {
-    const day1Hotel = await findHotelNearLocation(
-      airportCoords.lat,
-      airportCoords.lng,
-      hotels,
-      country,
-      15 // 15km radius for airport area
+    // Get cluster for this day, or empty if we ran out
+    const dayClusterSimple = clusters[i] || [];
+    let dayActivities = getFullPlaces(dayClusterSimple);
+
+    // CRITICAL FIX: Limit to max 4 activities per day to prevent exhaustion and "overkill"
+    // Also ensures we don't dump 21 places in Day 1.
+    const MAX_PER_DAY = 4;
+    if (dayActivities.length > MAX_PER_DAY) {
+      // If we have too many, sort by rating and take top 4
+      dayActivities.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      dayActivities = dayActivities.slice(0, MAX_PER_DAY);
+    }
+
+    // If completely empty day (limited data), try to grab ANY unused activity from pool
+    if (dayActivities.length === 0) {
+        const unused = activityPool.filter(p => !globalUsedIds.has(p.id));
+        if (unused.length > 0) {
+            dayActivities = unused.slice(0, 3);
+        }
+    }
+
+    // Mark IDs as used
+    dayActivities.forEach(p => globalUsedIds.add(p.id));
+
+    // Optimize Route for the Day (Nearest Neighbor)
+    // FIX: Start from PREVIOUS DAY'S END location (or hotel/airport) to ensure flow
+    // If we have a base hotel, we usually start from there. BUT if we want continuity across the country,
+    // we should bias the start to be near where we left off (if staying in different places)
+    // or just assume we drive from base hotel.
+    // User complaint: "Day 1 ends somewhere, Day 2 starts somewhere else".
+    // Since we have a BASE HOTEL, we technically start at Base Hotel every morning.
+    // BUT the cluster order should make sense.
+    // We already ordered clusters. Now we just route from Base Hotel.
+    const dayStartPoint = baseHotel 
+        ? { lat: baseHotel.latitude, lng: baseHotel.longitude }
+        : previousEndLocation;
+        
+    const dayRouteSimple = nearestNeighborRoute(
+        dayActivities.map(p => ({ ...p, suggestedDuration: 90 })), 
+        dayStartPoint
     );
-    structuredDays[0].startingHotel = day1Hotel;
-    console.log(`[HOTEL] Day 1 starting hotel: ${day1Hotel?.name || 'None found'}`);
-  }
-  
-  // For each day (except last), find hotel near last activity
-  for (let i = 0; i < structuredDays.length; i++) {
-    const sd = structuredDays[i];
     
-    // Last day ends at airport, no ending hotel needed
-    if (sd.isLastDay) {
-      console.log(`[HOTEL] Day ${sd.dayNumber} (last day): ends at airport, no ending hotel`);
-      continue;
+    // Re-map to full objects
+    dayActivities = dayRouteSimple.map(dr => dayActivities.find(da => da.id === dr.id)!).filter(Boolean);
+
+    // Update previousEndLocation for next day logic (if we were doing multi-hotel)
+    if (dayActivities.length > 0) {
+        const last = dayActivities[dayActivities.length - 1];
+        previousEndLocation = { lat: last.latitude, lng: last.longitude };
     }
+
+    // Fetch Meals near the Activities
+    // Breakfast: Near Start
+    // Lunch: Near Middle
+    // Dinner: Near End/Hotel
+    const morningLoc = dayActivities[0] || dayStartPoint;
+    const midLoc = dayActivities[Math.floor(dayActivities.length / 2)] || morningLoc;
+    const endLoc = dayActivities[dayActivities.length - 1] || midLoc;
+
+    // Parallel fetch for speed
+    const [breakfasts, lunches, dinners] = await Promise.all([
+        fetchPlaces([LocationCategory.CAFE, LocationCategory.RESTAURANT], country, null, 5, Array.from(globalUsedIds), priceLevel).then(res => 
+            res.filter(r => haversineDistance(r.latitude, r.longitude, morningLoc.latitude, morningLoc.longitude) < 5)
+        ),
+        fetchPlaces([LocationCategory.RESTAURANT], country, null, 5, Array.from(globalUsedIds), priceLevel).then(res => 
+            res.filter(r => haversineDistance(r.latitude, r.longitude, midLoc.latitude, midLoc.longitude) < 5)
+        ),
+        fetchPlaces([LocationCategory.RESTAURANT, LocationCategory.BAR], country, null, 5, Array.from(globalUsedIds), priceLevel).then(res => 
+            res.filter(r => haversineDistance(r.latitude, r.longitude, endLoc.latitude, endLoc.longitude) < 10)
+        )
+    ]);
+
+    const breakfast = breakfasts[0] || null;
+    const lunch = lunches[0] || null;
+    const dinner = dinners[0] || null;
+
+    if (breakfast) globalUsedIds.add(breakfast.id);
+    if (lunch) globalUsedIds.add(lunch.id);
+    if (dinner) globalUsedIds.add(dinner.id);
     
-    // Find last activity location for this day
-    const lastLocation = getLastActivityLocation(sd);
-    
-    if (lastLocation) {
-      const endingHotel = await findHotelNearLocation(
-        lastLocation.lat,
-        lastLocation.lng,
-        hotels,
-        country,
-        10 // 10km radius
-      );
-      sd.endingHotel = endingHotel;
-      console.log(`[HOTEL] Day ${sd.dayNumber} ending hotel: ${endingHotel?.name || 'None found'}`);
-    } else {
-      // Fallback to airport area
-      sd.endingHotel = structuredDays[0].startingHotel;
-      console.log(`[HOTEL] Day ${sd.dayNumber} ending hotel (fallback): ${sd.endingHotel?.name || 'None'}`);
-    }
-  }
-  
-  // Use route optimizer to order activities within each day
-  // Each day starts from previous day's hotel (or airport for Day 1)
-  const days: ItineraryDayResult[] = [];
-  const globalUsedLocationIds = new Set<string>(); // Track locations across all days
-  
-  for (let i = 0; i < structuredDays.length; i++) {
-    const sd = structuredDays[i];
-    
-    // Determine start point for this day's route
-    let dayStartPoint: { lat: number; lng: number };
-    
-    if (sd.dayNumber === 1) {
-      // Day 1: start from airport (or starting hotel if found)
-      dayStartPoint = sd.startingHotel 
-        ? { lat: sd.startingHotel.latitude, lng: sd.startingHotel.longitude }
-        : airportCoords;
-    } else {
-      // Other days: start from previous day's ending hotel
-      const prevDay = structuredDays[i - 1];
-      dayStartPoint = prevDay.endingHotel
-        ? { lat: prevDay.endingHotel.latitude, lng: prevDay.endingHotel.longitude }
-        : airportCoords;
-    }
-    
-    // Collect all places for the day for route optimization
-    const dayPlacesRaw = [
-      sd.activities.anchor,
-      sd.meals.breakfast,
-      sd.activities.medium,
-      sd.meals.lunch,
-      sd.activities.light,
-      sd.meals.dinner,
-      sd.activities.evening,
-    ].filter((p): p is PlaceExtended => p !== null);
-    
-    // Deduplicate by id - prevent same location appearing twice in itinerary (within or across days)
-    const dayPlaces = dayPlacesRaw.filter(p => {
-      if (globalUsedLocationIds.has(p.id)) {
-        console.warn(`[DUPLICATE] Skipping duplicate location "${p.name}" (${p.id}) in Day ${sd.dayNumber}`);
-        return false;
-      }
-      globalUsedLocationIds.add(p.id);
-      return true;
-    });
-    
-    // Optimize route within the day from start point
-    const placesWithCoords = dayPlaces.map(p => ({
-      id: p.id,
-      name: p.name,
-      latitude: p.latitude,
-      longitude: p.longitude,
-      category: p.category,
-      suggestedDuration: p.category === LocationCategory.MUSEUM || p.category === LocationCategory.HIKING ? 180 : 90,
-    }));
-    
-    const orderedPlaces = nearestNeighborRoute(placesWithCoords, dayStartPoint);
-    const orderedFullPlaces = orderedPlaces
-      .map(p => dayPlaces.find(dp => dp.id === p.id))
-      .filter((p): p is PlaceExtended => p !== undefined);
-    
-    const locationNames = orderedFullPlaces.map(p => p.name).join(' → ');
-    
+    const theme = dayActivities.length > 0 ? (dayActivities[0].category as string) : 'Relaxation';
+
     days.push({
       id: uuidv4(),
-      dayNumber: sd.dayNumber,
-      description: `Day ${sd.dayNumber}: ${sd.theme || 'Exploring'}`,
-      routeDescription: sd.dayNumber === 1 
-        ? `Airport → ${sd.startingHotel?.name || 'Hotel'} → ${locationNames}`
-        : sd.isLastDay 
-          ? `${locationNames} → Airport`
-          : locationNames,
-      locations: orderedFullPlaces,
-      hotel: sd.endingHotel,  // End-of-day hotel
-      startingHotel: sd.dayNumber === 1 ? sd.startingHotel : undefined,
-      meals: sd.meals,
-      theme: sd.theme,
-      isLastDay: sd.isLastDay,
+      dayNumber: dayNum,
+      description: `Day ${dayNum}: ${theme} in ${dayActivities[0]?.city || country}`,
+      routeDescription: dayActivities.map(d => d.name).join(' -> '),
+      locations: dayActivities,
+      hotel: baseHotel, // Same hotel every night!
+      startingHotel: isLastDay ? undefined : baseHotel, // Consistent
+      meals: {
+        breakfast,
+        lunch,
+        dinner
+      },
+      theme,
+      isLastDay
     });
   }
-  
-  // Enrich with images if missing (only for places that need it)
-  console.log('[IMAGES] Checking for missing images...');
-  for (const day of days) {
-    for (const location of day.locations) {
-      if ((!location.imageUrl || location.imageUrl === '') && location.googlePlaceId) {
-        try {
-          console.log(`[IMAGES] Fetching image for ${location.name} (${location.googlePlaceId})...`);
-          const details = await getPlaceDetails(location.googlePlaceId);
-          
-          if (details.data && details.data.photos && details.data.photos.length > 0) {
-            const mainPhoto = details.data.photos[0];
-            const allPhotos = details.data.photos;
-            
-            location.imageUrl = mainPhoto;
-            location.imageUrls = allPhotos;
-            
-            // Update database asynchronously using provider
-            itineraryProvider.updatePlaceEnrichment(location.id, {
-              imageUrl: mainPhoto,
-              imageUrls: allPhotos,
-              lastEnrichedAt: new Date()
-            }).catch((err: Error) => console.error(`[ERROR] Failed to save images for ${location.name}:`, err));
-          }
-        } catch (error) {
-          console.error(`[ERROR] Failed to fetch image for ${location.name}:`, error);
-        }
-      }
-    }
-  }
-  
-  // Calculate costs
-  const totalEstimatedCostUSD = days.reduce((sum, day) => {
-    return sum + day.locations.reduce((dSum, loc) => dSum + (loc.costMinUSD || 20), 0);
-  }, 0);
-  
-  // Generate AI polish
+
+  // AI Polish (Warnings, Tips) - kept as is
   let warnings: Array<{ title: string; description: string }> = [];
   let touristTraps: Array<{ name: string; reason: string }> = [];
   let localTips: string[] = [];
   
   try {
-    const aiPolish = await generateAIPolish(days, cityName);
+    const aiPolish = await generateAIPolish(days, cityName || country);
     warnings = aiPolish.warnings;
     touristTraps = aiPolish.touristTraps;
     localTips = aiPolish.localTips;
   } catch (error) {
     console.error('AI Polish failed (non-critical):', error);
   }
-  
-  const totalLocations = days.reduce((sum, d) => sum + d.locations.length, 0);
-  console.log(`[SUCCESS] Generated itinerary: ${days.length} days, ${totalLocations} total locations (avg ${(totalLocations / days.length).toFixed(1)}/day)`);
-  
+
+  // Cost Calculation & Budget Guard
+  let totalEstimatedCostUSD = days.reduce((sum, day) => {
+    return sum + day.locations.reduce((dSum, loc) => dSum + (loc.costMinUSD || 20), 0) + (budgetLevel === BudgetLevel.HIGH ? 150 : 50);
+  }, 0);
+
+  // If over budget, try to trim expensive activities
+  if (budgetUSD > 0 && totalEstimatedCostUSD > budgetUSD) {
+    console.log(`[BUDGET] Over budget ($${totalEstimatedCostUSD} > $${budgetUSD}). Trimming...`);
+    
+    // Flatten all locations with their day index
+    let allLocs: {loc: PlaceExtended, dayIdx: number}[] = [];
+    days.forEach((d, idx) => {
+      d.locations.forEach(l => allLocs.push({loc: l, dayIdx: idx}));
+    });
+
+    // Sort by cost descending (assuming costMinUSD or default 20)
+    allLocs.sort((a, b) => (b.loc.costMinUSD || 20) - (a.loc.costMinUSD || 20));
+
+    while (totalEstimatedCostUSD > budgetUSD && allLocs.length > 0) {
+       const candidate = allLocs.shift();
+       if (!candidate) break;
+
+       // Remove from specific day
+       const day = days[candidate.dayIdx];
+       // Only remove if day has enough activities or we're desperate
+       if (day.locations.length > 2) {
+         day.locations = day.locations.filter(l => l.id !== candidate.loc.id);
+         totalEstimatedCostUSD -= (candidate.loc.costMinUSD || 20);
+         console.log(`[BUDGET] Removed expensive item "${candidate.loc.name}" to save $${candidate.loc.costMinUSD || 20}`);
+       }
+    }
+  }
+
   return {
     itinerary: {
       numberOfDays,
@@ -636,9 +651,9 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       travelStyles,
     },
     days,
-    hotel: structuredDays[0]?.startingHotel || days[0]?.hotel || null,
+    hotel: baseHotel,
     totalEstimatedCostUSD,
-    routeSummary: `${numberOfDays} days in ${days[0]?.locations[0]?.city || cityName}`,
+    routeSummary: `${numberOfDays} days in ${country}`,
     warnings,
     touristTraps,
     localTips,
@@ -904,7 +919,8 @@ export function buildItineraryResponse(
       },
     },
     days: daysWithIds,
-    hotel,
+    hotels: hotel ? [hotel] : [],
+    hotel, // Keep singular for backward compatibility if needed
     airport: {
       name: airportConfig.name,
       code: airportConfig.code,
@@ -962,6 +978,15 @@ export function buildItineraryDetailsResponse(
     };
   });
 
+  // Extract unique hotels from days for top-level map display
+  const uniqueHotelsMap = new Map();
+  itinerary.days.forEach((day: any) => {
+      if (day.hotel) {
+          uniqueHotelsMap.set(day.hotel.id, mapPlaceToHotel(day.hotel));
+      }
+  });
+  const hotels = Array.from(uniqueHotelsMap.values());
+
   return {
     source: 'DATABASE',
     itinerary: {
@@ -972,6 +997,7 @@ export function buildItineraryDetailsResponse(
       travelStyles: itinerary.travelStyles,
     },
     days,
+    hotels, // Fix: Frontend expects this top-level array
     airport: mapAirportToResponse(airportConfig, {
       country: itinerary.country,
       code: itinerary.airportCode,

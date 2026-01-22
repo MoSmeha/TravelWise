@@ -1,8 +1,10 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as ExpoLocation from 'expo-location';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Text, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { placesService } from '../services/api';
+import { decodePolyline } from '../lib/polyline';
 import { DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
 import { useItineraryStore } from '../store/itineraryStore';
@@ -13,6 +15,7 @@ import {
   HotelCard,
   MapHeader,
   BottomNavigation,
+  MapLegend,
 } from '../components/map';
 
 const HOTEL_COLOR = '#8b5cf6';
@@ -47,6 +50,7 @@ export default function MapScreen() {
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [locationPhotos, setLocationPhotos] = useState<Record<string, LocationPhotosData>>({});
   const [isNavigatingToItinerary, setIsNavigatingToItinerary] = useState(false);
+  const [realRoutes, setRealRoutes] = useState<Record<number, { latitude: number; longitude: number }[]>>({});
 
   // Combine data sources: prefer passed, then fetched
   const data = passedData || (fetchedData as ItineraryResponse | undefined) || null;
@@ -78,6 +82,16 @@ export default function MapScreen() {
   }, [selectedLocation]);
 
   useEffect(() => {
+    (async () => {
+      const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission to access location was denied');
+        return;
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (params.data) {
       try {
         const parsed = JSON.parse(params.data as string);
@@ -93,6 +107,102 @@ export default function MapScreen() {
       }
     }
   }, [params.data, setActiveItinerary]);
+
+
+
+  const allLocations: Location[] = data?.days?.flatMap((day) => day.locations) || [];
+  const hotels: Hotel[] = data?.hotels || [];
+
+  // Build routes for each day
+  const dayRoutes = (data?.days || []).map((day, index) => {
+    const coords = day.locations.map(loc => ({
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    }));
+
+    // Add airport as starting point for the first day
+    if (index === 0 && data?.airport) {
+      coords.unshift({
+        latitude: data.airport.latitude,
+        longitude: data.airport.longitude,
+      });
+    }
+    return coords;
+  });
+
+  const initialRegion = {
+    latitude: data?.airport?.latitude || allLocations[0]?.latitude || 0,
+    longitude: data?.airport?.longitude || allLocations[0]?.longitude || 0,
+    latitudeDelta: 0.5,
+    longitudeDelta: 0.5,
+  };
+
+  const [connectorRoutes, setConnectorRoutes] = useState<Record<number, { latitude: number; longitude: number }[]>>({});
+
+  // Fetch real routes for each day AND connectors
+  useEffect(() => {
+    if (!data) return;
+
+    const fetchRoutes = async () => {
+      // 1. Fetch Day Routes
+      for (let i = 0; i < dayRoutes.length; i++) {
+        const route = dayRoutes[i];
+        if (route.length < 2) continue;
+        
+        if (realRoutes[i]) continue;
+
+        try {
+          const origin = route[0];
+          const destination = route[route.length - 1];
+          const waypoints = route.slice(1, route.length - 1);
+
+          const result = await placesService.getDirections(
+            origin.latitude,
+            origin.longitude,
+            destination.latitude,
+            destination.longitude,
+            waypoints.map(p => ({ lat: p.latitude, lng: p.longitude }))
+          );
+
+          if (result?.points) {
+            setRealRoutes(prev => ({ ...prev, [i]: decodePolyline(result.points) }));
+          }
+        } catch (error) {
+          console.error(`Failed to fetch route for day ${i + 1}:`, error);
+        }
+      }
+
+      // 2. Fetch Connectors (Day N End -> Day N+1 Start)
+      for (let i = 0; i < dayRoutes.length - 1; i++) {
+        if (connectorRoutes[i]) continue;
+        
+        const currentDayRoute = dayRoutes[i];
+        const nextDayRoute = dayRoutes[i+1];
+
+        if (currentDayRoute.length > 0 && nextDayRoute.length > 0) {
+            // End of today -> Start of tomorrow
+            const start = currentDayRoute[currentDayRoute.length - 1];
+            const end = nextDayRoute[0];
+
+            try {
+                const result = await placesService.getDirections(
+                    start.latitude, start.longitude,
+                    end.latitude, end.longitude,
+                    [] // No waypoints
+                );
+
+                if (result?.points) {
+                    setConnectorRoutes(prev => ({ ...prev, [i]: decodePolyline(result.points) }));
+                }
+            } catch (error) {
+                console.error(`Failed to fetch connector ${i}:`, error);
+            }
+        }
+      }
+    };
+
+    fetchRoutes();
+  }, [data, dayRoutes]);
 
   // Loading state
   if (loadingItinerary && !passedData && itineraryId) {
@@ -112,33 +222,6 @@ export default function MapScreen() {
       </View>
     );
   }
-
-  const allLocations: Location[] = data.days.flatMap((day) => day.locations);
-  const hotels: Hotel[] = data.hotels || [];
-
-  // Build routes for each day
-  const dayRoutes = data.days.map((day, index) => {
-    const coords = day.locations.map(loc => ({
-      latitude: loc.latitude,
-      longitude: loc.longitude,
-    }));
-
-    // Add airport as starting point for the first day
-    if (index === 0 && data.airport) {
-      coords.unshift({
-        latitude: data.airport.latitude,
-        longitude: data.airport.longitude,
-      });
-    }
-    return coords;
-  });
-
-  const initialRegion = {
-    latitude: data.airport?.latitude || allLocations[0]?.latitude || 0,
-    longitude: data.airport?.longitude || allLocations[0]?.longitude || 0,
-    latitudeDelta: 0.5,
-    longitudeDelta: 0.5,
-  };
 
   const handleHotelBook = (url: string) => {
     Linking.openURL(url).catch(() => {
@@ -174,24 +257,62 @@ export default function MapScreen() {
         itineraryId={data.itinerary.id}
       />
 
+      <MapLegend days={data.itinerary.numberOfDays} />
+
       {/* Map */}
       <MapView
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
         initialRegion={initialRegion}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
       >
         {/* Route polylines per day */}
-        {dayRoutes.map((route, index) => (
-          route.length > 1 && (
-            <Polyline
-              key={`route-${index}`}
-              coordinates={route}
-              strokeColor={DAY_COLORS[index % DAY_COLORS.length]}
-              strokeWidth={3}
-              lineDashPattern={[10, 5]}
-            />
-          )
-        ))}
+        {dayRoutes.map((fallbackRoute, index) => {
+          const routeToRender = realRoutes[index] || fallbackRoute;
+          
+          // Calculate connector to next day
+          let connector = null;
+          if (index < dayRoutes.length - 1) {
+             const nextFallback = dayRoutes[index + 1];
+             const nextRoute = realRoutes[index + 1] || nextFallback;
+             
+             if (routeToRender.length > 0 && nextRoute.length > 0) {
+               // Prefer real fetched connector, fallback to straight line if loading/failed
+               const fetchedConnector = connectorRoutes[index];
+               const start = routeToRender[routeToRender.length - 1];
+               const end = nextRoute[0];
+               
+               const connectorCoords = fetchedConnector || [start, end];
+
+               connector = (
+                 <Polyline
+                   key={`connector-${index}`}
+                   coordinates={connectorCoords}
+                   strokeColor="#9CA3AF"
+                   strokeWidth={5}
+                   lineDashPattern={[10, 5]}
+                 />
+               );
+             }
+          }
+
+          return (
+            <React.Fragment key={`route-group-${index}`}>
+              {/* Daily Route */}
+              {routeToRender.length > 1 && (
+                <Polyline
+                  key={`route-${index}`}
+                  coordinates={routeToRender}
+                  strokeColor={DAY_COLORS[index % DAY_COLORS.length]}
+                  strokeWidth={5}
+                />
+              )}
+              {/* Connector to next day */}
+              {connector}
+            </React.Fragment>
+          );
+        })}
 
         {/* Airport marker */}
         {data.airport && (

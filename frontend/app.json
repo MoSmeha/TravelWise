@@ -18,6 +18,9 @@
       "bundleIdentifier": "com.travelwise.app",
       "config": {
         "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show where you are on the map."
       }
     },
     "android": {

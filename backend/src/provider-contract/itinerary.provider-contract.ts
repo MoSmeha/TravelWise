@@ -176,6 +176,26 @@ export interface CreatedItinerary {
 }
 
 
+// Data for creating a new place from external source
+export interface CreatePlaceData {
+  googlePlaceId: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  country: string;
+  city?: string;
+  address?: string;
+  category: LocationCategory;
+  description?: string;
+  rating?: number | null;
+  totalRatings?: number | null;
+  priceLevel?: PriceLevel | null;
+  imageUrl?: string | null;
+  imageUrls?: string[];
+  websiteUrl?: string | null;
+  classification?: LocationClassification;
+}
+
 export interface IItineraryProvider {
   
   fetchPlaces(params: FetchPlacesParams): Promise<PlaceRecord[]>;
@@ -199,4 +219,6 @@ export interface IItineraryProvider {
   createChecklistItem(data: CreateChecklistItemData): Promise<{ id: string }>;
   
   createExternalHotel(data: CreateExternalHotelData): Promise<{ id: string }>;
+
+  createPlace(data: CreatePlaceData): Promise<{ id: string }>;
 }

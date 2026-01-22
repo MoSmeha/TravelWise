@@ -55,7 +55,7 @@ function calculateCentroid(places: PlaceWithCoords[]): Coordinate {
 }
 
 // K-means clustering to group places into day-sized clusters
-function kMeansClustering(
+export function kMeansClustering(
   places: PlaceWithCoords[],
   k: number,
   maxIterations: number = 50
@@ -340,7 +340,8 @@ export function optimizeRoute(
 }
 
 // Export helper functions for use in other services
+// Export helper functions for use in other services
 export {
-    calculateCentroid, calculateRouteDistance, estimateTravelTime, generateTimeBlocks, haversineDistance, nearestNeighborRoute
+    calculateCentroid, calculateRouteDistance, estimateTravelTime, generateTimeBlocks, haversineDistance, nearestNeighborRoute, orderClustersByProximity
 };
 

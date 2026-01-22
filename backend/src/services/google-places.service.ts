@@ -4,6 +4,7 @@ import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from './cache.service.js';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';
+const GOOGLE_DIRECTIONS_BASE_URL = 'https://maps.googleapis.com/maps/api/directions';
 
 // Types
 export interface PlaceEnrichment {
@@ -56,7 +57,77 @@ export function isGooglePlacesConfigured(): boolean {
   return !!GOOGLE_PLACES_API_KEY && GOOGLE_PLACES_API_KEY !== 'your_google_places_api_key_here';
 }
 
-// Search for a place by name and location
+// Search for places by text query (e.g. "Hiking trails in Lebanon")
+export async function searchPlacesByText(
+  query: string,
+  minRating: number = 4.0
+): Promise<{ places: HotelSearchResult[]; source: 'live' | 'cache' | 'unavailable' }> {
+  const cacheKey = CACHE_KEYS.googlePlaceSearch(query, 0, 0); // Reuse or adjust key logic
+  
+  // Check cache
+  const cached = cacheGet<HotelSearchResult[]>(cacheKey);
+  if (cached) {
+      return { places: cached, source: 'cache' };
+  }
+
+  if (!isGooglePlacesConfigured()) {
+      return { places: [], source: 'unavailable' };
+  }
+
+  try {
+    const result = await withCircuitBreaker(
+      CIRCUIT_BREAKERS.googlePlaces,
+      'Google Places Text Search',
+      async () => {
+        const url = new URL(`${GOOGLE_PLACES_BASE_URL}/textsearch/json`);
+        url.searchParams.set('query', query);
+        url.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+        
+        const response = await fetch(url.toString());
+        if (!response.ok) throw new Error(`Google Places API error: ${response.status}`);
+        return response.json();
+      }
+    );
+
+    const data: any = result as any;
+    if (data.status === 'OK' && data.results?.length > 0) {
+        const filtered = data.results
+            .filter((p: any) => (p.rating || 0) >= minRating)
+            .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
+            .slice(0, 5); // Take top 5
+
+        const places: HotelSearchResult[] = [];
+        for (const place of filtered) {
+            // Get details for photos/website
+            const details = await getPlaceDetails(place.place_id);
+            
+            places.push({
+                googlePlaceId: place.place_id,
+                name: place.name,
+                rating: place.rating || 0,
+                totalRatings: place.user_ratings_total || 0,
+                latitude: place.geometry?.location?.lat || 0,
+                longitude: place.geometry?.location?.lng || 0,
+                formattedAddress: place.formatted_address || '',
+                websiteUrl: details.data?.website || null,
+                bookingUrl: '', // Not needed for general activities
+                photos: details.data?.photos || [],
+                priceLevel: place.price_level ?? null,
+            });
+        }
+        
+        cacheSet(cacheKey, places, CACHE_TTL.placeSearch);
+        return { places, source: 'live' };
+    }
+    return { places: [], source: 'live' };
+
+  } catch (error) {
+      console.error('[ERROR] Text search failed:', error);
+      return { places: [], source: 'unavailable' };
+  }
+}
+
+// Search for a place by name and location (Find Place)
 export async function searchPlace(
   name: string,
   lat?: number,
@@ -406,6 +477,67 @@ export async function searchNearbyHotels(
     }
     
     return { hotels: [], source: 'unavailable' };
+  }
+}
+
+// Get directions between points
+export async function getDirections(
+  origin: string,
+  destination: string,
+  waypoints: string[] = []
+): Promise<{ points: string; distance: string; duration: string } | null> {
+  if (!isGooglePlacesConfigured()) {
+    console.warn('[WARN] Google Places API not configured for directions');
+    return null;
+  }
+
+  try {
+    const result = await withCircuitBreaker(
+      CIRCUIT_BREAKERS.googlePlaces,
+      'Google Directions',
+      async () => {
+        const url = new URL(`${GOOGLE_DIRECTIONS_BASE_URL}/json`);
+        url.searchParams.set('origin', origin);
+        url.searchParams.set('destination', destination);
+        if (waypoints.length > 0) {
+          url.searchParams.set('waypoints', `optimize:true|${waypoints.join('|')}`);
+        }
+        url.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+
+        const response = await fetch(url.toString());
+        
+        if (!response.ok) {
+          throw new Error(`Google Directions API error: ${response.status}`);
+        }
+
+        return response.json();
+      }
+    );
+
+    const data: any = result as any;
+
+    if (data.status === 'OK' && data.routes?.[0]) {
+      const route = data.routes[0];
+      const leg = route.legs[0]; // Simplified: mostly usually 1 leg if no stopovers or we just want aggregate? 
+      // Actually if waypoints are used, there are multiple legs.
+      // But usually we want the overview_polyline for the whole route.
+      
+      return {
+        points: route.overview_polyline.points,
+        distance: leg.distance?.text || '', // This might be just the first leg if multiple
+        duration: leg.duration?.text || '',
+      };
+    }
+    
+    return null;
+
+  } catch (error) {
+    if (error instanceof CircuitOpenError) {
+      console.warn('[WARN] Google Directions circuit breaker is open');
+    } else {
+      console.error('[ERROR] Directions fetch failed:', error);
+    }
+    return null;
   }
 }
 
