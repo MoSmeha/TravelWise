@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { FriendshipController } from '../controllers/friendship.controller.js';
+import {
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  getFriends,
+  getPendingRequests,
+  getSentRequests,
+} from '../controllers/friendship.controller.js';
 import { validate } from '../middleware/validate.js';
 import {
   sendFriendRequestSchema,
@@ -8,11 +15,11 @@ import {
 
 const router = Router();
 
-router.post('/request', validate(sendFriendRequestSchema), FriendshipController.sendFriendRequest);
-router.put('/request/:id/accept', validate(friendshipIdParamSchema, 'params'), FriendshipController.acceptFriendRequest);
-router.put('/request/:id/reject', validate(friendshipIdParamSchema, 'params'), FriendshipController.rejectFriendRequest);
-router.get('/', FriendshipController.getFriends);
-router.get('/requests/pending', FriendshipController.getPendingRequests);
-router.get('/requests/sent', FriendshipController.getSentRequests);
+router.post('/request', validate(sendFriendRequestSchema), sendFriendRequest);
+router.put('/request/:id/accept', validate(friendshipIdParamSchema, 'params'), acceptFriendRequest);
+router.put('/request/:id/reject', validate(friendshipIdParamSchema, 'params'), rejectFriendRequest);
+router.get('/', getFriends);
+router.get('/requests/pending', getPendingRequests);
+router.get('/requests/sent', getSentRequests);
 
 export default router;

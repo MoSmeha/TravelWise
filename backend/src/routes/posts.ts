@@ -1,5 +1,18 @@
 import { Router } from 'express';
-import { PostController } from '../controllers/post.controller.js';
+import {
+  createPost,
+  getFeed,
+  getPublicFeed,
+  getUserPosts,
+  getPost,
+  deletePost,
+  likePost,
+  unlikePost,
+  getPostLikes,
+  addComment,
+  getPostComments,
+  deleteComment,
+} from '../controllers/post.controller.js';
 import { validate } from '../middleware/validate.js';
 import { singleImageUpload } from '../middleware/upload.middleware.js';
 import {
@@ -12,30 +25,30 @@ import {
 const router = Router();
 
 // Post CRUD
-router.post('/', singleImageUpload, validate(createPostSchema), PostController.createPost);
-router.get('/feed', PostController.getFeed);
-router.get('/discover', PostController.getPublicFeed);
-router.get('/user/:userId', validate(userIdParamSchema, 'params'), PostController.getUserPosts);
-router.get('/:id', validate(postIdParamSchema, 'params'), PostController.getPost);
-router.delete('/:id', validate(postIdParamSchema, 'params'), PostController.deletePost);
+router.post('/', singleImageUpload, validate(createPostSchema), createPost);
+router.get('/feed', getFeed);
+router.get('/discover', getPublicFeed);
+router.get('/user/:userId', validate(userIdParamSchema, 'params'), getUserPosts);
+router.get('/:id', validate(postIdParamSchema, 'params'), getPost);
+router.delete('/:id', validate(postIdParamSchema, 'params'), deletePost);
 
 // Likes
-router.post('/:id/like', validate(postIdParamSchema, 'params'), PostController.likePost);
-router.delete('/:id/like', validate(postIdParamSchema, 'params'), PostController.unlikePost);
-router.get('/:id/likes', validate(postIdParamSchema, 'params'), PostController.getPostLikes);
+router.post('/:id/like', validate(postIdParamSchema, 'params'), likePost);
+router.delete('/:id/like', validate(postIdParamSchema, 'params'), unlikePost);
+router.get('/:id/likes', validate(postIdParamSchema, 'params'), getPostLikes);
 
 // Comments
 router.post(
   '/:id/comments',
   validate(postIdParamSchema, 'params'),
   validate(addCommentSchema),
-  PostController.addComment
+  addComment
 );
-router.get('/:id/comments', validate(postIdParamSchema, 'params'), PostController.getPostComments);
+router.get('/:id/comments', validate(postIdParamSchema, 'params'), getPostComments);
 router.delete(
   '/:id/comments/:commentId',
   validate(postIdParamSchema, 'params'),
-  PostController.deleteComment
+  deleteComment
 );
 
 export default router;

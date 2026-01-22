@@ -25,7 +25,7 @@ vi.mock('../../services/socket.service.js', () => ({
   },
 }));
 
-import { messageController } from '../../controllers/message.controller.js';
+import * as messageController from '../../controllers/message.controller.js';
 import * as messageService from '../../services/message.service.js';
 
 const mockConversation = {

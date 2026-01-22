@@ -16,7 +16,7 @@ vi.mock('../../services/friendship.service.js', () => ({
   getSentRequests: vi.fn(),
 }));
 
-import { FriendshipController } from '../../controllers/friendship.controller.js';
+import * as FriendshipController from '../../controllers/friendship.controller.js';
 import {
   sendFriendRequest,
   acceptFriendRequest,

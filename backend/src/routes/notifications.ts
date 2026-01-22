@@ -1,11 +1,19 @@
 import { Router } from 'express';
-import { NotificationController } from '../controllers/notification.controller.js';
+import {
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
+  getUnreadCount,
+} from '../controllers/notification.controller.js';
+import { authenticate } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-router.get('/', NotificationController.getNotifications);
-router.get('/unread-count', NotificationController.getUnreadCount);
-router.put('/:id/read', NotificationController.markAsRead);
-router.put('/read-all', NotificationController.markAllAsRead);
+router.use(authenticate);
+
+router.get('/', getNotifications);
+router.get('/unread-count', getUnreadCount);
+router.put('/:id/read', markAsRead);
+router.put('/read-all', markAllAsRead);
 
 export default router;
