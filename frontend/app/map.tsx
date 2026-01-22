@@ -137,25 +137,23 @@ export default function MapScreen() {
     longitudeDelta: 0.5,
   };
 
-  // Fetch real routes for each day
+  const [connectorRoutes, setConnectorRoutes] = useState<Record<number, { latitude: number; longitude: number }[]>>({});
+
+  // Fetch real routes for each day AND connectors
   useEffect(() => {
     if (!data) return;
 
     const fetchRoutes = async () => {
-      // Loop through each day's route
+      // 1. Fetch Day Routes
       for (let i = 0; i < dayRoutes.length; i++) {
         const route = dayRoutes[i];
-        if (route.length < 2) continue; // Need at least 2 points
+        if (route.length < 2) continue;
         
-        // Skip if already fetched
         if (realRoutes[i]) continue;
 
         try {
-          // Origin is first point
           const origin = route[0];
-          // Destination is last point
           const destination = route[route.length - 1];
-          // Waypoints are everything in between
           const waypoints = route.slice(1, route.length - 1);
 
           const result = await placesService.getDirections(
@@ -167,11 +165,38 @@ export default function MapScreen() {
           );
 
           if (result?.points) {
-            const decodedPoints = decodePolyline(result.points);
-            setRealRoutes(prev => ({ ...prev, [i]: decodedPoints }));
+            setRealRoutes(prev => ({ ...prev, [i]: decodePolyline(result.points) }));
           }
         } catch (error) {
           console.error(`Failed to fetch route for day ${i + 1}:`, error);
+        }
+      }
+
+      // 2. Fetch Connectors (Day N End -> Day N+1 Start)
+      for (let i = 0; i < dayRoutes.length - 1; i++) {
+        if (connectorRoutes[i]) continue;
+        
+        const currentDayRoute = dayRoutes[i];
+        const nextDayRoute = dayRoutes[i+1];
+
+        if (currentDayRoute.length > 0 && nextDayRoute.length > 0) {
+            // End of today -> Start of tomorrow
+            const start = currentDayRoute[currentDayRoute.length - 1];
+            const end = nextDayRoute[0];
+
+            try {
+                const result = await placesService.getDirections(
+                    start.latitude, start.longitude,
+                    end.latitude, end.longitude,
+                    [] // No waypoints
+                );
+
+                if (result?.points) {
+                    setConnectorRoutes(prev => ({ ...prev, [i]: decodePolyline(result.points) }));
+                }
+            } catch (error) {
+                console.error(`Failed to fetch connector ${i}:`, error);
+            }
         }
       }
     };
@@ -245,15 +270,48 @@ export default function MapScreen() {
         {/* Route polylines per day */}
         {dayRoutes.map((fallbackRoute, index) => {
           const routeToRender = realRoutes[index] || fallbackRoute;
+          
+          // Calculate connector to next day
+          let connector = null;
+          if (index < dayRoutes.length - 1) {
+             const nextFallback = dayRoutes[index + 1];
+             const nextRoute = realRoutes[index + 1] || nextFallback;
+             
+             if (routeToRender.length > 0 && nextRoute.length > 0) {
+               // Prefer real fetched connector, fallback to straight line if loading/failed
+               const fetchedConnector = connectorRoutes[index];
+               const start = routeToRender[routeToRender.length - 1];
+               const end = nextRoute[0];
+               
+               const connectorCoords = fetchedConnector || [start, end];
+
+               connector = (
+                 <Polyline
+                   key={`connector-${index}`}
+                   coordinates={connectorCoords}
+                   strokeColor="#9CA3AF"
+                   strokeWidth={5}
+                   lineDashPattern={[10, 5]}
+                 />
+               );
+             }
+          }
+
           return (
-            (routeToRender.length > 1) && (
-              <Polyline
-                key={`route-${index}`}
-                coordinates={routeToRender}
-              strokeColor={DAY_COLORS[index % DAY_COLORS.length]}
-              strokeWidth={5}
-            />
-          ));
+            <React.Fragment key={`route-group-${index}`}>
+              {/* Daily Route */}
+              {routeToRender.length > 1 && (
+                <Polyline
+                  key={`route-${index}`}
+                  coordinates={routeToRender}
+                  strokeColor={DAY_COLORS[index % DAY_COLORS.length]}
+                  strokeWidth={5}
+                />
+              )}
+              {/* Connector to next day */}
+              {connector}
+            </React.Fragment>
+          );
         })}
 
         {/* Airport marker */}

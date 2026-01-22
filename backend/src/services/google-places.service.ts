@@ -57,7 +57,77 @@ export function isGooglePlacesConfigured(): boolean {
   return !!GOOGLE_PLACES_API_KEY && GOOGLE_PLACES_API_KEY !== 'your_google_places_api_key_here';
 }
 
-// Search for a place by name and location
+// Search for places by text query (e.g. "Hiking trails in Lebanon")
+export async function searchPlacesByText(
+  query: string,
+  minRating: number = 4.0
+): Promise<{ places: HotelSearchResult[]; source: 'live' | 'cache' | 'unavailable' }> {
+  const cacheKey = CACHE_KEYS.googlePlaceSearch(query, 0, 0); // Reuse or adjust key logic
+  
+  // Check cache
+  const cached = cacheGet<HotelSearchResult[]>(cacheKey);
+  if (cached) {
+      return { places: cached, source: 'cache' };
+  }
+
+  if (!isGooglePlacesConfigured()) {
+      return { places: [], source: 'unavailable' };
+  }
+
+  try {
+    const result = await withCircuitBreaker(
+      CIRCUIT_BREAKERS.googlePlaces,
+      'Google Places Text Search',
+      async () => {
+        const url = new URL(`${GOOGLE_PLACES_BASE_URL}/textsearch/json`);
+        url.searchParams.set('query', query);
+        url.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+        
+        const response = await fetch(url.toString());
+        if (!response.ok) throw new Error(`Google Places API error: ${response.status}`);
+        return response.json();
+      }
+    );
+
+    const data: any = result as any;
+    if (data.status === 'OK' && data.results?.length > 0) {
+        const filtered = data.results
+            .filter((p: any) => (p.rating || 0) >= minRating)
+            .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
+            .slice(0, 5); // Take top 5
+
+        const places: HotelSearchResult[] = [];
+        for (const place of filtered) {
+            // Get details for photos/website
+            const details = await getPlaceDetails(place.place_id);
+            
+            places.push({
+                googlePlaceId: place.place_id,
+                name: place.name,
+                rating: place.rating || 0,
+                totalRatings: place.user_ratings_total || 0,
+                latitude: place.geometry?.location?.lat || 0,
+                longitude: place.geometry?.location?.lng || 0,
+                formattedAddress: place.formatted_address || '',
+                websiteUrl: details.data?.website || null,
+                bookingUrl: '', // Not needed for general activities
+                photos: details.data?.photos || [],
+                priceLevel: place.price_level ?? null,
+            });
+        }
+        
+        cacheSet(cacheKey, places, CACHE_TTL.placeSearch);
+        return { places, source: 'live' };
+    }
+    return { places: [], source: 'live' };
+
+  } catch (error) {
+      console.error('[ERROR] Text search failed:', error);
+      return { places: [], source: 'unavailable' };
+  }
+}
+
+// Search for a place by name and location (Find Place)
 export async function searchPlace(
   name: string,
   lat?: number,

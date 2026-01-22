@@ -7,6 +7,7 @@ import {
   CreateItineraryDayData,
   CreateItineraryItemData,
   CreatedItinerary,
+  CreatePlaceData,
   FetchPlacesParams,
   IItineraryProvider,
   ItineraryDayRecord,
@@ -243,6 +244,44 @@ class ItineraryPgProvider implements IItineraryProvider {
     
     console.log(`[HOTEL] Saved external hotel "${data.name}" to database with id: ${hotel.id}`);
     return hotel;
+  }
+
+  async createPlace(data: CreatePlaceData): Promise<{ id: string }> {
+    const place = await prisma.place.upsert({
+      where: { googlePlaceId: data.googlePlaceId },
+      update: {
+        rating: data.rating ?? undefined,
+        totalRatings: data.totalRatings ?? undefined,
+        imageUrl: data.imageUrl ?? undefined,
+        imageUrls: data.imageUrls ?? undefined,
+        lastEnrichedAt: new Date(),
+      },
+      create: {
+        name: data.name,
+        classification: data.classification || LocationClassification.HIDDEN_GEM,
+        category: data.category,
+        description: data.description || `${data.rating ?? 0}★ ${data.category.replace('_', ' ')}`,
+        sources: ['google_places', 'user_generation'],
+        sourceUrls: [],
+        popularity: data.totalRatings ?? 0,
+        googlePlaceId: data.googlePlaceId,
+        rating: data.rating ?? null,
+        totalRatings: data.totalRatings ?? null,
+        priceLevel: data.priceLevel ?? null,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        address: data.address ?? null,
+        city: data.city ?? data.country,
+        country: data.country,
+        imageUrl: data.imageUrl ?? null,
+        imageUrls: data.imageUrls ?? [],
+        activityTypes: ['activity'],
+        lastEnrichedAt: new Date(),
+      },
+      select: { id: true },
+    });
+    console.log(`[PLACE] Saved new place "${data.name}" to database with id: ${place.id}`);
+    return place;
   }
 }
 
