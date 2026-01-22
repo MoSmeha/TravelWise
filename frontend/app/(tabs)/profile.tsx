@@ -167,7 +167,7 @@ export default function ProfileScreen() {
           <Text className="text-gray-500 text-center mt-2">There was an error fetching your profile information.</Text>
           <TouchableOpacity 
             className="mt-6 bg-blue-600 px-6 py-3 rounded-xl"
-            onPress={() => router.replace('/auth/login' as any)}
+            onPress={() => logoutMutation.mutate()}
           >
             <Text className="text-white font-semibold">Login Again</Text>
           </TouchableOpacity>
