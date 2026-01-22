@@ -4,7 +4,14 @@
  */
 
 import { Router } from 'express';
-import * as authController from '../controllers/auth.controller.js';
+import {
+  register,
+  login,
+  refresh,
+  verifyEmail,
+  resendVerification,
+  me,
+} from '../controllers/auth.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import {
   loginRateLimiter,
@@ -28,7 +35,7 @@ router.post(
   '/register',
   registerRateLimiter,
   validate(registerSchema),
-  authController.register
+  register
 );
 
 // POST /api/auth/login - Login (rate-limited)
@@ -36,7 +43,7 @@ router.post(
   '/login',
   loginRateLimiter,
   validate(loginSchema),
-  authController.login
+  login
 );
 
 // POST /api/auth/refresh - Refresh access token
@@ -44,14 +51,14 @@ router.post(
   '/refresh',
   refreshRateLimiter,
   validate(refreshTokenSchema),
-  authController.refresh
+  refresh
 );
 
 // POST /api/auth/verify-email - Verify email with OTP
 router.post(
   '/verify-email',
   validate(verifyEmailSchema),
-  authController.verifyEmail
+  verifyEmail
 );
 
 // POST /api/auth/resend-verification - Resend verification email
@@ -59,10 +66,10 @@ router.post(
   '/resend-verification',
   resendVerificationRateLimiter,
   validate(resendVerificationSchema),
-  authController.resendVerification
+  resendVerification
 );
 
 // GET /api/auth/me - Get current user (protected)
-router.get('/me', authenticate, authController.me);
+router.get('/me', authenticate, me);
 
 export default router;

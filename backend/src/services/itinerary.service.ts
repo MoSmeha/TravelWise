@@ -1,11 +1,11 @@
 import { ChecklistCategory, ItineraryItemType, LocationCategory, Place, PriceLevel } from '../generated/prisma/client.js';
 import { BudgetLevel, TravelStyle, mapBudgetToPriceLevel } from '../utils/enum-mappers.js';
 import { v4 as uuidv4 } from 'uuid';
-import * as googlePlacesService from './google-places.service.js';
-import * as routeOptimizer from './route-optimizer.service.js';
+import { searchNearbyHotels, getPlaceDetails, enrichPlaceWithGoogleData } from './google-places.service.js';
+import { nearestNeighborRoute } from './route-optimizer.service.js';
 import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils.js';
-import * as fs from 'fs';
-import * as path from 'path';
+import { appendFileSync } from 'fs';
+import { join } from 'path';
 import { itineraryProvider } from '../providers/itinerary.provider.pg.js';
 import { IItineraryProvider } from '../provider-contract/itinerary.provider-contract.js';
 import { mapPlaceForGenerateResponse, mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } from '../utils/response-mappers.js';
@@ -235,7 +235,7 @@ async function findHotelNearLocation(
   // Fallback to Google Places API
   console.log(`[HOTEL] No DB hotels within ${radiusKm}km of (${lat.toFixed(4)}, ${lng.toFixed(4)}), searching Google Places...`);
   
-  const googleResult = await googlePlacesService.searchNearbyHotels(lat, lng, radiusKm * 1000, 4.0);
+  const googleResult = await searchNearbyHotels(lat, lng, radiusKm * 1000, 4.0);
   
   if (googleResult.hotels.length > 0) {
     const bestHotel = googleResult.hotels[0];
@@ -332,9 +332,9 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   
   // Log if no categories match
   if (activityCategories.length === 0) {
-    const logPath = path.join(__dirname, '../../logs/missing-data.log');
+    const logPath = join(__dirname, '../../logs/missing-data.log');
     const logEntry = `[${new Date().toISOString()}] No categories for styles: ${travelStyles.join(', ')}\n`;
-    fs.appendFileSync(logPath, logEntry);
+    appendFileSync(logPath, logEntry);
     console.warn(`[WARN] No categories match travel styles: ${travelStyles.join(', ')}`);
   }
   
@@ -551,7 +551,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       suggestedDuration: p.category === LocationCategory.MUSEUM || p.category === LocationCategory.HIKING ? 180 : 90,
     }));
     
-    const orderedPlaces = routeOptimizer.nearestNeighborRoute(placesWithCoords, dayStartPoint);
+    const orderedPlaces = nearestNeighborRoute(placesWithCoords, dayStartPoint);
     const orderedFullPlaces = orderedPlaces
       .map(p => dayPlaces.find(dp => dp.id === p.id))
       .filter((p): p is PlaceExtended => p !== undefined);
@@ -583,7 +583,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       if ((!location.imageUrl || location.imageUrl === '') && location.googlePlaceId) {
         try {
           console.log(`[IMAGES] Fetching image for ${location.name} (${location.googlePlaceId})...`);
-          const details = await googlePlacesService.getPlaceDetails(location.googlePlaceId);
+          const details = await getPlaceDetails(location.googlePlaceId);
           
           if (details.data && details.data.photos && details.data.photos.length > 0) {
             const mainPhoto = details.data.photos[0];
@@ -807,7 +807,7 @@ export async function enrichLocations(days: DayWithLocations[]) {
           continue;
         }
 
-        const googleData = await googlePlacesService.enrichPlaceWithGoogleData(
+        const googleData = await enrichPlaceWithGoogleData(
           location.name,
           location.latitude,
           location.longitude

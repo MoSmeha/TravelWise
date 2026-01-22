@@ -1,5 +1,13 @@
 import { Request, Response } from 'express';
-import { messageService } from '../services/message.service.js';
+import {
+  getConversations,
+  getConversation,
+  getOrCreateDirectConversation,
+  getMessages,
+  sendMessage,
+  markConversationRead,
+  getConversationParticipantIds
+} from '../services/message.service.js';
 import { socketService } from '../services/socket.service.js';
 
 interface AuthRequest extends Request {
@@ -20,7 +28,7 @@ export const messageController = {
 
       // Data already validated by middleware
       const { page, limit } = req.query as unknown as { page: number; limit: number };
-      const result = await messageService.getConversations(userId, page, limit);
+      const result = await getConversations(userId, page, limit);
       return res.json(result);
     } catch (error) {
       console.error('[MessageController] Error fetching conversations:', error);
@@ -41,7 +49,7 @@ export const messageController = {
 
       // Data already validated by middleware
       const { id } = req.params;
-      const conversation = await messageService.getConversation(id, userId);
+      const conversation = await getConversation(id, userId);
 
       if (!conversation) {
         return res.status(404).json({ error: 'Conversation not found' });
@@ -72,7 +80,7 @@ export const messageController = {
         return res.status(400).json({ error: 'Cannot create conversation with yourself' });
       }
 
-      const conversation = await messageService.getOrCreateDirectConversation(userId, friendId);
+      const conversation = await getOrCreateDirectConversation(userId, friendId);
       return res.status(201).json(conversation);
     } catch (error) {
       console.error('[MessageController] Error creating conversation:', error);
@@ -95,7 +103,7 @@ export const messageController = {
       const { id } = req.params;
       const { page, limit } = req.query as unknown as { page: number; limit: number };
 
-      const result = await messageService.getMessages(id, userId, page, limit);
+      const result = await getMessages(id, userId, page, limit);
       return res.json(result);
     } catch (error: any) {
       if (error.message === 'Not a participant in this conversation') {
@@ -121,10 +129,10 @@ export const messageController = {
       const conversationId = req.params.id;
       const { content } = req.body;
 
-      const message = await messageService.sendMessage(conversationId, userId, content);
+      const message = await sendMessage(conversationId, userId, content);
 
       // Emit real-time event to all participants except sender
-      const participantIds = await messageService.getConversationParticipantIds(conversationId);
+      const participantIds = await getConversationParticipantIds(conversationId);
       participantIds
         .filter((id) => id !== userId)
         .forEach((participantId) => {
@@ -158,7 +166,7 @@ export const messageController = {
       // Data already validated by middleware
       const { id } = req.params;
 
-      await messageService.markConversationRead(id, userId);
+      await markConversationRead(id, userId);
 
       return res.json({ success: true });
     } catch (error) {

@@ -2,72 +2,21 @@ import { ChecklistCategory } from '../generated/prisma/client.js';
 import { WeatherForecast } from './weather.service.js';
 import { checklistProvider } from '../providers/checklist.provider.pg.js';
 import {
-  IChecklistProvider,
   ChecklistItemRecord,
   CreateChecklistItemData,
 } from '../provider-contract/checklist.provider-contract.js';
 import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema.js';
 
-
-export class ChecklistService {
-  constructor(private provider: IChecklistProvider = checklistProvider) {}
-
-  /**
-   * Get all checklist items for an itinerary
-   */
-  async getItineraryChecklist(itineraryId: string): Promise<ChecklistItemRecord[]> {
-    return this.provider.findByItineraryId(itineraryId);
-  }
-
-  /**
-   * Update a checklist item's checked status
-   */
-  async updateItem(itemId: string, input: UpdateChecklistItemInput): Promise<ChecklistItemRecord> {
-    return this.provider.updateIsChecked(itemId, input.isChecked);
-  }
-
-  /**
-   * Create a custom checklist item
-   */
-  async createItem(itineraryId: string, input: CreateChecklistItemInput): Promise<ChecklistItemRecord> {
-    return this.provider.create({
-      itineraryId,
-      category: input.category as ChecklistCategory,
-      item: input.item,
-      reason: input.reason || null,
-      source: 'user',
-    });
-  }
-
-  /**
-   * Delete a checklist item
-   */
-  async deleteItem(itemId: string): Promise<void> {
-    return this.provider.delete(itemId);
-  }
-
-  /**
-   * Bulk create checklist items (used by itinerary generation)
-   */
-  async createBulkItems(items: CreateChecklistItemData[]): Promise<{ count: number }> {
-    return this.provider.createMany(items);
-  }
-}
-
-// Singleton instance for use throughout the app
-export const checklistService = new ChecklistService();
-
-
 export interface ChecklistItemData {
   category: ChecklistCategory;
   item: string;
   reason: string;
-  source: 'essential' | 'weather' | 'terrain' | 'activity' | 'safety';
+  source: 'essential' | 'weather' | 'terrain' | 'activity' | 'safety' | 'user';
   priority: 'high' | 'medium' | 'low';
 }
 
 // Essential items everyone needs
-const ESSENTIAL_ITEMS: ChecklistItemData[] = [
+export const ESSENTIAL_ITEMS: ChecklistItemData[] = [
   { category: 'ESSENTIALS', item: 'Passport', reason: 'Required for international travel', source: 'essential', priority: 'high' },
   { category: 'ESSENTIALS', item: 'Travel insurance documents', reason: 'Keep digital and physical copies', source: 'essential', priority: 'high' },
   { category: 'ESSENTIALS', item: 'Phone charger', reason: 'For navigation and communication', source: 'essential', priority: 'high' },
@@ -152,7 +101,49 @@ const SAFETY_ITEMS: Record<string, ChecklistItemData[]> = {
   ],
 };
 
-// Determine weather conditions from forecast
+/**
+ * Get all checklist items for an itinerary
+ */
+export async function getItineraryChecklist(itineraryId: string): Promise<ChecklistItemRecord[]> {
+  return checklistProvider.findByItineraryId(itineraryId);
+}
+
+/**
+ * Update a checklist item's checked status
+ */
+export async function updateItem(itemId: string, input: UpdateChecklistItemInput): Promise<ChecklistItemRecord> {
+  return checklistProvider.updateIsChecked(itemId, input.isChecked);
+}
+
+/**
+ * Create a custom checklist item
+ */
+export async function createItem(itineraryId: string, input: CreateChecklistItemInput): Promise<ChecklistItemRecord> {
+  return checklistProvider.create({
+    itineraryId,
+    category: input.category as ChecklistCategory,
+    item: input.item,
+    reason: input.reason || null,
+    source: 'user',
+  });
+}
+
+/**
+ * Delete a checklist item
+ */
+export async function deleteItem(itemId: string): Promise<void> {
+  return checklistProvider.delete(itemId);
+}
+
+/**
+ * Bulk create checklist items (used by itinerary generation)
+ */
+export async function createBulkItems(items: CreateChecklistItemData[]): Promise<{ count: number }> {
+  return checklistProvider.createMany(items);
+}
+
+// Helper functions for logic
+
 function analyzeWeather(forecast: WeatherForecast[]): string[] {
   const conditions: string[] = [];
   
@@ -171,7 +162,6 @@ function analyzeWeather(forecast: WeatherForecast[]): string[] {
   return conditions;
 }
 
-// Map activity types to checklist categories
 function mapActivityTypes(activityTypes: string[]): string[] {
   const mappings: Record<string, string[]> = {
     'culture': ['museum', 'church', 'mosque'],
@@ -194,7 +184,6 @@ function mapActivityTypes(activityTypes: string[]): string[] {
   return [...new Set(activities)];
 }
 
-// Determine safety concerns based on activities and location
 function determineSafetyConcerns(activityTypes: string[], forecast: WeatherForecast[]): string[] {
   const concerns: string[] = [];
   
@@ -216,7 +205,9 @@ function determineSafetyConcerns(activityTypes: string[], forecast: WeatherForec
   return concerns;
 }
 
-// Main function to generate checklist
+/**
+ * Main function to generate checklist
+ */
 export function generateChecklist(
   activityTypes: string[],
   forecast: WeatherForecast[],
@@ -281,13 +272,16 @@ export function generateChecklist(
   };
   
   return items.sort((a, b) => {
+    // @ts-ignore
     const catDiff = (categoryOrder[a.category] || 99) - (categoryOrder[b.category] || 99);
     if (catDiff !== 0) return catDiff;
     return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
 }
 
-// Generate checklist summary for notifications
+/**
+ * Generate checklist summary for notifications
+ */
 export function generateChecklistSummary(items: ChecklistItemData[]): string {
   const highPriority = items.filter(i => i.priority === 'high');
   const categories = [...new Set(items.map(i => i.category))];

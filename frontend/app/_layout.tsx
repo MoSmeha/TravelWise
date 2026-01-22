@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import { hideAsync, preventAutoHideAsync } from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -16,7 +16,7 @@ import { useSocket } from '../hooks/useSocket';
 import { useUser } from '../hooks/queries/useUser';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { isAuthenticated, isRestoring } = useAuth();
@@ -70,7 +70,7 @@ export default function RootLayout() {
   }, [hydrate]);
 
   useEffect(() => {
-      SplashScreen.hideAsync();
+      hideAsync();
   }, []);
 
 

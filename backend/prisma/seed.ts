@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { LocationCategory, LocationClassification, PriceLevel, PrismaClient } from "../src/generated/prisma/client";
-import * as argon2 from "argon2";
+import { hash } from "argon2";
 import fs from "fs";
 import path from "path";
 import { Pool } from "pg";
@@ -136,7 +136,7 @@ async function main() {
   console.log("\n🚀 Seeding users...");
   
   const password = "Password123-";
-  const passwordHash = await argon2.hash(password);
+  const passwordHash = await hash(password);
 
   const users = [
     {
@@ -196,7 +196,7 @@ async function main() {
 
   for (const user of users) {
     const userPasswordHash = (user as any).password 
-      ? await argon2.hash((user as any).password) 
+      ? await hash((user as any).password) 
       : passwordHash;
     
     await prisma.user.upsert({

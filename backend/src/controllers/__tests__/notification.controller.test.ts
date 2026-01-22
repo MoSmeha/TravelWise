@@ -7,17 +7,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext, resetAllMocks } from './setup.js';
 
 // Mock the notification service
+// Mock the notification service
 vi.mock('../../services/notification.service.js', () => ({
-  notificationService: {
-    getNotifications: vi.fn(),
-    markAsRead: vi.fn(),
-    markAllAsRead: vi.fn(),
-    getUnreadCount: vi.fn(),
-  },
+  getNotifications: vi.fn(),
+  markAsRead: vi.fn(),
+  markAllAsRead: vi.fn(),
+  getUnreadCount: vi.fn(),
 }));
 
 import { NotificationController } from '../../controllers/notification.controller.js';
-import { notificationService } from '../../services/notification.service.js';
+import * as notificationService from '../../services/notification.service.js';
 
 const mockNotification = {
   id: 'notif-123',
@@ -118,7 +117,7 @@ describe('Notification Controller', () => {
     it('should mark all notifications as read', async () => {
       const { req, res } = createMockContext();
 
-      vi.mocked(notificationService.markAllAsRead).mockResolvedValue(undefined);
+      vi.mocked(notificationService.markAllAsRead).mockResolvedValue({ count: 5 });
 
       await NotificationController.markAllAsRead(req, res);
 

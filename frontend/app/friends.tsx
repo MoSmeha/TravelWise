@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -13,6 +13,9 @@ import {
   User,
   FriendRequest
 } from '../hooks/queries/useFriends';
+import { FriendItem } from '../components/friends/FriendItem';
+import { FriendRequestItem } from '../components/friends/FriendRequestItem';
+import { FriendsTabs } from '../components/friends/FriendsTabs';
 
 type Tab = 'friends' | 'pending';
 
@@ -63,48 +66,17 @@ export default function FriendsScreen() {
   };
 
   const renderFriendItem = ({ item }: { item: User }) => (
-    <View className="flex-row items-center p-4 bg-white border-b border-gray-100">
-      <Image 
-        source={{ uri: item.avatarUrl || 'https://via.placeholder.com/50' }} 
-        className="w-12 h-12 rounded-full bg-gray-200"
-      />
-      <View className="ml-4 flex-1">
-        <Text className="text-base font-semibold text-gray-800">{item.name}</Text>
-        <Text className="text-sm text-gray-500">@{item.username}</Text>
-      </View>
-      <TouchableOpacity className="p-2">
-        <Ionicons name="chatbubble-outline" size={24} color="#4F46E5" />
-      </TouchableOpacity>
-    </View>
+    <FriendItem friend={item} />
   );
 
   const renderRequestItem = ({ item }: { item: FriendRequest }) => (
-    <View className="flex-row items-center p-4 bg-white border-b border-gray-100">
-      <Image 
-        source={{ uri: item.requester?.avatarUrl || 'https://via.placeholder.com/50' }} 
-        className="w-12 h-12 rounded-full bg-gray-200"
-      />
-      <View className="ml-4 flex-1">
-        <Text className="text-base font-semibold text-gray-800">{item.requester?.name}</Text>
-        <Text className="text-sm text-gray-500">@{item.requester?.username}</Text>
-      </View>
-      <View className="flex-row">
-        <TouchableOpacity 
-          onPress={() => handleReject(item.id)}
-          className="p-2 bg-gray-100 rounded-full mr-2"
-          disabled={rejectMutation.isPending}
-        >
-          <Ionicons name="close" size={20} color="#EF4444" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => handleAccept(item.id)}
-          className="p-2 bg-indigo-100 rounded-full"
-          disabled={acceptMutation.isPending}
-        >
-          <Ionicons name="checkmark" size={20} color="#4F46E5" />
-        </TouchableOpacity>
-      </View>
-    </View>
+    <FriendRequestItem
+      request={item}
+      onAccept={handleAccept}
+      onReject={handleReject}
+      isAccepting={acceptMutation.isPending}
+      isRejecting={rejectMutation.isPending}
+    />
   );
 
   return (
@@ -119,25 +91,11 @@ export default function FriendsScreen() {
       </View>
 
       {/* Tabs */}
-      <View className="flex-row px-4 py-2 border-b border-gray-100">
-        <TouchableOpacity 
-          onPress={() => setActiveTab('friends')}
-          className={`mr-6 pb-2 border-b-2 ${activeTab === 'friends' ? 'border-indigo-600' : 'border-transparent'}`}
-        >
-          <Text className={`font-medium ${activeTab === 'friends' ? 'text-indigo-600' : 'text-gray-500'}`}>
-            Your Friends
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          onPress={() => setActiveTab('pending')}
-          className={`mr-6 pb-2 border-b-2 ${activeTab === 'pending' ? 'border-indigo-600' : 'border-transparent'}`}
-        >
-          <Text className={`font-medium ${activeTab === 'pending' ? 'text-indigo-600' : 'text-gray-500'}`}>
-            Requests
-            {pendingRequests.length > 0 && <Text className="text-indigo-600 ml-1"> ({pendingRequests.length})</Text>}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <FriendsTabs 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+        pendingCount={pendingRequests.length}
+      />
 
       {/* Content */}
       <View className="flex-1 bg-gray-50">

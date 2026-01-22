@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { useAuth } from '../store/authStore';
 import { socketService } from '../services/socketService';
 import { useNotificationStore, Notification } from '../store/notificationStore';
@@ -16,6 +17,7 @@ export const useSocket = () => {
   const { accessToken, user, isRestoring } = useAuth();
   const { handleNewNotification } = useNotificationStore();
   const queryClient = useQueryClient();
+  const appState = useRef(AppState.currentState);
 
   const handleNotification = useCallback((notification: Notification) => {
     console.log('[useSocket] Received notification:', notification);
@@ -47,6 +49,34 @@ export const useSocket = () => {
         : event.message.content,
     });
   }, [queryClient]);
+
+  // Handle app state changes (background/foreground)
+  // This fixes socket reconnection when returning from camera/photo picker
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      console.log('[useSocket] AppState changed:', appState.current, '->', nextAppState);
+      
+      // App returned to foreground from background/inactive
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        console.log('[useSocket] App returned to foreground, forcing socket reconnect');
+        // Force socket reconnection if we have auth
+        if (accessToken && user?.id) {
+          socketService.forceReconnect(accessToken);
+        }
+      }
+      
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, [accessToken, user?.id]);
 
   useEffect(() => {
     // Only connect socket after hydration is complete AND user data is loaded

@@ -6,7 +6,6 @@ import {
     Platform,
     RefreshControl,
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
@@ -45,11 +44,11 @@ export default function ChecklistScreen() {
 
   if (!itineraryId) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.emptyText}>No itinerary selected.</Text>
-        <Text style={styles.emptySubtext}>Generate an itinerary first to see your checklist.</Text>
-        <TouchableOpacity onPress={() => router.push('/(tabs)')} style={styles.goHomeButton}>
-          <Text style={styles.goHomeButtonText}>Go to Home</Text>
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-gray-400 text-base">No itinerary selected.</Text>
+        <Text className="text-gray-300 text-sm mt-2 text-center">Generate an itinerary first to see your checklist.</Text>
+        <TouchableOpacity onPress={() => router.push('/(tabs)')} className="mt-5 bg-primary px-6 py-3 rounded-lg">
+          <Text className="text-white text-base font-semibold">Go to Home</Text>
         </TouchableOpacity>
       </View>
     );
@@ -65,8 +64,6 @@ export default function ChecklistScreen() {
 
     // Trigger mutation
     toggleMutation.mutate({ itemId, isChecked: !item.isChecked });
-    // Note: React Query's optimistic updates not fully implemented, relying on fast refetch
-    // But we can trigger LayoutAnimation for smoothness
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
   };
 
@@ -112,65 +109,65 @@ export default function ChecklistScreen() {
 
   if (isLoading && !isRefetching) {
     return (
-      <View style={styles.loadingContainer}>
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#007AFF" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-gray-100">
       <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
       <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff', zIndex: 10 }}>
-        <View style={styles.header}>
-             <TouchableOpacity 
-                style={styles.backButton}
-                onPress={() => router.back()}
-             >
-                <ArrowLeft size={24} color="#374151" />
-             </TouchableOpacity>
-             <Text style={styles.headerTitle}>Trip Checklist</Text>
-             <View style={{ width: 40 }} /> 
+        <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+          <TouchableOpacity 
+            className="w-10 h-10 justify-center items-start"
+            onPress={() => router.back()}
+          >
+            <ArrowLeft size={24} color="#374151" />
+          </TouchableOpacity>
+          <Text className="text-lg font-bold text-gray-800">Trip Checklist</Text>
+          <View style={{ width: 40 }} /> 
         </View>
       </SafeAreaView>
 
       {/* Progress Bar */}
-      <View style={styles.progressSection}>
-        <View style={styles.progressHeader}>
-          <Text style={styles.progressText}>
+      <View className="bg-white p-4 border-b border-gray-200">
+        <View className="flex-row justify-between mb-2">
+          <Text className="text-sm text-gray-500 font-semibold">
             {checkedItems} of {totalItems} items packed
           </Text>
-          <Text style={styles.progressPercent}>{Math.round(progress * 100)}%</Text>
+          <Text className="text-sm text-primary font-bold">{Math.round(progress * 100)}%</Text>
         </View>
-        <View style={styles.progressBarBg}>
-          <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
+        <View className="h-2 bg-gray-200 rounded overflow-hidden">
+          <View className="h-full bg-primary rounded" style={{ width: `${progress * 100}%` }} />
         </View>
       </View>
 
       <ScrollView
-        style={styles.scrollView}
+        className="flex-1"
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} />}
       >
-        <View style={styles.content}>
+        <View className="p-4 pb-20">
           {sortedCategories.map(category => (
-            <View key={category} style={styles.categorySection}>
-              <Text style={styles.categoryTitle}>{category.replace('_', ' ')}</Text>
+            <View key={category} className="mb-5">
+              <Text className="text-sm font-bold text-gray-400 mb-2 tracking-wide">{category.replace('_', ' ')}</Text>
               {groupedItems[category].map(item => (
                 <TouchableOpacity
                   key={item.id}
-                  style={[styles.itemCard, item.isChecked && styles.itemCardChecked]}
+                  className={`bg-white rounded-xl p-4 mb-2 flex-row items-center shadow-sm ${item.isChecked ? 'opacity-80 bg-gray-50' : ''}`}
                   onPress={() => toggleItem(item.id)}
                 >
-                  <View style={[styles.checkbox, item.isChecked && styles.checkboxChecked]}>
-                    {item.isChecked && <Text style={styles.checkmark}>✓</Text>}
+                  <View className={`w-6 h-6 rounded-full border-2 mr-3 items-center justify-center ${item.isChecked ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>
+                    {item.isChecked && <Text className="text-white text-sm font-bold">✓</Text>}
                   </View>
-                  <View style={styles.itemContent}>
-                    <Text style={[styles.itemText, item.isChecked && styles.itemTextChecked]}>
+                  <View className="flex-1">
+                    <Text className={`text-base font-medium ${item.isChecked ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                       {item.item}
                     </Text>
                     {item.reason && (
-                      <Text style={styles.itemReason}>{item.reason}</Text>
+                      <Text className="text-xs text-gray-500 mt-0.5">{item.reason}</Text>
                     )}
                   </View>
                 </TouchableOpacity>
@@ -179,239 +176,34 @@ export default function ChecklistScreen() {
           ))}
           
           {items.length === 0 && (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No checklist items yet.</Text>
+            <View className="p-10 items-center">
+              <Text className="text-gray-400 text-base">No checklist items yet.</Text>
             </View>
           )}
         </View>
       </ScrollView>
 
       {/* Add Item Input */}
-      <View style={styles.inputContainer}>
+      <View className="absolute bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200 flex-row items-center gap-3">
         <TextInput
-          style={styles.input}
+          className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-base"
           value={newItemText}
           onChangeText={setNewItemText}
           placeholder="Add a new item..."
           onSubmitEditing={addNewItem}
         />
         <TouchableOpacity
-          style={[styles.addButton, (!newItemText.trim() || addMutation.isPending) && styles.addButtonDisabled]}
+          className={`w-11 h-11 rounded-full items-center justify-center ${(!newItemText.trim() || addMutation.isPending) ? 'bg-gray-300' : 'bg-primary'}`}
           onPress={addNewItem}
           disabled={!newItemText.trim() || addMutation.isPending}
         >
           {addMutation.isPending ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={styles.addButtonText}>+</Text>
+            <Text className="text-white text-2xl font-light" style={{ marginTop: -2 }}>+</Text>
           )}
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressSection: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  progressText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '600',
-  },
-  progressPercent: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: 'bold',
-  },
-  progressBarBg: {
-    height: 8,
-    backgroundColor: '#eee',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#007AFF',
-    borderRadius: 4,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 80,
-  },
-  categorySection: {
-    marginBottom: 20,
-  },
-  categoryTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#888',
-    marginBottom: 8,
-    letterSpacing: 1,
-  },
-  itemCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  itemCardChecked: {
-    backgroundColor: '#f9f9f9',
-    opacity: 0.8,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#ddd',
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#22c55e',
-    borderColor: '#22c55e',
-  },
-  checkmark: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  itemContent: {
-    flex: 1,
-  },
-  itemText: {
-    fontSize: 16,
-    color: '#1a1a1a',
-    fontWeight: '500',
-  },
-  itemTextChecked: {
-    textDecorationLine: 'line-through',
-    color: '#888',
-  },
-  itemReason: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  emptyState: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: '#999',
-    fontSize: 16,
-  },
-  inputContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#007AFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontSize: 24,
-    marginTop: -2,
-    fontWeight: '300',
-  },
-  emptySubtext: {
-    color: '#bbb',
-    fontSize: 14,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  goHomeButton: {
-    marginTop: 20,
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  goHomeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1f2937',
-  },
-});
-

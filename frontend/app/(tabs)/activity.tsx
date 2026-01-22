@@ -1,16 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, TextInput, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  Heart, 
-  MessageCircle, 
-  UserPlus, 
-  Users, 
-  Check, 
-  X,
-  Bell,
-  Search
-} from 'lucide-react-native';
+import { Bell, MessageCircle, Search } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { 
     useNotifications, 
@@ -31,9 +22,11 @@ import {
     Conversation
 } from '../../hooks/queries/useMessages';
 import { useOnlineStatus } from '../../hooks/queries/useOnlineStatus';
-import { OnlineIndicator } from '../../components/OnlineIndicator';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../../store/authStore';
+import { ActivityTabs } from '../../components/activity/ActivityTabs';
+import { NotificationItem } from '../../components/activity/NotificationItem';
+import { FriendConversationItem } from '../../components/activity/FriendConversationItem';
 
 type Tab = 'notifications' | 'messages';
 
@@ -197,37 +190,7 @@ export default function ActivityScreen() {
         return date.toLocaleDateString();
     };
 
-    // Get the other participant in a direct conversation
-    const getOtherParticipant = (conversation: Conversation) => {
-        if (conversation.type === 'DIRECT') {
-            return conversation.participants.find(p => p.userId !== currentUser?.id)?.user;
-        }
-        return null;
-    };
-
     const renderNotificationItem = ({ item }: { item: Notification }) => {
-        let Icon = Bell;
-        let iconColor = '#64748b';
-        let iconBgColor = '#f1f5f9';
-
-        if (item.type === 'FRIEND_REQUEST') {
-            Icon = UserPlus;
-            iconColor = '#4F46E5';
-            iconBgColor = '#e0e7ff';
-        } else if (item.type === 'FRIEND_ACCEPTED') {
-            Icon = Users;
-            iconColor = '#10B981';
-            iconBgColor = '#d1fae5';
-        } else if (item.title.toLowerCase().includes('liked')) {
-             Icon = Heart;
-             iconColor = '#ec4899';
-             iconBgColor = '#fce7f3';
-        } else if (item.title.toLowerCase().includes('commented')) {
-             Icon = MessageCircle;
-             iconColor = '#3b82f6';
-             iconBgColor = '#dbeafe';
-        }
-
         const isFriendRequest = item.type === 'FRIEND_REQUEST';
         const friendshipId = item.data?.friendshipId;
         const requesterId = item.data?.requesterId;
@@ -250,117 +213,31 @@ export default function ActivityScreen() {
         };
 
         return (
-            <TouchableOpacity 
-                activeOpacity={0.7}
-                onPress={() => handleNotificationPress(item)}
-                className="flex-row p-4 items-center border-b border-gray-100 border-dashed"
-            >
-               <View className={`w-12 h-12 rounded-full items-center justify-center mr-4`} style={{backgroundColor: iconBgColor}}>
-                    <Icon size={24} color={iconColor} strokeWidth={1.5} />
-               </View>
-               
-               <View className="flex-1 mr-2">
-                   <Text className="text-gray-900 font-medium text-base mb-1">
-                        <Text className="font-normal text-gray-600">{item.message}</Text>
-                   </Text>
-                   <Text className="text-gray-400 text-xs font-medium">
-                       {formatTime(item.createdAt)}
-                   </Text>
-               </View>
-
-               {showActions && (
-                   <View className="flex-row gap-2 mr-2">
-                       <TouchableOpacity 
-                            onPress={(e) => {
-                                e.stopPropagation();
-                                handleAction('reject');
-                            }}
-                            className="bg-gray-100 p-2 rounded-full"
-                       >
-                           <X size={20} color="#EF4444" strokeWidth={2} />
-                       </TouchableOpacity>
-
-                       <TouchableOpacity 
-                            onPress={(e) => {
-                                e.stopPropagation();
-                                handleAction('accept');
-                            }}
-                            className="bg-indigo-100 p-2 rounded-full"
-                       >
-                           <Check size={20} color="#4F46E5" strokeWidth={2} />
-                       </TouchableOpacity>
-                   </View>
-               )}
-
-               {!item.read && (
-                   <View className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-               )}
-            </TouchableOpacity>
+            <NotificationItem
+                notification={item}
+                onPress={handleNotificationPress}
+                onAccept={(id) => handleAction('accept')}
+                onReject={(id) => handleAction('reject')}
+                showActions={showActions}
+                formatTime={formatTime}
+            />
         );
     };
 
-
-
-    // Unified friend item renderer (shows friend with optional conversation data)
     const renderFriendWithConversation = ({ item }: { item: typeof friendsWithConversations[0] }) => {
         const isOnline = onlineStatus[item.id] || false;
         
         return (
-            <TouchableOpacity 
-                activeOpacity={0.7}
+            <FriendConversationItem
+                friend={item}
+                isOnline={isOnline}
                 onPress={() => item.conversation 
                     ? handleConversationPress(item.conversation)
                     : handleFriendPress(item)
                 }
-                className="flex-row p-4 items-center border-b border-gray-100"
-                disabled={createConversationMutation.isPending}
-            >
-                <View style={{ position: 'relative' }}>
-                    {item.avatarUrl ? (
-                        <Image 
-                            source={{ uri: item.avatarUrl }} 
-                            className="w-12 h-12 rounded-full"
-                        />
-                    ) : (
-                        <View className="w-12 h-12 rounded-full bg-indigo-100 items-center justify-center">
-                            <Text className="text-indigo-600 font-bold text-lg">
-                                {item.name.charAt(0).toUpperCase()}
-                            </Text>
-                        </View>
-                    )}
-                    <OnlineIndicator isOnline={isOnline} size="medium" />
-                </View>
-                
-                <View className="flex-1 ml-4">
-                    <Text className="text-gray-900 font-semibold text-base">
-                        {item.name}
-                    </Text>
-                    {item.conversation?.lastMessage ? (
-                        <Text className="text-gray-500 text-sm mt-0.5" numberOfLines={1}>
-                            {item.conversation.lastMessage.content}
-                        </Text>
-                    ) : (
-                        <Text className="text-gray-400 text-sm mt-0.5">
-                            @{item.username}
-                        </Text>
-                    )}
-                </View>
-
-                <View className="items-end">
-                    {item.conversation?.lastMessage && (
-                        <Text className="text-gray-400 text-xs">
-                            {formatTime(item.conversation.lastMessage.createdAt)}
-                        </Text>
-                    )}
-                    {(item.unreadCount || 0) > 0 && (
-                        <View className="bg-indigo-600 rounded-full min-w-[20px] h-5 items-center justify-center mt-1 px-1.5">
-                            <Text className="text-white text-xs font-bold">
-                                {item.unreadCount}
-                            </Text>
-                        </View>
-                    )}
-                </View>
-            </TouchableOpacity>
+                isLoading={createConversationMutation.isPending}
+                formatTime={formatTime}
+            />
         );
     };
 
@@ -412,26 +289,7 @@ export default function ActivityScreen() {
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
             {/* Tabs */}
-            <View className="flex-row items-center px-4 pt-4 pb-2 gap-4">
-                <TouchableOpacity 
-                    onPress={() => setActiveTab('notifications')}
-                    className={`flex-1 py-2.5 rounded-xl flex-row items-center justify-center gap-2 ${activeTab === 'notifications' ? 'bg-[#094772]' : 'bg-gray-100'}`}
-                >
-                    <Bell size={18} color={activeTab === 'notifications' ? 'white' : '#6b7280'} strokeWidth={2} />
-                    <Text className={`text-base font-semibold ${activeTab === 'notifications' ? 'text-white' : 'text-gray-500'}`}>
-                        Notifications
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                    onPress={() => setActiveTab('messages')}
-                    className={`flex-1 py-2.5 rounded-xl flex-row items-center justify-center gap-2 ${activeTab === 'messages' ? 'bg-[#094772]' : 'bg-gray-100'}`}
-                >
-                    <MessageCircle size={18} color={activeTab === 'messages' ? 'white' : '#6b7280'} strokeWidth={2} />
-                    <Text className={`text-base font-semibold ${activeTab === 'messages' ? 'text-white' : 'text-gray-500'}`}>
-                        Messages
-                    </Text>
-                </TouchableOpacity>
-            </View>
+            <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
             <View className="h-[1px] bg-gray-100 w-full mb-2" />
 

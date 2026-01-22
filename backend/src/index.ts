@@ -12,6 +12,7 @@ import usersRouter from './routes/users.js';
 import friendshipRouter from './routes/friendship.js';
 import notificationRouter from './routes/notifications.js';
 import messagingRouter from './routes/messaging.js';
+import postsRouter from './routes/posts.js';
 import { createServer } from 'http';
 import { socketService } from './services/socket.service.js';
 
@@ -48,6 +49,7 @@ app.use('/api/users', authenticate, usersRouter);
 app.use('/api/friends', authenticate, friendshipRouter);
 app.use('/api/notifications', authenticate, notificationRouter);
 app.use('/api/messages', authenticate, messagingRouter);
+app.use('/api/posts', authenticate, postsRouter);
 
 // Health check
 app.get('/', (_req: Request, res: Response) => {

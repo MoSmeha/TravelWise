@@ -1,6 +1,6 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import { authService } from './auth.service.js';
+import { verifyAccessToken } from './auth.service.js';
 
 interface AuthSocket extends Socket {
   userId?: string;
@@ -27,7 +27,7 @@ class SocketService {
 
         // Verify token (strip 'Bearer ' if present)
         const tokenString = token.startsWith('Bearer ') ? token.slice(7) : token;
-        const payload = authService.verifyAccessToken(tokenString);
+        const payload = verifyAccessToken(tokenString);
 
         if (!payload) {
           return next(new Error('Authentication error'));

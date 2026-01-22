@@ -5,12 +5,16 @@ class SocketService {
   private socket: Socket | null = null;
   private listeners: Map<string, Function[]> = new Map();
   private pingInterval: ReturnType<typeof setInterval> | null = null;
+  private currentToken: string | null = null;
 
   connect(token: string) {
     if (this.socket?.connected) {
       console.log('[Socket] Already connected');
       return;
     }
+
+    // Store token for reconnection
+    this.currentToken = token;
 
     // Disconnect existing socket if any
     if (this.socket) {
@@ -44,9 +48,14 @@ class SocketService {
     this.socket.on('disconnect', (reason) => {
       console.log('[Socket] Disconnected, reason:', reason);
       this.stopPing();
-      // If server disconnected, try to reconnect
-      if (reason === 'io server disconnect') {
-        this.socket?.connect();
+      // Reconnect for server disconnect OR transport close (app backgrounding)
+      if (reason === 'io server disconnect' || reason === 'transport close') {
+        console.log('[Socket] Attempting reconnect for reason:', reason);
+        setTimeout(() => {
+          if (this.currentToken && !this.socket?.connected) {
+            this.socket?.connect();
+          }
+        }, 500);
       }
     });
 
@@ -69,6 +78,26 @@ class SocketService {
       });
     });
   }
+
+  /**
+   * Force reconnection - used when app returns from background
+   */
+  forceReconnect(token: string) {
+    console.log('[Socket] Force reconnecting...');
+    this.currentToken = token;
+    
+    // If socket exists but not connected, try to reconnect
+    if (this.socket && !this.socket.connected) {
+      console.log('[Socket] Socket exists but disconnected, reconnecting...');
+      this.socket.connect();
+    } else if (!this.socket) {
+      // No socket exists, create new connection
+      console.log('[Socket] No socket exists, creating new connection...');
+      this.connect(token);
+    } else {
+      console.log('[Socket] Socket already connected');
+    }
+  }
   
   private startPing() {
     this.stopPing();
@@ -89,6 +118,7 @@ class SocketService {
 
   disconnect() {
     this.stopPing();
+    this.currentToken = null;
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
