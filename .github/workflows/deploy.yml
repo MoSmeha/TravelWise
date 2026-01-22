@@ -87,7 +87,7 @@ jobs:
                 - CLOUDINARY_API_NAME=${{ secrets.CLOUDINARY_API_NAME }}
                 - CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
                 - CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
-          
+          # test
           volumes:
             postgres_data:
           EOF
