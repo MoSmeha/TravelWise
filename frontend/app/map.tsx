@@ -1,8 +1,10 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as ExpoLocation from 'expo-location';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Text, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { placesService } from '../services/api';
+import { decodePolyline } from '../lib/polyline';
 import { DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
 import { useItineraryStore } from '../store/itineraryStore';
@@ -13,6 +15,7 @@ import {
   HotelCard,
   MapHeader,
   BottomNavigation,
+  MapLegend,
 } from '../components/map';
 
 const HOTEL_COLOR = '#8b5cf6';
@@ -47,6 +50,7 @@ export default function MapScreen() {
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [locationPhotos, setLocationPhotos] = useState<Record<string, LocationPhotosData>>({});
   const [isNavigatingToItinerary, setIsNavigatingToItinerary] = useState(false);
+  const [realRoutes, setRealRoutes] = useState<Record<number, { latitude: number; longitude: number }[]>>({});
 
   // Combine data sources: prefer passed, then fetched
   const data = passedData || (fetchedData as ItineraryResponse | undefined) || null;
@@ -78,6 +82,16 @@ export default function MapScreen() {
   }, [selectedLocation]);
 
   useEffect(() => {
+    (async () => {
+      const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission to access location was denied');
+        return;
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (params.data) {
       try {
         const parsed = JSON.parse(params.data as string);
@@ -93,6 +107,77 @@ export default function MapScreen() {
       }
     }
   }, [params.data, setActiveItinerary]);
+
+
+
+  const allLocations: Location[] = data?.days?.flatMap((day) => day.locations) || [];
+  const hotels: Hotel[] = data?.hotels || [];
+
+  // Build routes for each day
+  const dayRoutes = (data?.days || []).map((day, index) => {
+    const coords = day.locations.map(loc => ({
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+    }));
+
+    // Add airport as starting point for the first day
+    if (index === 0 && data?.airport) {
+      coords.unshift({
+        latitude: data.airport.latitude,
+        longitude: data.airport.longitude,
+      });
+    }
+    return coords;
+  });
+
+  const initialRegion = {
+    latitude: data?.airport?.latitude || allLocations[0]?.latitude || 0,
+    longitude: data?.airport?.longitude || allLocations[0]?.longitude || 0,
+    latitudeDelta: 0.5,
+    longitudeDelta: 0.5,
+  };
+
+  // Fetch real routes for each day
+  useEffect(() => {
+    if (!data) return;
+
+    const fetchRoutes = async () => {
+      // Loop through each day's route
+      for (let i = 0; i < dayRoutes.length; i++) {
+        const route = dayRoutes[i];
+        if (route.length < 2) continue; // Need at least 2 points
+        
+        // Skip if already fetched
+        if (realRoutes[i]) continue;
+
+        try {
+          // Origin is first point
+          const origin = route[0];
+          // Destination is last point
+          const destination = route[route.length - 1];
+          // Waypoints are everything in between
+          const waypoints = route.slice(1, route.length - 1);
+
+          const result = await placesService.getDirections(
+            origin.latitude,
+            origin.longitude,
+            destination.latitude,
+            destination.longitude,
+            waypoints.map(p => ({ lat: p.latitude, lng: p.longitude }))
+          );
+
+          if (result?.points) {
+            const decodedPoints = decodePolyline(result.points);
+            setRealRoutes(prev => ({ ...prev, [i]: decodedPoints }));
+          }
+        } catch (error) {
+          console.error(`Failed to fetch route for day ${i + 1}:`, error);
+        }
+      }
+    };
+
+    fetchRoutes();
+  }, [data, dayRoutes]);
 
   // Loading state
   if (loadingItinerary && !passedData && itineraryId) {
@@ -112,33 +197,6 @@ export default function MapScreen() {
       </View>
     );
   }
-
-  const allLocations: Location[] = data.days.flatMap((day) => day.locations);
-  const hotels: Hotel[] = data.hotels || [];
-
-  // Build routes for each day
-  const dayRoutes = data.days.map((day, index) => {
-    const coords = day.locations.map(loc => ({
-      latitude: loc.latitude,
-      longitude: loc.longitude,
-    }));
-
-    // Add airport as starting point for the first day
-    if (index === 0 && data.airport) {
-      coords.unshift({
-        latitude: data.airport.latitude,
-        longitude: data.airport.longitude,
-      });
-    }
-    return coords;
-  });
-
-  const initialRegion = {
-    latitude: data.airport?.latitude || allLocations[0]?.latitude || 0,
-    longitude: data.airport?.longitude || allLocations[0]?.longitude || 0,
-    latitudeDelta: 0.5,
-    longitudeDelta: 0.5,
-  };
 
   const handleHotelBook = (url: string) => {
     Linking.openURL(url).catch(() => {
@@ -174,24 +232,29 @@ export default function MapScreen() {
         itineraryId={data.itinerary.id}
       />
 
+      <MapLegend days={data.itinerary.numberOfDays} />
+
       {/* Map */}
       <MapView
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
         initialRegion={initialRegion}
+        showsUserLocation={true}
+        showsMyLocationButton={true}
       >
         {/* Route polylines per day */}
-        {dayRoutes.map((route, index) => (
-          route.length > 1 && (
-            <Polyline
-              key={`route-${index}`}
-              coordinates={route}
+        {dayRoutes.map((fallbackRoute, index) => {
+          const routeToRender = realRoutes[index] || fallbackRoute;
+          return (
+            (routeToRender.length > 1) && (
+              <Polyline
+                key={`route-${index}`}
+                coordinates={routeToRender}
               strokeColor={DAY_COLORS[index % DAY_COLORS.length]}
-              strokeWidth={3}
-              lineDashPattern={[10, 5]}
+              strokeWidth={5}
             />
-          )
-        ))}
+          ));
+        })}
 
         {/* Airport marker */}
         {data.airport && (

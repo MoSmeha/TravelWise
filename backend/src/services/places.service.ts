@@ -18,6 +18,7 @@ import {
   isGooglePlacesConfigured,
   searchPlace as googleSearchPlace,
   getPlaceDetails as googleGetDetails,
+  getDirections as googleGetDirections,
   PlaceEnrichment
 } from './google-places.service.js';
 import { extractCityFromAddress } from '../utils/enum-mappers.js';
@@ -258,6 +259,27 @@ export class PlacesService {
    */
   async updatePlaceEnrichment(id: string, data: PlaceEnrichmentData): Promise<void> {
     return this.provider.updateEnrichment(id, data);
+  }
+
+  /**
+   * Get directions between two points
+   */
+  async getDirections(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number },
+    waypoints: { lat: number; lng: number }[] = []
+  ): Promise<{ points: string } | null> {
+    const originStr = `${origin.lat},${origin.lng}`;
+    const destStr = `${destination.lat},${destination.lng}`;
+    const waypointsStr = waypoints.map(p => `${p.lat},${p.lng}`);
+
+    const result = await googleGetDirections(originStr, destStr, waypointsStr);
+    
+    if (result) {
+      return { points: result.points };
+    }
+    
+    return null;
   }
 }
 

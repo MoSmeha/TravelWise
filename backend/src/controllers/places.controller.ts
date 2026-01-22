@@ -23,6 +23,31 @@ export async function getPhotos(req: Request, res: Response) {
   }
 }
 
+//GET /api/places/directions
+//Get directions between two points
+export async function getDirections(req: Request, res: Response) {
+  try {
+    const { originLat, originLng, destLat, destLng, waypoints } = req.query;
+
+    if (!originLat || !originLng || !destLat || !destLng) {
+      return res.status(400).json({ error: 'Missing origin or destination coordinates' });
+    }
+
+    const waypointsParsed = waypoints ? JSON.parse(String(waypoints)) : [];
+
+    const result = await placesService.getDirections(
+      { lat: parseFloat(String(originLat)), lng: parseFloat(String(originLng)) },
+      { lat: parseFloat(String(destLat)), lng: parseFloat(String(destLng)) },
+      waypointsParsed
+    );
+
+    return res.json({ points: result?.points || null });
+  } catch (error) {
+    console.error('Error fetching directions:', error);
+    return res.status(500).json({ error: 'Failed to fetch directions' });
+  }
+}
+
 //GET /api/places/search
 //Search for a place (DB first, then Google with ingestion)
 export async function searchPlace(req: Request, res: Response) {

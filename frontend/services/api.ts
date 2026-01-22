@@ -193,6 +193,24 @@ export const placesService = {
     const response = await api.get<{ photos: string[]; reviews: any[] }>('/places/photos', { params });
     return response.data;
   },
+
+  async getDirections(
+    originLat: number,
+    originLng: number,
+    destLat: number,
+    destLng: number,
+    waypoints: { lat: number; lng: number }[] = []
+  ): Promise<{ points: string } | null> {
+    const params = {
+      originLat,
+      originLng,
+      destLat,
+      destLng,
+      waypoints: JSON.stringify(waypoints),
+    };
+    const response = await api.get<{ points: string | null }>('/places/directions', { params });
+    return response.data as { points: string } | null;
+  },
 };
 
 export const checklistService = {

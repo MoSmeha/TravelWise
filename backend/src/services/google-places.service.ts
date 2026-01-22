@@ -4,6 +4,7 @@ import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from './cache.service.js';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';
+const GOOGLE_DIRECTIONS_BASE_URL = 'https://maps.googleapis.com/maps/api/directions';
 
 // Types
 export interface PlaceEnrichment {
@@ -406,6 +407,67 @@ export async function searchNearbyHotels(
     }
     
     return { hotels: [], source: 'unavailable' };
+  }
+}
+
+// Get directions between points
+export async function getDirections(
+  origin: string,
+  destination: string,
+  waypoints: string[] = []
+): Promise<{ points: string; distance: string; duration: string } | null> {
+  if (!isGooglePlacesConfigured()) {
+    console.warn('[WARN] Google Places API not configured for directions');
+    return null;
+  }
+
+  try {
+    const result = await withCircuitBreaker(
+      CIRCUIT_BREAKERS.googlePlaces,
+      'Google Directions',
+      async () => {
+        const url = new URL(`${GOOGLE_DIRECTIONS_BASE_URL}/json`);
+        url.searchParams.set('origin', origin);
+        url.searchParams.set('destination', destination);
+        if (waypoints.length > 0) {
+          url.searchParams.set('waypoints', `optimize:true|${waypoints.join('|')}`);
+        }
+        url.searchParams.set('key', GOOGLE_PLACES_API_KEY!);
+
+        const response = await fetch(url.toString());
+        
+        if (!response.ok) {
+          throw new Error(`Google Directions API error: ${response.status}`);
+        }
+
+        return response.json();
+      }
+    );
+
+    const data: any = result as any;
+
+    if (data.status === 'OK' && data.routes?.[0]) {
+      const route = data.routes[0];
+      const leg = route.legs[0]; // Simplified: mostly usually 1 leg if no stopovers or we just want aggregate? 
+      // Actually if waypoints are used, there are multiple legs.
+      // But usually we want the overview_polyline for the whole route.
+      
+      return {
+        points: route.overview_polyline.points,
+        distance: leg.distance?.text || '', // This might be just the first leg if multiple
+        duration: leg.duration?.text || '',
+      };
+    }
+    
+    return null;
+
+  } catch (error) {
+    if (error instanceof CircuitOpenError) {
+      console.warn('[WARN] Google Directions circuit breaker is open');
+    } else {
+      console.error('[ERROR] Directions fetch failed:', error);
+    }
+    return null;
   }
 }
 

@@ -21,6 +21,9 @@ export const useLoginMutation = () => {
       router.replace('/(tabs)');
     },
     onError: (error: any) => {
+      console.error('[AUTH] Login Mutation Error:', error);
+     
+
       const errorData = error.response?.data;
       const msg = errorData?.message || errorData?.error || 'Login failed. Please try again.';
       Toast.show({
