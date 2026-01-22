@@ -44,16 +44,35 @@ jobs:
           version: "3.9"
           
           services:
+            db:
+              image: postgres:16-alpine
+              container_name: travelwise-db
+              restart: unless-stopped
+              environment:
+                POSTGRES_DB: travelwise
+                POSTGRES_USER: traveluser
+                POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+              volumes:
+                - postgres_data:/var/lib/postgresql/data
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -U traveluser -d travelwise"]
+                interval: 10s
+                timeout: 5s
+                retries: 5
+          
             backend:
               image: ${{ secrets.DOCKER_USERNAME }}/travelwise-backend:latest
               container_name: travelwise-backend
               restart: unless-stopped
               ports:
                 - "3000:3000"
+              depends_on:
+                db:
+                  condition: service_healthy
               environment:
                 - PORT=3000
                 - NODE_ENV=production
-                - DATABASE_URL=${{ secrets.DATABASE_URL }}
+                - DATABASE_URL=postgresql://traveluser:${{ secrets.DB_PASSWORD }}@db:5432/travelwise?schema=public
                 - OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
                 - GOOGLE_PLACES_API_KEY=${{ secrets.GOOGLE_PLACES_API_KEY }}
                 - OPENWEATHERMAP_API_KEY=${{ secrets.OPENWEATHERMAP_API_KEY }}
@@ -68,6 +87,9 @@ jobs:
                 - CLOUDINARY_API_NAME=${{ secrets.CLOUDINARY_API_NAME }}
                 - CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
                 - CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          # test
+          volumes:
+            postgres_data:
           EOF
           
           docker-compose pull backend
@@ -75,5 +97,11 @@ jobs:
           docker-compose down
           
           docker-compose up -d
+          
+          echo "Waiting for database to be ready..."
+          sleep 10
+          
+          echo "Running database migrations..."
+          docker-compose exec -T backend npx prisma migrate deploy
           
           docker-compose logs --tail=50 backend
