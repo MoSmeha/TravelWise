@@ -37,11 +37,9 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          # Navigate to application directory (create if doesn't exist)
           mkdir -p ~/travelwise
           cd ~/travelwise
           
-          # Create docker-compose.yml with version 3.9 for Docker Compose v1
           cat > docker-compose.yml << 'EOF'
           version: "3.9"
           
@@ -72,14 +70,10 @@ jobs:
                 - CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
           EOF
           
-          # Pull latest image
           docker-compose pull backend
           
-          # Stop and remove old container
           docker-compose down
           
-          # Start new container
           docker-compose up -d
           
-          # Show logs
           docker-compose logs --tail=50 backend
