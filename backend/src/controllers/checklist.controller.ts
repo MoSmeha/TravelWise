@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema.js';
-import { checklistService } from '../services/checklist.service.js';
+import {
+  getItineraryChecklist,
+  updateItem as updateChecklistItem,
+  createItem as createChecklistItem
+} from '../services/checklist.service.js';
 
 //GET /api/checklist/:itineraryId
 //Get all checklist items for an itinerary
@@ -8,7 +12,7 @@ export async function getChecklist(req: Request, res: Response) {
   try {
     const { itineraryId } = req.params;
 
-    const items = await checklistService.getItineraryChecklist(itineraryId);
+    const items = await getItineraryChecklist(itineraryId);
 
     return res.json({ data: items });
   } catch (error: any) {
@@ -24,7 +28,7 @@ export async function updateItem(req: Request, res: Response) {
     const { itemId } = req.params;
     const input = req.body as UpdateChecklistItemInput;
 
-    const updated = await checklistService.updateItem(itemId, input);
+    const updated = await updateChecklistItem(itemId, input);
 
     return res.json({ data: updated });
   } catch (error: any) {
@@ -40,7 +44,7 @@ export async function createItem(req: Request, res: Response) {
     const { itineraryId } = req.params;
     const input = req.body as CreateChecklistItemInput;
 
-    const newItem = await checklistService.createItem(itineraryId, input);
+    const newItem = await createChecklistItem(itineraryId, input);
 
     return res.json({ data: newItem });
   } catch (error: any) {

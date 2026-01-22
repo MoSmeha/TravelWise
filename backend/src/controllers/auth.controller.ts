@@ -7,7 +7,15 @@ import {
   ResendVerificationInput,
   VerifyEmailInput,
 } from '../schemas/auth.schema.js';
-import { authService } from '../services/auth.service.js';
+import {
+  register as registerUser,
+  login as loginUser,
+  rotateRefreshToken,
+  verifyEmailWithOTP,
+  getUserById,
+  getUserByEmail,
+  generateVerificationOTP,
+} from '../services/auth.service.js';
 import { sendVerificationEmail, sendWelcomeEmail } from '../services/email.service.js';
 
 //POST /api/auth/register
@@ -16,7 +24,7 @@ export async function register(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as RegisterInput;
 
-    const { user, verificationOTP } = await authService.register(input);
+    const { user, verificationOTP } = await registerUser(input);
 
     // Send verification email
     if (user.email) {
@@ -47,7 +55,7 @@ export async function login(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as LoginInput;
 
-    const result = await authService.login(input);
+    const result = await loginUser(input);
 
     res.json({
       message: 'Login successful',
@@ -85,7 +93,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as RefreshTokenInput;
 
-    const tokens = await authService.rotateRefreshToken(input.refreshToken);
+    const tokens = await rotateRefreshToken(input.refreshToken);
 
     if (!tokens) {
       res.status(401).json({ error: 'Invalid or expired refresh token' });
@@ -109,7 +117,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
   try {
     const { email, otp } = req.body as VerifyEmailInput;
 
-    const result = await authService.verifyEmailWithOTP(email, otp);
+    const result = await verifyEmailWithOTP(email, otp);
 
     if (!result) {
       res.status(400).json({ error: 'Invalid or expired OTP' });
@@ -117,7 +125,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
     }
 
     // Get user info for welcome email
-    const user = await authService.getUserById(result.userId);
+    const user = await getUserById(result.userId);
     if (user?.email) {
       await sendWelcomeEmail(user.email, user.name);
     }
@@ -140,7 +148,7 @@ export async function resendVerification(req: Request, res: Response): Promise<v
   try {
     const input = req.body as ResendVerificationInput;
 
-    const user = await authService.getUserByEmail(input.email);
+    const user = await getUserByEmail(input.email);
 
     if (!user) {
       // Don't reveal if email exists or not
@@ -153,7 +161,7 @@ export async function resendVerification(req: Request, res: Response): Promise<v
       return;
     }
 
-    const verificationOTP = await authService.generateVerificationOTP(user.id);
+    const verificationOTP = await generateVerificationOTP(user.id);
     await sendVerificationEmail(user.email!, user.name, verificationOTP);
 
     res.json({ message: 'Verification email sent' });
@@ -181,7 +189,7 @@ export async function me(req: AuthenticatedRequest, res: Response): Promise<void
       return;
     }
 
-    const user = await authService.getUserById(req.user.userId);
+    const user = await getUserById(req.user.userId);
 
     if (!user) {
       res.status(404).json({ error: 'User not found' });

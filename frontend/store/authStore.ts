@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import { deleteItemAsync, getItemAsync, setItemAsync } from 'expo-secure-store';
 import { User } from '../types/auth';
 
 interface AuthState {
@@ -28,8 +28,8 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   logout: async () => {
     console.log('[AUTH] Logout called');
-    await SecureStore.deleteItemAsync(STORAGE_KEY_ACCESS);
-    await SecureStore.deleteItemAsync(STORAGE_KEY_REFRESH);
+    await deleteItemAsync(STORAGE_KEY_ACCESS);
+    await deleteItemAsync(STORAGE_KEY_REFRESH);
     
     // Clear React Query cache to prevent stale data
     const { queryClient } = require('../lib/react-query');
@@ -49,8 +49,8 @@ export const useAuth = create<AuthState>((set, get) => ({
      console.log('[AUTH] Hydrating...');
      set({ isRestoring: true });
      try {
-       const accessToken = await SecureStore.getItemAsync(STORAGE_KEY_ACCESS);
-       const refreshToken = await SecureStore.getItemAsync(STORAGE_KEY_REFRESH);
+       const accessToken = await getItemAsync(STORAGE_KEY_ACCESS);
+       const refreshToken = await getItemAsync(STORAGE_KEY_REFRESH);
        console.log('[AUTH] Found tokens:', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
 
        if (accessToken && refreshToken) {
@@ -72,8 +72,8 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
   
   setTokens: (accessToken, refreshToken) => {
-      SecureStore.setItemAsync(STORAGE_KEY_ACCESS, accessToken);
-      SecureStore.setItemAsync(STORAGE_KEY_REFRESH, refreshToken);
+      setItemAsync(STORAGE_KEY_ACCESS, accessToken);
+      setItemAsync(STORAGE_KEY_REFRESH, refreshToken);
       set({ accessToken, refreshToken, isAuthenticated: true });
   },
 

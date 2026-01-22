@@ -12,7 +12,13 @@ import {
   ScrollView,
 } from 'react-native';
 import { X, Camera, Image as ImageIcon } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
+import {
+  requestMediaLibraryPermissionsAsync,
+  requestCameraPermissionsAsync,
+  launchImageLibraryAsync,
+  launchCameraAsync,
+  MediaTypeOptions,
+} from 'expo-image-picker';
 import { useCreatePost } from '../../hooks/queries/usePosts';
 import type { PostVisibility } from '../../types/post';
 import Toast from 'react-native-toast-message';
@@ -40,7 +46,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
   };
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status } = await requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Toast.show({
         type: 'error',
@@ -50,8 +56,8 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    const result = await launchImageLibraryAsync({
+      mediaTypes: MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -63,7 +69,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
   };
 
   const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    const { status } = await requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Toast.show({
         type: 'error',
@@ -73,7 +79,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
       return;
     }
 
-    const result = await ImagePicker.launchCameraAsync({
+    const result = await launchCameraAsync({
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,

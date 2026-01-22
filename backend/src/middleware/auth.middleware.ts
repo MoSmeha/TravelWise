@@ -5,7 +5,7 @@
 
 import { NextFunction, Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
-import { authService } from '../services/auth.service.js';
+import { verifyAccessToken } from '../services/auth.service.js';
 
 /**
  * Extended Request interface with user data
@@ -38,7 +38,7 @@ export async function authenticate(
     }
     
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    const payload = authService.verifyAccessToken(token);
+    const payload = verifyAccessToken(token);
     
     if (!payload) {
       res.status(401).json({ error: 'Invalid or expired access token' });
@@ -123,7 +123,7 @@ export async function optionalAuth(
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
-      const payload = authService.verifyAccessToken(token);
+      const payload = verifyAccessToken(token);
       
       if (payload) {
         req.user = {

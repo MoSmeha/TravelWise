@@ -1,7 +1,11 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Camera } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
+import {
+  requestMediaLibraryPermissionsAsync,
+  launchImageLibraryAsync,
+  MediaTypeOptions,
+} from 'expo-image-picker';
 import { User } from '../../types/auth';
 import { useUpdateAvatar } from '../../hooks/mutations/useUserMutations';
 import Toast from 'react-native-toast-message';
@@ -14,7 +18,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
   const updateAvatarMutation = useUpdateAvatar();
 
   const handleAvatarPress = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status } = await requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Toast.show({
         type: 'error',
@@ -24,8 +28,8 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    const result = await launchImageLibraryAsync({
+      mediaTypes: MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,

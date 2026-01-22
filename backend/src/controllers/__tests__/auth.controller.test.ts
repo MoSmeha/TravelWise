@@ -8,15 +8,13 @@ import { createMockContext, resetAllMocks, mockUser } from './setup.js';
 
 // Mock the auth service
 vi.mock('../../services/auth.service.js', () => ({
-  authService: {
-    register: vi.fn(),
-    login: vi.fn(),
-    rotateRefreshToken: vi.fn(),
-    verifyEmailWithOTP: vi.fn(),
-    getUserByEmail: vi.fn(),
-    getUserById: vi.fn(),
-    generateVerificationOTP: vi.fn(),
-  },
+  register: vi.fn(),
+  login: vi.fn(),
+  rotateRefreshToken: vi.fn(),
+  verifyEmailWithOTP: vi.fn(),
+  getUserByEmail: vi.fn(),
+  getUserById: vi.fn(),
+  generateVerificationOTP: vi.fn(),
 }));
 
 // Mock email service
@@ -26,7 +24,12 @@ vi.mock('../../services/email.service.js', () => ({
 }));
 
 import { register, login, refresh, me } from '../../controllers/auth.controller.js';
-import { authService } from '../../services/auth.service.js';
+import {
+  register as registerService,
+  login as loginService,
+  rotateRefreshToken,
+  getUserById
+} from '../../services/auth.service.js';
 
 describe('Auth Controller', () => {
   beforeEach(() => {
@@ -43,7 +46,7 @@ describe('Auth Controller', () => {
         username: 'newuser',
       };
 
-      vi.mocked(authService.register).mockResolvedValue({
+      vi.mocked(registerService).mockResolvedValue({
         user: { ...mockUser, email: 'newuser@example.com' },
         verificationOTP: '123456',
       });
@@ -67,7 +70,7 @@ describe('Auth Controller', () => {
         username: 'testuser',
       };
 
-      vi.mocked(authService.register).mockRejectedValue(new Error('EMAIL_EXISTS'));
+      vi.mocked(registerService).mockRejectedValue(new Error('EMAIL_EXISTS'));
 
       await register(req, res);
 
@@ -84,7 +87,7 @@ describe('Auth Controller', () => {
         username: 'existinguser',
       };
 
-      vi.mocked(authService.register).mockRejectedValue(new Error('USERNAME_EXISTS'));
+      vi.mocked(registerService).mockRejectedValue(new Error('USERNAME_EXISTS'));
 
       await register(req, res);
 
@@ -101,7 +104,7 @@ describe('Auth Controller', () => {
         password: 'Password123!',
       };
 
-      vi.mocked(authService.login).mockResolvedValue({
+      vi.mocked(loginService).mockResolvedValue({
         accessToken: 'access-token-123',
         refreshToken: 'refresh-token-456',
         user: mockUser,
@@ -125,7 +128,7 @@ describe('Auth Controller', () => {
         password: 'wrongpassword',
       };
 
-      vi.mocked(authService.login).mockRejectedValue(new Error('INVALID_CREDENTIALS'));
+      vi.mocked(loginService).mockRejectedValue(new Error('INVALID_CREDENTIALS'));
 
       await login(req, res);
 
@@ -140,7 +143,7 @@ describe('Auth Controller', () => {
         password: 'Password123!',
       };
 
-      vi.mocked(authService.login).mockRejectedValue(new Error('EMAIL_NOT_VERIFIED'));
+      vi.mocked(loginService).mockRejectedValue(new Error('EMAIL_NOT_VERIFIED'));
 
       await login(req, res);
 
@@ -160,7 +163,7 @@ describe('Auth Controller', () => {
         refreshToken: 'valid-refresh-token',
       };
 
-      vi.mocked(authService.rotateRefreshToken).mockResolvedValue({
+      vi.mocked(rotateRefreshToken).mockResolvedValue({
         accessToken: 'new-access-token',
         refreshToken: 'new-refresh-token',
       });
@@ -182,7 +185,7 @@ describe('Auth Controller', () => {
         refreshToken: 'invalid-token',
       };
 
-      vi.mocked(authService.rotateRefreshToken).mockResolvedValue(null);
+      vi.mocked(rotateRefreshToken).mockResolvedValue(null);
 
       await refresh(req, res);
 
@@ -198,7 +201,7 @@ describe('Auth Controller', () => {
       const { req, res } = createMockContext();
       req.user = { userId: mockUser.id };
 
-      vi.mocked(authService.getUserById).mockResolvedValue(mockUser);
+      vi.mocked(getUserById).mockResolvedValue(mockUser);
 
       await me(req, res);
 
@@ -219,7 +222,7 @@ describe('Auth Controller', () => {
       const { req, res } = createMockContext();
       req.user = { userId: 'non-existent-id' };
 
-      vi.mocked(authService.getUserById).mockResolvedValue(null);
+      vi.mocked(getUserById).mockResolvedValue(null);
 
       await me(req, res);
 

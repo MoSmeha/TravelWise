@@ -7,16 +7,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext, resetAllMocks } from './setup.js';
 
 // Mock the message service
+// Mock the message service
 vi.mock('../../services/message.service.js', () => ({
-  messageService: {
-    getConversations: vi.fn(),
-    getConversation: vi.fn(),
-    getOrCreateDirectConversation: vi.fn(),
-    getMessages: vi.fn(),
-    sendMessage: vi.fn(),
-    markConversationRead: vi.fn(),
-    getConversationParticipantIds: vi.fn(),
-  },
+  getConversations: vi.fn(),
+  getConversation: vi.fn(),
+  getOrCreateDirectConversation: vi.fn(),
+  getMessages: vi.fn(),
+  sendMessage: vi.fn(),
+  markConversationRead: vi.fn(),
+  getConversationParticipantIds: vi.fn(),
 }));
 
 // Mock socket service
@@ -27,7 +26,7 @@ vi.mock('../../services/socket.service.js', () => ({
 }));
 
 import { messageController } from '../../controllers/message.controller.js';
-import { messageService } from '../../services/message.service.js';
+import * as messageService from '../../services/message.service.js';
 
 const mockConversation = {
   id: 'conv-123',

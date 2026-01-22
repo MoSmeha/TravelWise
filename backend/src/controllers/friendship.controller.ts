@@ -1,6 +1,13 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware.js';
-import { friendshipService } from '../services/friendship.service.js';
+import {
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  getFriends,
+  getPendingRequests,
+  getSentRequests,
+} from '../services/friendship.service.js';
 
 export class FriendshipController {
   
@@ -13,7 +20,7 @@ export class FriendshipController {
         return res.status(400).json({ error: 'Cannot send friend request to yourself' });
       }
 
-      const friendship = await friendshipService.sendFriendRequest(userId, addresseeId);
+      const friendship = await sendFriendRequest(userId, addresseeId);
       return res.json(friendship);
     } catch (error: any) {
       console.error('[FriendshipController] Error sending request:', error);
@@ -26,7 +33,7 @@ export class FriendshipController {
       const userId = req.user!.userId;
       const { id } = req.params; // Already validated by middleware
 
-      const friendship = await friendshipService.acceptFriendRequest(userId, id);
+      const friendship = await acceptFriendRequest(userId, id);
       return res.json(friendship);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -38,7 +45,7 @@ export class FriendshipController {
       const userId = req.user!.userId;
       const { id } = req.params; // Already validated by middleware
 
-      const friendship = await friendshipService.rejectFriendRequest(userId, id);
+      const friendship = await rejectFriendRequest(userId, id);
       return res.json(friendship);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -48,7 +55,7 @@ export class FriendshipController {
   static async getFriends(req: AuthRequest, res: Response) {
     try {
       const userId = req.user!.userId;
-      const friends = await friendshipService.getFriends(userId);
+      const friends = await getFriends(userId);
       return res.json(friends);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -58,7 +65,7 @@ export class FriendshipController {
   static async getPendingRequests(req: AuthRequest, res: Response) {
     try {
       const userId = req.user!.userId;
-      const requests = await friendshipService.getPendingRequests(userId);
+      const requests = await getPendingRequests(userId);
       return res.json(requests);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -68,7 +75,7 @@ export class FriendshipController {
   static async getSentRequests(req: AuthRequest, res: Response) {
     try {
       const userId = req.user!.userId;
-      const requests = await friendshipService.getSentRequests(userId);
+      const requests = await getSentRequests(userId);
       return res.json(requests);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });

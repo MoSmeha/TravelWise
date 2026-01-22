@@ -1,6 +1,19 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware.js';
-import { postService } from '../services/post.service.js';
+import {
+  createPost,
+  getFriendsFeed,
+  getPublicFeed,
+  getPostsByUser,
+  getPostById,
+  deletePost,
+  likePost,
+  unlikePost,
+  getPostLikes,
+  addComment,
+  getPostComments,
+  deleteComment,
+} from '../services/post.service.js';
 import { PostVisibility } from '../generated/prisma/client.js';
 
 export class PostController {
@@ -18,7 +31,7 @@ export class PostController {
         return res.status(400).json({ error: 'Image is required' });
       }
 
-      const post = await postService.createPost(
+      const post = await createPost(
         userId,
         req.file.buffer,
         description || null,
@@ -41,7 +54,7 @@ export class PostController {
       const userId = req.user!.userId;
       const { cursor, limit } = req.query;
 
-      const result = await postService.getFriendsFeed(
+      const result = await getFriendsFeed(
         userId,
         cursor as string | undefined,
         limit ? parseInt(limit as string, 10) : undefined
@@ -63,7 +76,7 @@ export class PostController {
       const userId = req.user!.userId;
       const { cursor, limit } = req.query;
 
-      const result = await postService.getPublicFeed(
+      const result = await getPublicFeed(
         userId,
         cursor as string | undefined,
         limit ? parseInt(limit as string, 10) : undefined
@@ -86,7 +99,7 @@ export class PostController {
       const { userId } = req.params;
       const { cursor, limit } = req.query;
 
-      const result = await postService.getPostsByUser(
+      const result = await getPostsByUser(
         userId,
         currentUserId,
         cursor as string | undefined,
@@ -109,7 +122,7 @@ export class PostController {
       const userId = req.user!.userId;
       const { id } = req.params;
 
-      const post = await postService.getPostById(id, userId);
+      const post = await getPostById(id, userId);
       
       if (!post) {
         return res.status(404).json({ error: 'Post not found' });
@@ -131,7 +144,7 @@ export class PostController {
       const userId = req.user!.userId;
       const { id } = req.params;
 
-      await postService.deletePost(id, userId);
+      await deletePost(id, userId);
       
       return res.json({ message: 'Post deleted successfully' });
     } catch (error: any) {
@@ -155,7 +168,7 @@ export class PostController {
       const userId = req.user!.userId;
       const { id } = req.params;
 
-      await postService.likePost(id, userId);
+      await likePost(id, userId);
       
       return res.json({ message: 'Post liked successfully' });
     } catch (error: any) {
@@ -179,7 +192,7 @@ export class PostController {
       const userId = req.user!.userId;
       const { id } = req.params;
 
-      await postService.unlikePost(id, userId);
+      await unlikePost(id, userId);
       
       return res.json({ message: 'Post unliked successfully' });
     } catch (error: any) {
@@ -203,7 +216,7 @@ export class PostController {
       const { id } = req.params;
       const { cursor, limit } = req.query;
 
-      const result = await postService.getPostLikes(
+      const result = await getPostLikes(
         id,
         cursor as string | undefined,
         limit ? parseInt(limit as string, 10) : undefined
@@ -226,7 +239,7 @@ export class PostController {
       const { id } = req.params;
       const { content } = req.body;
 
-      const comment = await postService.addComment(id, userId, content);
+      const comment = await addComment(id, userId, content);
       
       return res.status(201).json({ data: comment });
     } catch (error: any) {
@@ -247,7 +260,7 @@ export class PostController {
       const { id } = req.params;
       const { cursor, limit } = req.query;
 
-      const result = await postService.getPostComments(
+      const result = await getPostComments(
         id,
         cursor as string | undefined,
         limit ? parseInt(limit as string, 10) : undefined
@@ -269,7 +282,7 @@ export class PostController {
       const userId = req.user!.userId;
       const { commentId } = req.params;
 
-      await postService.deleteComment(commentId, userId);
+      await deleteComment(commentId, userId);
       
       return res.json({ message: 'Comment deleted successfully' });
     } catch (error: any) {

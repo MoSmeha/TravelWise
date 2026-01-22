@@ -8,18 +8,23 @@ import { createMockContext, resetAllMocks } from './setup.js';
 
 // Mock the friendship service
 vi.mock('../../services/friendship.service.js', () => ({
-  friendshipService: {
-    sendFriendRequest: vi.fn(),
-    acceptFriendRequest: vi.fn(),
-    rejectFriendRequest: vi.fn(),
-    getFriends: vi.fn(),
-    getPendingRequests: vi.fn(),
-    getSentRequests: vi.fn(),
-  },
+  sendFriendRequest: vi.fn(),
+  acceptFriendRequest: vi.fn(),
+  rejectFriendRequest: vi.fn(),
+  getFriends: vi.fn(),
+  getPendingRequests: vi.fn(),
+  getSentRequests: vi.fn(),
 }));
 
 import { FriendshipController } from '../../controllers/friendship.controller.js';
-import { friendshipService } from '../../services/friendship.service.js';
+import {
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  getFriends,
+  getPendingRequests,
+  getSentRequests
+} from '../../services/friendship.service.js';
 
 const mockFriendship = {
   id: 'friendship-123',
@@ -40,11 +45,11 @@ describe('Friendship Controller', () => {
       const { req, res } = createMockContext();
       req.body = { addresseeId: 'friend-user-id' };
 
-      vi.mocked(friendshipService.sendFriendRequest).mockResolvedValue(mockFriendship as any);
+      vi.mocked(sendFriendRequest).mockResolvedValue(mockFriendship as any);
 
       await FriendshipController.sendFriendRequest(req, res);
 
-      expect(friendshipService.sendFriendRequest).toHaveBeenCalledWith(
+      expect(sendFriendRequest).toHaveBeenCalledWith(
         req.user.userId,
         'friend-user-id'
       );
@@ -67,7 +72,7 @@ describe('Friendship Controller', () => {
       const { req, res } = createMockContext();
       req.body = { addresseeId: 'friend-user-id' };
 
-      vi.mocked(friendshipService.sendFriendRequest).mockRejectedValue(
+      vi.mocked(sendFriendRequest).mockRejectedValue(
         new Error('Friend request already pending')
       );
 
@@ -86,11 +91,11 @@ describe('Friendship Controller', () => {
       req.params = { id: 'friendship-123' };
 
       const acceptedFriendship = { ...mockFriendship, status: 'ACCEPTED' };
-      vi.mocked(friendshipService.acceptFriendRequest).mockResolvedValue(acceptedFriendship as any);
+      vi.mocked(acceptFriendRequest).mockResolvedValue(acceptedFriendship as any);
 
       await FriendshipController.acceptFriendRequest(req, res);
 
-      expect(friendshipService.acceptFriendRequest).toHaveBeenCalledWith(
+      expect(acceptFriendRequest).toHaveBeenCalledWith(
         req.user.userId,
         'friendship-123'
       );
@@ -101,7 +106,7 @@ describe('Friendship Controller', () => {
       const { req, res } = createMockContext();
       req.params = { id: 'friendship-123' };
 
-      vi.mocked(friendshipService.acceptFriendRequest).mockRejectedValue(
+      vi.mocked(acceptFriendRequest).mockRejectedValue(
         new Error('Unauthorized to accept this request')
       );
 
@@ -117,11 +122,11 @@ describe('Friendship Controller', () => {
       req.params = { id: 'friendship-123' };
 
       const rejectedFriendship = { ...mockFriendship, status: 'REJECTED' };
-      vi.mocked(friendshipService.rejectFriendRequest).mockResolvedValue(rejectedFriendship as any);
+      vi.mocked(rejectFriendRequest).mockResolvedValue(rejectedFriendship as any);
 
       await FriendshipController.rejectFriendRequest(req, res);
 
-      expect(friendshipService.rejectFriendRequest).toHaveBeenCalledWith(
+      expect(rejectFriendRequest).toHaveBeenCalledWith(
         req.user.userId,
         'friendship-123'
       );
@@ -137,11 +142,11 @@ describe('Friendship Controller', () => {
         { id: 'friend-1', name: 'Friend One', username: 'friend1' },
         { id: 'friend-2', name: 'Friend Two', username: 'friend2' },
       ];
-      vi.mocked(friendshipService.getFriends).mockResolvedValue(friends as any);
+      vi.mocked(getFriends).mockResolvedValue(friends as any);
 
       await FriendshipController.getFriends(req, res);
 
-      expect(friendshipService.getFriends).toHaveBeenCalledWith(req.user.userId);
+      expect(getFriends).toHaveBeenCalledWith(req.user.userId);
       expect(res.json).toHaveBeenCalledWith(friends);
     });
   });
@@ -151,11 +156,11 @@ describe('Friendship Controller', () => {
       const { req, res } = createMockContext();
 
       const pendingRequests = [mockFriendship];
-      vi.mocked(friendshipService.getPendingRequests).mockResolvedValue(pendingRequests as any);
+      vi.mocked(getPendingRequests).mockResolvedValue(pendingRequests as any);
 
       await FriendshipController.getPendingRequests(req, res);
 
-      expect(friendshipService.getPendingRequests).toHaveBeenCalledWith(req.user.userId);
+      expect(getPendingRequests).toHaveBeenCalledWith(req.user.userId);
       expect(res.json).toHaveBeenCalledWith(pendingRequests);
     });
   });
@@ -165,11 +170,11 @@ describe('Friendship Controller', () => {
       const { req, res } = createMockContext();
 
       const sentRequests = [mockFriendship];
-      vi.mocked(friendshipService.getSentRequests).mockResolvedValue(sentRequests as any);
+      vi.mocked(getSentRequests).mockResolvedValue(sentRequests as any);
 
       await FriendshipController.getSentRequests(req, res);
 
-      expect(friendshipService.getSentRequests).toHaveBeenCalledWith(req.user.userId);
+      expect(getSentRequests).toHaveBeenCalledWith(req.user.userId);
       expect(res.json).toHaveBeenCalledWith(sentRequests);
     });
   });
