@@ -54,6 +54,9 @@ export const addCommentSchema = z.object({
   content: z.string().min(1, 'Comment cannot be empty').max(1000),
 });
 
+// Combine schemas for delete comment route which needs both IDs
+export const deleteCommentSchema = postIdParamSchema.merge(commentIdParamSchema);
+
 // Type exports for use in controllers
 export type PaginationInput = z.infer<typeof paginationSchema>;
 export type CreatePostInput = z.infer<typeof createPostSchema>;
@@ -61,3 +64,5 @@ export type PostIdParam = z.infer<typeof postIdParamSchema>;
 export type UserIdParam = z.infer<typeof userIdParamSchema>;
 export type CommentIdParam = z.infer<typeof commentIdParamSchema>;
 export type AddCommentInput = z.infer<typeof addCommentSchema>;
+export type DeleteCommentParams = z.infer<typeof deleteCommentSchema>;
+

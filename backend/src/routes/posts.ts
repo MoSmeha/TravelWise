@@ -20,6 +20,7 @@ import {
   postIdParamSchema,
   userIdParamSchema,
   addCommentSchema,
+  deleteCommentSchema,
 } from '../schemas/post.schema.js';
 
 const router = Router();
@@ -47,7 +48,7 @@ router.post(
 router.get('/:id/comments', validate(postIdParamSchema, 'params'), getPostComments);
 router.delete(
   '/:id/comments/:commentId',
-  validate(postIdParamSchema, 'params'),
+  validate(deleteCommentSchema, 'params'),
   deleteComment
 );
 
