@@ -57,6 +57,7 @@ export interface ItineraryResult {
   warnings: Array<{ title: string; description: string }>;
   touristTraps: Array<{ name: string; reason: string }>;
   localTips: string[];
+  checklist: Array<{ category: string; item: string; reason: string }>;
 }
 
 // Activity categories mapping based on travel style
@@ -77,9 +78,10 @@ async function generateAIPolish(
   warnings: Array<{ title: string; description: string }>;
   touristTraps: Array<{ name: string; reason: string }>;
   localTips: string[];
+  checklist: Array<{ category: string; item: string; reason: string }>;
 }> {
   if (!isOpenAIConfigured()) {
-    return { warnings: [], touristTraps: [], localTips: [] };
+    return { warnings: [], touristTraps: [], localTips: [], checklist: [] };
   }
   
   const openai = getOpenAIClient();
@@ -106,12 +108,15 @@ Generate:
 1. 2-3 specific warnings relevant to THESE locations (e.g. if visiting a specific market, warn about pickpockets there).
 2. 2-3 specific tourist traps to avoid NEAR the places listed.
 3. 3-5 "insider" local tips for these specific spots (e.g. "Best sunset view is from the terrace of X").
+4. 5-7 packing checklist items customized for this specific trip (weather, activities, culture).
+   Categories must be one of: ESSENTIALS, WEATHER, ACTIVITY, CLOTHING, TOILETRIES, TEC, HEALTH, MISC.
 
 Format as JSON:
 {
   "warnings": [{"title": "...", "description": "..."}],
   "touristTraps": [{"name": "...", "reason": "..."}],
-  "localTips": ["...", "..."]
+  "localTips": ["...", "..."],
+  "checklist": [{"category": "...", "item": "...", "reason": "..."}]
 }`;
 
   try {
@@ -129,13 +134,14 @@ Format as JSON:
         warnings: parsed.warnings || [],
         touristTraps: parsed.touristTraps || [],
         localTips: parsed.localTips || [],
+        checklist: parsed.checklist || [],
       };
     }
   } catch (error) {
     console.error('AI Polish generation failed:', error);
   }
   
-  return { warnings: [], touristTraps: [], localTips: [] };
+  return { warnings: [], touristTraps: [], localTips: [], checklist: [] };
 }
 
 /**
@@ -600,12 +606,15 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   let warnings: Array<{ title: string; description: string }> = [];
   let touristTraps: Array<{ name: string; reason: string }> = [];
   let localTips: string[] = [];
+  let checklist: Array<{ category: string; item: string; reason: string }> = [];
+
   
   try {
     const aiPolish = await generateAIPolish(days, cityName || country);
     warnings = aiPolish.warnings;
     touristTraps = aiPolish.touristTraps;
     localTips = aiPolish.localTips;
+    checklist = aiPolish.checklist;
   } catch (error) {
     console.error('AI Polish failed (non-critical):', error);
   }
@@ -657,6 +666,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     warnings,
     touristTraps,
     localTips,
+    checklist,
   };
 }
 
@@ -769,18 +779,14 @@ export async function saveItineraryToDb(
     }
   }
   
-  // Create mock checklist for RAG
-  const checklistItems: Array<{ category: ChecklistCategory; item: string; reason: string }> = [
-    { category: ChecklistCategory.ESSENTIALS, item: 'Passport', reason: 'Required for travel' },
-    { category: ChecklistCategory.ESSENTIALS, item: 'Universal Adapter', reason: 'For charging devices' },
-    { category: ChecklistCategory.WEATHER, item: 'Sunscreen', reason: 'Sunny weather expected' },
-    { category: ChecklistCategory.ACTIVITY, item: 'Comfortable Shoes', reason: 'Walking tours' }
-  ];
+  // Create checklist from AI generated items (or empty if none)
+  const checklistItems = generated.checklist || [];
+
   
   for (const item of checklistItems) {
     await provider.createChecklistItem({
       itineraryId: itinerary.id,
-      category: item.category,
+      category: item.category as ChecklistCategory,
       item: item.item,
       reason: item.reason,
     });
