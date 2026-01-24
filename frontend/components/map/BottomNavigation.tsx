@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Bot, MapPin } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import type { ItineraryResponse } from '../../types/api';
@@ -7,14 +7,12 @@ import type { ItineraryResponse } from '../../types/api';
 interface BottomNavigationProps {
   itineraryId: string;
   data: ItineraryResponse;
-  isNavigating: boolean;
   onNavigateToItinerary: () => void;
 }
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   itineraryId,
   data,
-  isNavigating,
   onNavigateToItinerary,
 }) => {
   const router = useRouter();
@@ -33,18 +31,11 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       </TouchableOpacity>
 
       <TouchableOpacity
-        className={`flex-1 bg-gray-100 rounded-2xl flex-row items-center justify-center gap-2 border border-gray-200 h-14 ${isNavigating ? 'opacity-50' : ''}`}
+        className="flex-1 bg-gray-100 rounded-2xl flex-row items-center justify-center gap-2 border border-gray-200 h-14"
         onPress={onNavigateToItinerary}
-        disabled={isNavigating}
       >
-        {isNavigating ? (
-          <ActivityIndicator size="small" color="#374151" />
-        ) : (
-          <>
-            <MapPin size={22} color="#374151" strokeWidth={2.5} />
-            <Text className="text-gray-700 text-base font-bold tracking-wide">Itinerary</Text>
-          </>
-        )}
+        <MapPin size={22} color="#374151" strokeWidth={2.5} />
+        <Text className="text-gray-700 text-base font-bold tracking-wide">Itinerary</Text>
       </TouchableOpacity>
     </View>
   );

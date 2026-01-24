@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
+import { AppError } from '../utils/AppError.js';
+import { InvalidTokenError } from '../errors/auth.errors.js';
 import {
   LoginInput,
   RefreshTokenInput,
@@ -36,12 +38,8 @@ export async function register(req: Request, res: Response): Promise<void> {
       user,
     });
   } catch (error: any) {
-    if (error.message === 'EMAIL_EXISTS') {
-      res.status(409).json({ error: 'Email already registered' });
-      return;
-    }
-    if (error.message === 'USERNAME_EXISTS') {
-      res.status(409).json({ error: 'Username already taken' });
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
       return;
     }
     console.error('Registration error:', error.message);
@@ -71,15 +69,8 @@ export async function login(req: Request, res: Response): Promise<void> {
       },
     });
   } catch (error: any) {
-    if (error.message === 'INVALID_CREDENTIALS') {
-      res.status(401).json({ error: 'Invalid credentials' });
-      return;
-    }
-    if (error.message === 'EMAIL_NOT_VERIFIED') {
-      res.status(403).json({
-        error: 'Email not verified',
-        message: 'Please verify your email address before logging in',
-      });
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
       return;
     }
     console.error('Login error:', error.message);
@@ -96,8 +87,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
     const tokens = await rotateRefreshToken(input.refreshToken);
 
     if (!tokens) {
-      res.status(401).json({ error: 'Invalid or expired refresh token' });
-      return;
+      throw new InvalidTokenError();
     }
 
     res.json({
@@ -106,6 +96,10 @@ export async function refresh(req: Request, res: Response): Promise<void> {
       refreshToken: tokens.refreshToken,
     });
   } catch (error: any) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
+      return;
+    }
     console.error('Token refresh error:', error.message);
     res.status(500).json({ error: 'Token refresh failed', message: error.message });
   }
@@ -120,8 +114,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
     const result = await verifyEmailWithOTP(email, otp);
 
     if (!result) {
-      res.status(400).json({ error: 'Invalid or expired OTP' });
-      return;
+      throw new AppError('Invalid or expired OTP', 400);
     }
 
     // Get user info for welcome email
@@ -135,6 +128,10 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
       userId: result.userId,
     });
   } catch (error: any) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
+      return;
+    }
     console.error('Email verification error:', error.message);
     res.status(500).json({ error: 'Email verification failed', message: error.message });
   }
@@ -157,8 +154,7 @@ export async function resendVerification(req: Request, res: Response): Promise<v
     }
 
     if (user.emailVerified) {
-      res.status(400).json({ error: 'Email already verified' });
-      return;
+      throw new AppError('Email already verified', 400);
     }
 
     const verificationOTP = await generateVerificationOTP(user.id);
@@ -166,6 +162,10 @@ export async function resendVerification(req: Request, res: Response): Promise<v
 
     res.json({ message: 'Verification email sent' });
   } catch (error: any) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
+      return;
+    }
     console.error('Resend verification error:', error.message);
     res.status(500).json({
       error: 'Failed to resend verification email',
@@ -198,6 +198,10 @@ export async function me(req: AuthenticatedRequest, res: Response): Promise<void
 
     res.json({ user });
   } catch (error: any) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
+      return;
+    }
     console.error('Get user error:', error.message);
     res.status(500).json({ error: 'Failed to get user', message: error.message });
   }

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, Modal, TouchableOpacity, FlatList, ActivityIndicator, Image, Alert } from 'react-native';
-import { X, UserMinus, Shield, Eye, ChevronDown } from 'lucide-react-native';
+import { X, UserMinus, Shield, Eye } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { customToastConfig } from '../ui/ToastMessage';
 import { useItineraryCollaborators, useRemoveCollaborator } from '../../hooks/queries/useItineraryShares';

@@ -51,7 +51,6 @@ export default function MapScreen() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [locationPhotos, setLocationPhotos] = useState<Record<string, LocationPhotosData>>({});
-  const [isNavigatingToItinerary, setIsNavigatingToItinerary] = useState(false);
   const [realRoutes, setRealRoutes] = useState<Record<number, { latitude: number; longitude: number }[]>>({});
 
   // Location sharing
@@ -216,7 +215,7 @@ export default function MapScreen() {
     };
 
     fetchRoutes();
-  }, [data, dayRoutes]);
+  }, [data, dayRoutes, realRoutes, connectorRoutes]);
 
   // Loading state
   if (loadingItinerary && !passedData && itineraryId) {
@@ -244,18 +243,14 @@ export default function MapScreen() {
   };
 
   const handleNavigateToItinerary = () => {
-    if (isNavigatingToItinerary) return;
-    setIsNavigatingToItinerary(true);
-    
-    requestAnimationFrame(() => {
-      router.push({
-        pathname: '/itinerary',
-        params: { data: JSON.stringify(data) },
-      });
-      
-      setTimeout(() => {
-        setIsNavigatingToItinerary(false);
-      }, 1000);
+    // Pass ID only to prevent serialization lag
+    router.push({
+      pathname: '/itinerary',
+      params: { 
+        itineraryId: data.itinerary.id,
+        // Keep data param as fallback/initial state if needed, but try to avoid it if possible
+        // For now, we rely on React Query cache in the next screen
+      },
     });
   };
 
@@ -451,7 +446,6 @@ export default function MapScreen() {
       <BottomNavigation
         itineraryId={data.itinerary.id}
         data={data}
-        isNavigating={isNavigatingToItinerary}
         onNavigateToItinerary={handleNavigateToItinerary}
       />
     </View>

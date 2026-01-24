@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, Link } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 import { z } from 'zod';
 import Toast from 'react-native-toast-message';
 import { useRegisterMutation } from '../../hooks/mutations/useAuthMutations';
+import { AuthHeader } from '../../components/ui/AuthHeader';
+import { InputField } from '../../components/ui/InputField';
+import { PrimaryButton } from '../../components/ui/PrimaryButton';
+import { FlyingCloud } from '../../components/ui/FlyingCloud';
 
-// Matching backend validation
 const registerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -22,7 +24,6 @@ const registerSchema = z.object({
 });
 
 export default function RegisterScreen() {
-  const router = useRouter();
   const registerMutation = useRegisterMutation();
   
   const [formData, setFormData] = useState({
@@ -34,7 +35,6 @@ export default function RegisterScreen() {
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showPassword, setShowPassword] = useState(false);
 
   const validate = () => {
     try {
@@ -50,8 +50,6 @@ export default function RegisterScreen() {
           }
         });
         setErrors(newErrors);
-        
-        // Show first error as toast
         const firstError = error.issues[0];
         Toast.show({
           type: 'error',
@@ -74,118 +72,118 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-white"
-    >
-      <ScrollView contentContainerClassName="flex-grow px-6 py-10">
-        <TouchableOpacity onPress={() => router.back()} className="mb-6">
-            <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-
-        <View className="mb-8">
-            <Text className="text-3xl font-bold text-gray-900">Create Account</Text>
-            <Text className="text-gray-500 mt-2">Join TravelWise today</Text>
-        </View>
-
-        <View className="space-y-4">
-             {/* Name */}
-             <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">Full Name</Text>
-                <TextInput
-                  className={`w-full h-12 bg-gray-50 border rounded-xl px-4 text-gray-900 ${errors.name ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'}`}
-                  placeholder="John Doe"
-                  value={formData.name}
-                  onChangeText={(text) => setFormData({...formData, name: text})}
-                />
-                {errors.name && <Text className="text-red-500 text-xs mt-1">{errors.name}</Text>}
-             </View>
-
-             {/* Username */}
-             <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">Username</Text>
-                <TextInput
-                  className={`w-full h-12 bg-gray-50 border rounded-xl px-4 text-gray-900 ${errors.username ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'}`}
-                  placeholder="johndoe123"
-                  value={formData.username}
-                  onChangeText={(text) => setFormData({...formData, username: text})}
-                  autoCapitalize="none"
-                />
-                 {errors.username && <Text className="text-red-500 text-xs mt-1">{errors.username}</Text>}
-             </View>
-
-            {/* Email */}
-             <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
-                <TextInput
-                  className={`w-full h-12 bg-gray-50 border rounded-xl px-4 text-gray-900 ${errors.email ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'}`}
-                  placeholder="john@example.com"
-                  value={formData.email}
-                  onChangeText={(text) => setFormData({...formData, email: text})}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
-                 {errors.email && <Text className="text-red-500 text-xs mt-1">{errors.email}</Text>}
-             </View>
-
-            {/* Password */}
-             <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">Password</Text>
-                <View className="relative">
-                  <TextInput
-                    className={`w-full h-12 bg-gray-50 border rounded-xl px-4 text-gray-900 pr-12 ${errors.password ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'}`}
-                    placeholder="Min 8 chars, 1 upper, 1 lower, 1 number"
-                    value={formData.password}
-                    onChangeText={(text) => setFormData({...formData, password: text})}
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity 
-                    className="absolute right-4 top-3"
-                    onPress={() => setShowPassword(!showPassword)}
-                  >
-                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={24} color="#9CA3AF" />
-                  </TouchableOpacity>
-                </View>
-                 {errors.password && <Text className="text-red-500 text-xs mt-1">{errors.password}</Text>}
-             </View>
-
-            {/* Confirm Password */}
-             <View>
-                <Text className="text-sm font-medium text-gray-700 mb-1">Confirm Password</Text>
-                <TextInput
-                   className={`w-full h-12 bg-gray-50 border rounded-xl px-4 text-gray-900 ${errors.confirmPassword ? 'border-red-500' : 'border-gray-200 focus:border-blue-500'}`}
-                   placeholder="Confirm your password"
-                   value={formData.confirmPassword}
-                   onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
-                   secureTextEntry
-                 />
-                  {errors.confirmPassword && <Text className="text-red-500 text-xs mt-1">{errors.confirmPassword}</Text>}
-             </View>
-
-          <TouchableOpacity
-            className={`w-full h-14 bg-blue-600 rounded-xl items-center justify-center shadow-lg shadow-blue-600/30 mt-6 ${registerMutation.isPending ? 'opacity-70' : ''}`}
-            onPress={handleRegister}
-            disabled={registerMutation.isPending}
+    <View className="flex-1 bg-white relative">
+      <SafeAreaView style={{ flex: 1, zIndex: 20 }}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+        >
+          <ScrollView 
+            contentContainerClassName="flex-grow px-6 py-6 pb-32" 
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {registerMutation.isPending ? (
-               <Text className="text-white font-semibold text-lg">Creating Account...</Text>
-            ) : (
-               <Text className="text-white font-semibold text-lg">Sign Up</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+            
+            <AuthHeader 
+              title="Create Account" 
+              subtitle="Join TravelWise today" 
+            />
 
-        <View className="flex-row justify-center mt-8 mb-10">
-          <Text className="text-gray-600">Already have an account? </Text>
-          <Link href={"/auth/login" as any} asChild>
-            <TouchableOpacity>
-              <Text className="text-blue-600 font-bold">Sign In</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-    </SafeAreaView>
+            <View className="space-y-1 bg-white/80 p-4 -mx-4 rounded-3xl">
+              <InputField
+                label="Full Name"
+                placeholder="John Doe"
+                value={formData.name}
+                onChangeText={(text) => setFormData({...formData, name: text})}
+                error={errors.name}
+                icon="person-outline"
+              />
+
+              <InputField
+                label="Username"
+                placeholder="johndoe123"
+                value={formData.username}
+                onChangeText={(text) => setFormData({...formData, username: text})}
+                autoCapitalize="none"
+                error={errors.username}
+                icon="at-outline"
+              />
+
+              <InputField
+                label="Email"
+                placeholder="john@example.com"
+                value={formData.email}
+                onChangeText={(text) => setFormData({...formData, email: text})}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                error={errors.email}
+                icon="mail-outline"
+              />
+
+              <InputField
+                label="Password"
+                placeholder="Min 8 chars, 1 upper, 1 lower, 1 number"
+                value={formData.password}
+                onChangeText={(text) => setFormData({...formData, password: text})}
+                isPassword
+                error={errors.password}
+                icon="lock-closed-outline"
+              />
+
+              <InputField
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
+                isPassword
+                error={errors.confirmPassword}
+                icon="checkmark-circle-outline"
+              />
+
+              <View className="mt-4">
+                <PrimaryButton
+                  title="Sign Up"
+                  isLoading={registerMutation.isPending}
+                  loadingText="Creating Account..."
+                  onPress={handleRegister}
+                />
+              </View>
+            </View>
+
+            <View className="flex-row justify-center mt-8 mb-10 items-center">
+              <Text className="text-gray-500 font-medium">Already have an account? </Text>
+              <Link href={"/auth/login" as any} asChild>
+                <TouchableOpacity>
+                  <Text className="text-primary font-bold text-lg">Sign In</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+
+      {/* Massive Cloud Density (~16 clouds) */}
+      <FlyingCloud top={30} duration={32000} delay={0} size={70} opacity={0.08} variant="ionic" />
+      <FlyingCloud top={90} duration={26000} delay={8000} size={110} opacity={0.05} variant="lucide" />
+      <FlyingCloud top={160} duration={38000} delay={2000} size={50} opacity={0.10} variant="ionic" />
+      
+      <FlyingCloud top={220} duration={24000} delay={12000} size={85} opacity={0.06} variant="lucide" />
+      <FlyingCloud top={290} duration={42000} delay={5000} size={60} opacity={0.09} variant="ionic" />
+      <FlyingCloud top={350} duration={29000} delay={15000} size={95} opacity={0.05} variant="lucide" />
+      
+      <FlyingCloud top={410} duration={34000} delay={1000} size={45} opacity={0.11} variant="ionic" />
+      <FlyingCloud top={470} duration={21000} delay={10000} size={75} opacity={0.08} variant="lucide" />
+      <FlyingCloud top={530} duration={31000} delay={4000} size={105} opacity={0.04} variant="ionic" />
+      
+      <FlyingCloud top={590} duration={27000} delay={18000} size={55} opacity={0.10} variant="lucide" />
+      <FlyingCloud top={650} duration={39000} delay={7000} size={90} opacity={0.06} variant="ionic" />
+      <FlyingCloud top={710} duration={23000} delay={3000} size={65} opacity={0.09} variant="lucide" />
+      
+      <FlyingCloud top={770} duration={35000} delay={12000} size={100} opacity={0.05} variant="ionic" />
+      <FlyingCloud top={830} duration={25000} delay={8000} size={50} opacity={0.12} variant="lucide" />
+      <FlyingCloud top={120} duration={45000} delay={22000} size={80} opacity={0.04} variant="ionic" />
+      <FlyingCloud top={500} duration={28000} delay={16000} size={70} opacity={0.07} variant="lucide" />
+    </View>
   );
 }

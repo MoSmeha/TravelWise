@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, FlatList, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, MessageCircle, Search } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -23,7 +23,7 @@ import {
 } from '../../hooks/queries/useMessages';
 import { useOnlineStatus } from '../../hooks/queries/useOnlineStatus';
 import Toast from 'react-native-toast-message';
-import { useAuth } from '../../store/authStore';
+
 import { ActivityTabs } from '../../components/activity/ActivityTabs';
 import { NotificationItem } from '../../components/activity/NotificationItem';
 import { FriendConversationItem } from '../../components/activity/FriendConversationItem';
@@ -32,7 +32,6 @@ type Tab = 'notifications' | 'messages';
 
 export default function ActivityScreen() {
     const router = useRouter();
-    const { user: currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState<Tab>('notifications');
     const [searchQuery, setSearchQuery] = useState('');
     
