@@ -11,8 +11,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { RegisterInput, LoginInput } from '../schemas/auth.schema.js';
 import { authProvider } from '../providers/auth.provider.pg.js';
 import { UserResponse, UserWithPassword } from '../provider-contract/auth.provider-contract.js';
+import {
+  UserAlreadyExistsError,
+  InvalidCredentialsError,
+  EmailNotVerifiedError,
+} from '../errors/auth.errors.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'super-duper-secret-se-factory';
 
 // Token expiry times
 const JWT_ACCESS_EXPIRY_SEC = 15 * 60; // 15 minutes
@@ -51,13 +56,13 @@ export async function register(input: RegisterInput): Promise<RegisterResult> {
   // Check for existing email
   const existingEmail = await authProvider.findUserByEmail(input.email);
   if (existingEmail) {
-    throw new Error('EMAIL_EXISTS');
+    throw new UserAlreadyExistsError('Email already registered');
   }
 
   // Check for existing username
   const existingUsername = await authProvider.findUserByUsername(input.username);
   if (existingUsername) {
-    throw new Error('USERNAME_EXISTS');
+    throw new UserAlreadyExistsError('Username already taken');
   }
 
   // Hash password
@@ -98,12 +103,12 @@ export async function login(input: LoginInput): Promise<LoginResult> {
   // Verify password
   const isValid = await verifyPassword(input.password, user.passwordHash);
   if (!isValid) {
-    throw new Error('INVALID_CREDENTIALS');
+    throw new InvalidCredentialsError();
   }
 
   // Check email verification
   if (!user.emailVerified) {
-    throw new Error('EMAIL_NOT_VERIFIED');
+    throw new EmailNotVerifiedError();
   }
 
   // Generate tokens

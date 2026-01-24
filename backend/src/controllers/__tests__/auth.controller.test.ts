@@ -30,6 +30,11 @@ import {
   rotateRefreshToken,
   getUserById
 } from '../../services/auth.service.js';
+import {
+  UserAlreadyExistsError,
+  InvalidCredentialsError,
+  EmailNotVerifiedError,
+} from '../../errors/auth.errors.js';
 
 describe('Auth Controller', () => {
   beforeEach(() => {
@@ -70,7 +75,7 @@ describe('Auth Controller', () => {
         username: 'testuser',
       };
 
-      vi.mocked(registerService).mockRejectedValue(new Error('EMAIL_EXISTS'));
+      vi.mocked(registerService).mockRejectedValue(new UserAlreadyExistsError('Email already registered'));
 
       await register(req, res);
 
@@ -87,7 +92,7 @@ describe('Auth Controller', () => {
         username: 'existinguser',
       };
 
-      vi.mocked(registerService).mockRejectedValue(new Error('USERNAME_EXISTS'));
+      vi.mocked(registerService).mockRejectedValue(new UserAlreadyExistsError('Username already taken'));
 
       await register(req, res);
 
@@ -128,7 +133,7 @@ describe('Auth Controller', () => {
         password: 'wrongpassword',
       };
 
-      vi.mocked(loginService).mockRejectedValue(new Error('INVALID_CREDENTIALS'));
+      vi.mocked(loginService).mockRejectedValue(new InvalidCredentialsError());
 
       await login(req, res);
 
@@ -143,7 +148,7 @@ describe('Auth Controller', () => {
         password: 'Password123!',
       };
 
-      vi.mocked(loginService).mockRejectedValue(new Error('EMAIL_NOT_VERIFIED'));
+      vi.mocked(loginService).mockRejectedValue(new EmailNotVerifiedError());
 
       await login(req, res);
 
@@ -191,7 +196,7 @@ describe('Auth Controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Invalid or expired refresh token',
+        error: 'Invalid or expired token',
       });
     });
   });
