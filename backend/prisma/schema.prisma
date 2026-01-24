@@ -37,6 +37,11 @@ model User {
   posts    Post[]
   likes    Like[]
   comments Comment[]
+  
+  // Itinerary sharing
+  sharedItineraries     ItineraryShare[] @relation("SharedItineraries")
+  sentItineraryShares   ItineraryShare[] @relation("SentItineraryShares")
+  userLocations         UserLocation[]   @relation("UserLocations")
 
   @@index([email])
   @@index([username])
@@ -93,6 +98,8 @@ enum NotificationType {
   FRIEND_ACCEPTED
   POST_LIKE
   POST_COMMENT
+  ITINERARY_SHARED
+  ITINERARY_ACCEPTED
 }
 
 model Notification {
@@ -295,6 +302,8 @@ model UserItinerary {
   days                ItineraryDay[]
   checklist           ChecklistItem[]
   embeddings          ItineraryEmbedding[]
+  shares              ItineraryShare[]   @relation("ItineraryShares")
+  userLocations       UserLocation[]     @relation("ItineraryLocations")
   
   @@index([userId])
   @@index([flightDate])
@@ -450,6 +459,65 @@ enum ChunkType {
   PLACE_DETAIL
   CHECKLIST
   ROUTE_OVERVIEW
+}
+
+// ITINERARY SHARING MODELS
+
+enum SharePermission {
+  OWNER
+  VIEWER
+}
+
+enum ShareStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model ItineraryShare {
+  id           String          @id @default(cuid())
+  itineraryId  String
+  itinerary    UserItinerary   @relation("ItineraryShares", fields: [itineraryId], references: [id], onDelete: Cascade)
+  
+  userId       String
+  user         User            @relation("SharedItineraries", fields: [userId], references: [id], onDelete: Cascade)
+  
+  permission   SharePermission @default(VIEWER)
+  status       ShareStatus     @default(PENDING)
+  
+  invitedBy    String
+  inviter      User            @relation("SentItineraryShares", fields: [invitedBy], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  
+  @@unique([itineraryId, userId])
+  @@index([userId])
+  @@index([itineraryId])
+  @@index([status])
+}
+
+model UserLocation {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation("UserLocations", fields: [userId], references: [id], onDelete: Cascade)
+  
+  itineraryId       String
+  itinerary         UserItinerary @relation("ItineraryLocations", fields: [itineraryId], references: [id], onDelete: Cascade)
+  
+  latitude          Float
+  longitude         Float
+  accuracy          Float?        // meters
+  heading           Float?        // degrees
+  speed             Float?        // m/s
+  
+  lastUpdatedAt     DateTime      @default(now())
+  createdAt         DateTime      @default(now())
+  
+  @@unique([userId, itineraryId])
+  @@index([itineraryId])
+  @@index([userId])
+  @@index([lastUpdatedAt])
 }
 
 // POST/SOCIAL MODELS
