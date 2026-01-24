@@ -60,6 +60,10 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/testForEC2', (_req: Request, res: Response) => {
+  res.json({ status: 'Has been deployed to ec2', timestamp: new Date().toISOString() });
+});
+
 // 404 handler
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: 'Route not found' });

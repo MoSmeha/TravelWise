@@ -147,6 +147,10 @@ class SocketService {
     }
   }
 
+  getSocket() {
+    return this.socket;
+  }
+
   emit(event: string, data: any) {
     if (this.socket) {
       console.log('[Socket] Emitting:', event, data);

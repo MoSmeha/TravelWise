@@ -1,6 +1,12 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import { verifyAccessToken } from './auth.service.js';
+import {
+  updateUserLocation,
+  cleanupUserLocations,
+} from './location-sharing.service.js';
+import { UpdateLocationSchema } from '../schemas/location-sharing.schema.js';
+import { checkPermission } from './itinerary-share.service.js';
 
 interface AuthSocket extends Socket {
   userId?: string;
@@ -56,14 +62,82 @@ class SocketService {
       // Join a room specifically for this user
       socket.join(`user:${socket.userId}`);
 
-      socket.on('disconnect', (reason) => {
+      // Location sharing: Join itinerary room
+      socket.on('join-itinerary', async (itineraryId: string) => {
+        try {
+          // Verify user has access to itinerary
+          const permission = await checkPermission(itineraryId, socket.userId!);
+          if (permission) {
+            socket.join(`itinerary:${itineraryId}`);
+            console.log(`[SOCKET] User ${socket.userId} joined itinerary room: ${itineraryId}`);
+          } else {
+            socket.emit('error', { message: 'No access to this itinerary' });
+          }
+        } catch (error) {
+          console.error('[SOCKET] Error joining itinerary:', error);
+          socket.emit('error', { message: 'Failed to join itinerary' });
+        }
+      });
+
+      // Location sharing: Leave itinerary room
+      socket.on('leave-itinerary', (itineraryId: string) => {
+        socket.leave(`itinerary:${itineraryId}`);
+        console.log(`[SOCKET] User ${socket.userId} left itinerary room: ${itineraryId}`);
+      });
+
+      // Location sharing: Update location
+      socket.on('update-location', async (data: any) => {
+        try {
+          // Validate input
+          const validatedData = UpdateLocationSchema.parse(data);
+          
+          // Update location in database
+          await updateUserLocation(socket.userId!, validatedData);
+          
+          // Broadcast to itinerary collaborators
+          socket.to(`itinerary:${validatedData.itineraryId}`).emit('location-updated', {
+            userId: socket.userId,
+            location: {
+              latitude: validatedData.latitude,
+              longitude: validatedData.longitude,
+              accuracy: validatedData.accuracy,
+              heading: validatedData.heading,
+              speed: validatedData.speed,
+            },
+            timestamp: new Date(),
+          });
+        } catch (error) {
+          console.error('[SOCKET] Error updating location:', error);
+          socket.emit('error', { message: 'Failed to update location' });
+        }
+      });
+
+      socket.on('disconnect', async (reason) => {
         console.log(`[SOCKET] User disconnected: ${socket.userId}, reason: ${reason}`);
-        if (socket.userId && this.userSockets.has(socket.userId)) {
-          this.userSockets.get(socket.userId)?.delete(socket.id);
-          if (this.userSockets.get(socket.userId)?.size === 0) {
-            this.userSockets.delete(socket.userId);
+        
+        if (socket.userId) {
+          // Clean up user locations from all itineraries
+          await cleanupUserLocations(socket.userId);
+          
+          // Notify all itinerary rooms this user was in
+          const rooms = Array.from(socket.rooms);
+          rooms.forEach(room => {
+            if (room.startsWith('itinerary:')) {
+              socket.to(room).emit('user-location-removed', {
+                userId: socket.userId,
+              });
+            }
+          });
+          
+          // Remove from active users
+          if (this.userSockets.has(socket.userId)) {
+            this.userSockets.get(socket.userId)?.delete(socket.id);
+            if (this.userSockets.get(socket.userId)?.size === 0) {
+              this.userSockets.delete(socket.userId);
+            }
           }
         }
+        
         console.log(`[SOCKET] Remaining active users: ${Array.from(this.userSockets.keys()).join(', ')}`);
       });
     });
@@ -75,6 +149,12 @@ class SocketService {
   emitToUser(userId: string, event: string, data: any) {
     if (!this.io) return;
     this.io.to(`user:${userId}`).emit(event, data);
+  }
+
+  // Emit event to an itinerary room
+  emitToItinerary(itineraryId: string, event: string, data: any) {
+    if (!this.io) return;
+    this.io.to(`itinerary:${itineraryId}`).emit(event, data);
   }
 
   // Check if a user is online

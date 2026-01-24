@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { Calendar, Wallet } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, TouchableOpacity, Modal } from 'react-native';
+import { Calendar, Wallet, MoreVertical, Eye, Trash2, UserPlus, Users } from 'lucide-react-native';
 import { TripTag } from './TripTag';
 
 const COUNTRY_IMAGES: Record<string, string> = {
@@ -39,14 +39,39 @@ interface TripCardProps {
   trip: Trip;
   user?: User;
   onPress: (id: string, data: Trip) => void;
+  onDelete?: (id: string) => void;
+  onInvite?: (id: string) => void;
+  onManageCollaborators?: (id: string) => void;
 }
 
-export function TripCard({ trip, user, onPress }: TripCardProps) {
+export function TripCard({ trip, user, onPress, onDelete, onInvite, onManageCollaborators }: TripCardProps) {
+  const [menuVisible, setMenuVisible] = useState(false);
+  
   const countryName = trip.country || 'Unknown';
   const imageUri = COUNTRY_IMAGES[countryName] || COUNTRY_IMAGES['default'];
   const countryCode = COUNTRY_CODES[countryName] || 'un'; 
   const flagUrl = `https://flagcdn.com/w40/${countryCode}.png`;
   const dateString = new Date(trip.createdAt).toLocaleDateString();
+
+  const handleViewDetails = () => {
+    setMenuVisible(false);
+    onPress(trip.id, trip);
+  };
+
+  const handleDelete = () => {
+    setMenuVisible(false);
+    onDelete?.(trip.id);
+  };
+
+  const handleInvite = () => {
+    setMenuVisible(false);
+    onInvite?.(trip.id);
+  };
+
+  const handleManageCollaborators = () => {
+    setMenuVisible(false);
+    onManageCollaborators?.(trip.id);
+  };
 
   return (
     <View className="mb-5 mx-1 rounded-2xl bg-[#f5f5f5] overflow-hidden shadow-sm elevation-2"> 
@@ -108,14 +133,68 @@ export function TripCard({ trip, user, onPress }: TripCardProps) {
         {/* Footer */}
         <View className="flex-row justify-between items-center">
           <Text className="text-gray-400 text-xs">Created {dateString}</Text>
+          
+          {/* 3-dots menu button */}
           <TouchableOpacity 
-            onPress={() => onPress(trip.id, trip)}
-            className="bg-[#094772] px-4 py-2 rounded-xl"
+            onPress={() => setMenuVisible(true)}
+            className="bg-[#094772] p-2 rounded-xl"
           >
-            <Text className="text-white font-bold text-xs">View Details</Text>
+            <MoreVertical size={20} color="white" />
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Menu Modal */}
+      <Modal
+        visible={menuVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <TouchableOpacity 
+          className="flex-1 bg-black/50 justify-center items-center"
+          activeOpacity={1}
+          onPress={() => setMenuVisible(false)}
+        >
+          <View className="bg-white rounded-2xl w-64 overflow-hidden shadow-lg">
+            {/* View Details Option */}
+            <TouchableOpacity
+              onPress={handleViewDetails}
+              className="flex-row items-center px-5 py-4 border-b border-gray-100"
+            >
+              <Eye size={20} color="#094772" />
+              <Text className="ml-3 text-gray-800 font-semibold">View Details</Text>
+            </TouchableOpacity>
+
+            {/* Invite Friends Option */}
+            <TouchableOpacity
+              onPress={handleInvite}
+              className="flex-row items-center px-5 py-4 border-b border-gray-100"
+            >
+              <UserPlus size={20} color="#10b981" />
+              <Text className="ml-3 text-gray-800 font-semibold">Invite Friends</Text>
+            </TouchableOpacity>
+
+            {/* Manage Collaborators Option */}
+            <TouchableOpacity
+              onPress={handleManageCollaborators}
+              className="flex-row items-center px-5 py-4 border-b border-gray-100"
+            >
+              <Users size={20} color="#6366F1" />
+              <Text className="ml-3 text-gray-800 font-semibold">Manage Collaborators</Text>
+            </TouchableOpacity>
+
+            {/* Delete Itinerary Option */}
+            <TouchableOpacity
+              onPress={handleDelete}
+              className="flex-row items-center px-5 py-4"
+            >
+              <Trash2 size={20} color="#ef4444" />
+              <Text className="ml-3 text-red-500 font-semibold">Delete Itinerary</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }

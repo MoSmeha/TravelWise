@@ -118,6 +118,7 @@ export interface UserItinerarySummary {
 
 export interface UserItineraryWithDays {
   id: string;
+  userId: string | null;
   country: string;
   airportCode: string;
   numberOfDays: number;
@@ -221,4 +222,6 @@ export interface IItineraryProvider {
   createExternalHotel(data: CreateExternalHotelData): Promise<{ id: string }>;
 
   createPlace(data: CreatePlaceData): Promise<{ id: string }>;
+  
+  deleteItinerary(id: string): Promise<void>;
 }

@@ -22,20 +22,23 @@ interface OwnershipResult {
 const resourceLookups: Record<string, (id: string) => Promise<OwnershipResult | null>> = {
   /**
    * Itinerary ownership lookup
+   * Also checks ItineraryShare for users with ACCEPTED status
    */
   itinerary: async (id: string) => {
     const itinerary = await prisma.userItinerary.findUnique({
       where: { id },
       select: {
         userId: true,
-        // Future: include shared users when ItineraryShare table exists
-        // sharedWith: { select: { userId: true } }
+        shares: {
+          where: { status: 'ACCEPTED' },
+          select: { userId: true }
+        }
       },
     });
     return itinerary
       ? {
           ownerId: itinerary.userId,
-          // sharedUserIds: itinerary.sharedWith?.map(s => s.userId) || []
+          sharedUserIds: itinerary.shares?.map(s => s.userId) || []
         }
       : null;
   },

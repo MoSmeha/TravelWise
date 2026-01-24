@@ -283,6 +283,12 @@ class ItineraryPgProvider implements IItineraryProvider {
     console.log(`[PLACE] Saved new place "${data.name}" to database with id: ${place.id}`);
     return place;
   }
+
+  async deleteItinerary(id: string): Promise<void> {
+    await prisma.userItinerary.delete({
+      where: { id },
+    });
+  }
 }
 
 

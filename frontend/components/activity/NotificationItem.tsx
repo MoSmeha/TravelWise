@@ -40,14 +40,22 @@ export function NotificationItem({
     Icon = Users;
     iconColor = '#10B981';
     iconBgColor = '#d1fae5';
-  } else if (notification.title.toLowerCase().includes('liked')) {
+  } else if (notification.type === 'POST_LIKE' || notification.title.toLowerCase().includes('liked')) {
     Icon = Heart;
     iconColor = '#ec4899';
     iconBgColor = '#fce7f3';
-  } else if (notification.title.toLowerCase().includes('commented')) {
+  } else if (notification.type === 'POST_COMMENT' || notification.title.toLowerCase().includes('commented')) {
     Icon = MessageCircle;
     iconColor = '#3b82f6';
     iconBgColor = '#dbeafe';
+  } else if (notification.type === 'ITINERARY_SHARED') {
+    Icon = Bell;
+    iconColor = '#f59e0b';
+    iconBgColor = '#fef3c7';
+  } else if (notification.type === 'ITINERARY_ACCEPTED') {
+    Icon = Check;
+    iconColor = '#22c55e';
+    iconBgColor = '#dcfce7';
   }
 
   const friendshipId = notification.data?.friendshipId;

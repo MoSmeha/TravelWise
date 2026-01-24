@@ -178,7 +178,38 @@ export async function getItineraryDetails(req: Request, res: Response) {
   }
 }
 
+// DELETE /api/itinerary/:id
+// Delete an itinerary (only owner can delete)
+export async function deleteItinerary(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const userId = (req as AuthenticatedRequest).user!.userId;
+
+    // Fetch itinerary to check ownership
+    const itinerary = await itineraryProvider.findItineraryById(id);
+    if (!itinerary) {
+      return res.status(404).json({ error: "Itinerary not found" });
+    }
+
+    // Check if user is the owner
+    if (itinerary.userId !== userId) {
+      return res.status(403).json({ error: "Only the owner can delete this itinerary" });
+    }
+
+    // Delete the itinerary (cascade will handle related records)
+    await itineraryProvider.deleteItinerary(id);
+
+    return res.status(204).send();
+  } catch (error: any) {
+    console.error("Delete itinerary error:", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to delete itinerary", message: error.message });
+  }
+}
+
 async function generateEmbeddingsAsync(
+
   itineraryId: string,
   countryName: string,
   input: GenerateItineraryInput,
