@@ -5,7 +5,7 @@ import { useAuth } from '../../store/authStore';
 export interface Notification {
   id: string;
   userId: string;
-  type: 'FRIEND_REQUEST' | 'FRIEND_ACCEPTED';
+  type: 'FRIEND_REQUEST' | 'FRIEND_ACCEPTED' | 'POST_LIKE' | 'POST_COMMENT' | 'ITINERARY_SHARED' | 'ITINERARY_ACCEPTED';
   title: string;
   message: string;
   read: boolean;
@@ -20,7 +20,7 @@ export const useNotifications = () => {
     queryKey: ['notifications'],
     queryFn: async (): Promise<Notification[]> => {
       const response = await api.get('/notifications');
-      return response.data;
+      return response.data.data;
     },
     enabled: isAuthenticated && !isRestoring,
   });

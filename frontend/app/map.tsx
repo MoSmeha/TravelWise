@@ -1,13 +1,15 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as ExpoLocation from 'expo-location';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Linking, Text, View, TouchableOpacity } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
+import { MapPin, MapPinOff } from 'lucide-react-native';
 import { placesService } from '../services/api';
 import { decodePolyline } from '../lib/polyline';
 import { DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
 import { useItineraryStore } from '../store/itineraryStore';
+import { useLocationSharing } from '../hooks/useLocationSharing';
 import type { Hotel, ItineraryResponse, Location } from '../types/api';
 import {
   LocationMarker,
@@ -51,6 +53,16 @@ export default function MapScreen() {
   const [locationPhotos, setLocationPhotos] = useState<Record<string, LocationPhotosData>>({});
   const [isNavigatingToItinerary, setIsNavigatingToItinerary] = useState(false);
   const [realRoutes, setRealRoutes] = useState<Record<number, { latitude: number; longitude: number }[]>>({});
+
+  // Location sharing
+  const { 
+    isSharing, 
+    hasPermission, 
+    collaboratorLocations, 
+    startSharing, 
+    stopSharing 
+  } = useLocationSharing(itineraryId, true);
+
 
   // Combine data sources: prefer passed, then fetched
   const data = passedData || (fetchedData as ItineraryResponse | undefined) || null;
@@ -113,22 +125,24 @@ export default function MapScreen() {
   const allLocations: Location[] = data?.days?.flatMap((day) => day.locations) || [];
   const hotels: Hotel[] = data?.hotels || [];
 
-  // Build routes for each day
-  const dayRoutes = (data?.days || []).map((day, index) => {
-    const coords = day.locations.map(loc => ({
-      latitude: loc.latitude,
-      longitude: loc.longitude,
-    }));
+  // Build routes for each day - memoized to prevent infinite useEffect loops
+  const dayRoutes = useMemo(() => {
+    return (data?.days || []).map((day, index) => {
+      const coords = day.locations.map(loc => ({
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+      }));
 
-    // Add airport as starting point for the first day
-    if (index === 0 && data?.airport) {
-      coords.unshift({
-        latitude: data.airport.latitude,
-        longitude: data.airport.longitude,
-      });
-    }
-    return coords;
-  });
+      // Add airport as starting point for the first day
+      if (index === 0 && data?.airport) {
+        coords.unshift({
+          latitude: data.airport.latitude,
+          longitude: data.airport.longitude,
+        });
+      }
+      return coords;
+    });
+  }, [data]);
 
   const initialRegion = {
     latitude: data?.airport?.latitude || allLocations[0]?.latitude || 0,
@@ -357,6 +371,24 @@ export default function MapScreen() {
             }}
           />
         ))}
+
+        {/* Collaborator location markers */}
+        {collaboratorLocations.map((userData) => (
+          <Marker
+            key={userData.userId}
+            coordinate={{
+              latitude: userData.location.latitude,
+              longitude: userData.location.longitude,
+            }}
+            title={`👤 User ${userData.userId}`}
+            description="Live location"
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <View className="bg-blue-500 rounded-full p-2 border-2 border-white shadow-lg">
+              <MapPin size={20} color="white" />
+            </View>
+          </Marker>
+        ))}
       </MapView>
 
       {/* Location Card */}
@@ -375,6 +407,44 @@ export default function MapScreen() {
           onClose={() => setSelectedHotel(null)}
           onBook={handleHotelBook}
         />
+      )}
+
+      {/* Location Sharing Toggle */}
+      {itineraryId && hasPermission && (
+        <View className="absolute top-28 right-4 z-10">
+          <TouchableOpacity
+            onPress={() => {
+              if (isSharing) {
+                stopSharing();
+              } else {
+                startSharing();
+              }
+            }}
+            className={`p-4 rounded-full shadow-lg ${
+              isSharing ? 'bg-green-500' : 'bg-gray-700'
+            }`}
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }}
+          >
+            {isSharing ? (
+              <MapPin size={24} color="white" />
+            ) : (
+              <MapPinOff size={24} color="white" />
+            )}
+          </TouchableOpacity>
+          {isSharing && collaboratorLocations.length > 0 && (
+            <View className="absolute -top-1 -right-1 bg-blue-500 rounded-full w-5 h-5 items-center justify-center">
+              <Text className="text-white text-xs font-bold">
+                {collaboratorLocations.length}
+              </Text>
+            </View>
+          )}
+        </View>
       )}
 
       {/* Bottom Navigation */}
