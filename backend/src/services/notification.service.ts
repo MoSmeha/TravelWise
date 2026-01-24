@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { NotificationType } from '../generated/prisma/client.js';
+import { socketService } from './socket.service.js';
 
 export interface CreateNotificationParams {
   userId: string;
@@ -15,7 +16,7 @@ export interface CreateNotificationParams {
 }
 
 /**
- * Create a new notification
+ * Create a new notification and emit via socket for real-time delivery
  */
 export async function createNotification(
   userId: string,
@@ -28,7 +29,7 @@ export async function createNotification(
 ) {
   // Check if we should group notifications (e.g. multiple likes on same post)
   // For now, simple implementation
-  return prisma.notification.create({
+  const notification = await prisma.notification.create({
     data: {
       userId,
       type,
@@ -40,6 +41,20 @@ export async function createNotification(
       read: false,
     },
   });
+
+  // Emit real-time notification via Socket.io
+  socketService.emitToUser(userId, 'notification:new', {
+    id: notification.id,
+    type,
+    title,
+    message,
+    data: data || {},
+    postId,
+    commentId,
+    createdAt: notification.createdAt,
+  });
+
+  return notification;
 }
 
 /**
