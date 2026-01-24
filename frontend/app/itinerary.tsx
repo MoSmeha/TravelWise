@@ -26,31 +26,41 @@ import { DayAccordion } from '../components/itinerary/DayAccordion';
 import { useItineraryStore } from '../store/itineraryStore';
 import type { Hotel as HotelType, ItineraryResponse } from '../types/api';
 
+import { useItineraryDetails } from '../hooks/queries/useItineraries';
+
 export default function ItineraryScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [data, setData] = useState<ItineraryResponse | null>(null);
+  
+  // Get ID from params
+  const itineraryId = typeof params.itineraryId === 'string' ? params.itineraryId : null;
+  
+  // Use React Query to get data (should be cached from Map screen)
+  const { data: fetchedData, isLoading } = useItineraryDetails(itineraryId || '');
+  
+  const [passedData, setPassedData] = useState<ItineraryResponse | null>(null);
   
   // Itinerary store for persisting active itinerary
   const setActiveItinerary = useItineraryStore((state) => state.setActiveItinerary);
 
   useEffect(() => {
+    // Handle passed data (legacy/fallback)
     if (params.data) {
       try {
         const parsed = JSON.parse(params.data as string);
-        setData(parsed);
+        setPassedData(parsed);
         
-        // Set active itinerary in store for checklist tab access
         if (parsed.itinerary?.id) {
           setActiveItinerary(parsed.itinerary.id);
         }
       } catch (error) {
         console.error('Error parsing data:', error);
-        Alert.alert('Error', 'Failed to load itinerary data');
       }
+    } else if (itineraryId) {
+      setActiveItinerary(itineraryId);
     }
-  }, [params.data, setActiveItinerary]);
+  }, [params.data, itineraryId, setActiveItinerary]);
 
   const handleHotelBook = (url: string) => {
     Linking.openURL(url).catch(() => {
@@ -58,11 +68,28 @@ export default function ItineraryScreen() {
     });
   };
 
-  if (!data) {
+  // Prioritize fetched data (cache), then passed data
+  const data = (fetchedData as ItineraryResponse) || passedData;
+
+  if (isLoading && !passedData && !data) {
     return (
       <View className="flex-1 items-center justify-center bg-gray-50">
         <ActivityIndicator size="large" color="#094772" />
         <Text className="mt-3 text-gray-500">Loading itinerary...</Text>
+      </View>
+    );
+  }
+
+  if (!data) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gray-50">
+        <Text className="mt-3 text-gray-500">No itinerary data found</Text>
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          className="mt-4 bg-[#094772] px-6 py-2 rounded-full"
+        >
+          <Text className="text-white font-semibold">Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
