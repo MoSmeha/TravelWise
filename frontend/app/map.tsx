@@ -215,7 +215,7 @@ export default function MapScreen() {
     };
 
     fetchRoutes();
-  }, [data, dayRoutes]);
+  }, [data, dayRoutes, realRoutes, connectorRoutes]);
 
   // Loading state
   if (loadingItinerary && !passedData && itineraryId) {

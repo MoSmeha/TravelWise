@@ -69,7 +69,7 @@ export default function ProfileScreen() {
             try {
               await deletePostMutation.mutateAsync(postId);
               Toast.show({ type: 'success', text1: 'Deleted', text2: 'Post deleted successfully' });
-            } catch (error: any) {
+            } catch {
               Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to delete post' });
             }
           },

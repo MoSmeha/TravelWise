@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, Link } from 'expo-router';
+import { Link } from 'expo-router';
 import { z } from 'zod';
 import Toast from 'react-native-toast-message';
 import { useRegisterMutation } from '../../hooks/mutations/useAuthMutations';
@@ -24,7 +24,6 @@ const registerSchema = z.object({
 });
 
 export default function RegisterScreen() {
-  const router = useRouter();
   const registerMutation = useRegisterMutation();
   
   const [formData, setFormData] = useState({

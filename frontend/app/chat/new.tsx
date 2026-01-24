@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Send, Sparkles } from 'lucide-react-native';
 import { useAskQuestion } from '../../hooks/mutations/useItinerary';
-import type { RAGResponse } from '../../types/api';
+
 
 export default function ChatScreen() {
   const params = useLocalSearchParams();

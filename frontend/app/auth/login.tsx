@@ -88,7 +88,7 @@ export default function LoginScreen() {
             </View>
 
             <View className="flex-row justify-center mt-10 items-center">
-              <Text className="text-gray-500 font-medium">Don't have an account? </Text>
+              <Text className="text-gray-600">Don&apos;t have an account? </Text>
               <Link href={"/auth/register" as any} asChild>
                 <TouchableOpacity>
                   <Text className="text-primary font-bold text-lg">Sign Up</Text>

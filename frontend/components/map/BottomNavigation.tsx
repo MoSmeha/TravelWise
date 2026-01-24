@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Bot, MapPin } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import type { ItineraryResponse } from '../../types/api';
