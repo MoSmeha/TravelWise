@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, FlatList, ActivityIndicator, Image, Alert } from 'react-native';
 import { X, UserMinus, Shield, Eye, ChevronDown } from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
+import { customToastConfig } from '../ui/ToastMessage';
 import { useItineraryCollaborators, useRemoveCollaborator } from '../../hooks/queries/useItineraryShares';
 import type { ItineraryShare } from '../../services/itinerary-share';
 
@@ -26,9 +28,17 @@ export function ManageCollaboratorsModal({ visible, itineraryId, onClose }: Mana
           onPress: async () => {
             try {
               await removeCollaborator.mutateAsync({ shareId, itineraryId });
-              Alert.alert('Success', 'Collaborator removed');
+              Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Collaborator removed'
+              });
             } catch (error) {
-              Alert.alert('Error', 'Failed to remove collaborator');
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to remove collaborator'
+              });
               console.error('Remove error:', error);
             }
           }
@@ -155,6 +165,7 @@ export function ManageCollaboratorsModal({ visible, itineraryId, onClose }: Mana
               contentContainerStyle={{ paddingBottom: 20 }}
             />
           )}
+          <Toast config={customToastConfig} />
         </View>
       </View>
     </Modal>

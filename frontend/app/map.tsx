@@ -411,7 +411,7 @@ export default function MapScreen() {
 
       {/* Location Sharing Toggle */}
       {itineraryId && hasPermission && (
-        <View className="absolute top-28 right-4 z-10">
+        <View className="absolute top-32 right-4 z-10">
           <TouchableOpacity
             onPress={() => {
               if (isSharing) {
