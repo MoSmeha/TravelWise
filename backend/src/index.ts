@@ -16,6 +16,8 @@ import postsRouter from './routes/posts.js';
 import { createServer } from 'http';
 import { socketService } from './services/socket.service.js';
 
+import { webhookAuth } from './middleware/webhook-auth.middleware.js';
+
 dotenv.config();
 
 const app: Express = express();
@@ -44,7 +46,7 @@ app.use('/api/itinerary', authenticate, itineraryRouter);
 app.use('/api/itinerary', authenticate, ragRouter); // RAG endpoints under /api/itinerary/:id/ask
 app.use('/api/places', authenticate, placesRouter);
 app.use('/api/checklist', authenticate, checklistRouter);
-app.use('/api/webhooks', authenticate, webhooksRouter);
+app.use('/api/webhooks', webhookAuth, webhooksRouter); // API key auth for n8n
 app.use('/api/users', authenticate, usersRouter);
 app.use('/api/friends', authenticate, friendshipRouter);
 app.use('/api/notifications', authenticate, notificationRouter);
