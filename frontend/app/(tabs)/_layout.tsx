@@ -125,7 +125,7 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                 />
                 {showBadge && (
                   <View 
-                    className="absolute -top-1 -right-2 bg-red-500 rounded-full  h-4 items-center justify-center px-1"
+                    className="absolute -top-1 -right-2 bg-red-500 rounded-full min-w-[16px] h-4 items-center justify-center px-1"
                   >
                     <Text className="text-white text-[10px] font-bold">
                       {totalUnread > 99 ? '99+' : totalUnread}
