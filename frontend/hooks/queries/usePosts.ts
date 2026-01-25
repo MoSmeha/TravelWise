@@ -118,12 +118,14 @@ export function useLikePost() {
     onMutate: async (postId) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: postKeys.feed() });
+      await queryClient.cancelQueries({ queryKey: postKeys.discover() });
 
       // Snapshot current data
       const previousFeed = queryClient.getQueryData(postKeys.feed());
+      const previousDiscover = queryClient.getQueryData(postKeys.discover());
 
-      // Optimistically update feed
-      queryClient.setQueryData(postKeys.feed(), (old: any) => {
+      // Helper for optimistic update
+      const updateFeedData = (old: any) => {
         if (!old?.pages) return old;
         return {
           ...old,
@@ -136,18 +138,26 @@ export function useLikePost() {
             ),
           })),
         };
-      });
+      };
 
-      return { previousFeed };
+      // Optimistically update feeds
+      queryClient.setQueryData(postKeys.feed(), updateFeedData);
+      queryClient.setQueryData(postKeys.discover(), updateFeedData);
+
+      return { previousFeed, previousDiscover };
     },
     onError: (_err, _postId, context) => {
       // Rollback on error
       if (context?.previousFeed) {
         queryClient.setQueryData(postKeys.feed(), context.previousFeed);
       }
+      if (context?.previousDiscover) {
+        queryClient.setQueryData(postKeys.discover(), context.previousDiscover);
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      queryClient.invalidateQueries({ queryKey: postKeys.discover() });
     },
   });
 }
@@ -162,10 +172,12 @@ export function useUnlikePost() {
     mutationFn: (postId: string) => postService.unlikePost(postId),
     onMutate: async (postId) => {
       await queryClient.cancelQueries({ queryKey: postKeys.feed() });
+      await queryClient.cancelQueries({ queryKey: postKeys.discover() });
 
       const previousFeed = queryClient.getQueryData(postKeys.feed());
+      const previousDiscover = queryClient.getQueryData(postKeys.discover());
 
-      queryClient.setQueryData(postKeys.feed(), (old: any) => {
+      const updateFeedData = (old: any) => {
         if (!old?.pages) return old;
         return {
           ...old,
@@ -178,17 +190,24 @@ export function useUnlikePost() {
             ),
           })),
         };
-      });
+      };
 
-      return { previousFeed };
+      queryClient.setQueryData(postKeys.feed(), updateFeedData);
+      queryClient.setQueryData(postKeys.discover(), updateFeedData);
+
+      return { previousFeed, previousDiscover };
     },
     onError: (_err, _postId, context) => {
       if (context?.previousFeed) {
         queryClient.setQueryData(postKeys.feed(), context.previousFeed);
       }
+      if (context?.previousDiscover) {
+        queryClient.setQueryData(postKeys.discover(), context.previousDiscover);
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      queryClient.invalidateQueries({ queryKey: postKeys.discover() });
     },
   });
 }
@@ -205,8 +224,9 @@ export function useAddComment() {
     onSuccess: (_data, variables) => {
       // Invalidate comments for this post
       queryClient.invalidateQueries({ queryKey: postKeys.comments(variables.postId) });
-      // Invalidate feed to update comment count
+      // Invalidate feeds to update comment count
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      queryClient.invalidateQueries({ queryKey: postKeys.discover() });
     },
   });
 }
@@ -223,6 +243,7 @@ export function useDeleteComment() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: postKeys.comments(variables.postId) });
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      queryClient.invalidateQueries({ queryKey: postKeys.discover() });
     },
   });
 }
