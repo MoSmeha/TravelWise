@@ -87,7 +87,7 @@ export default function Layout() {
             <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
               <Avatar
                 alt={user?.name || 'Admin'}
-                src={user?.avatarUrl}
+                src={user?.avatarUrl || undefined}
                 sx={{ width: 40, height: 40, border: '2px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
               >
                 {user?.name?.charAt(0) || 'A'}

@@ -5,20 +5,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { client } from '../utils/client';
-
-interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: User;
-}
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  isAdmin?: boolean;
-  avatarUrl?: string;
-}
+import type { LoginResponse, User } from '../types/schemas';
 
 interface AuthContextType {
   user: User | null;

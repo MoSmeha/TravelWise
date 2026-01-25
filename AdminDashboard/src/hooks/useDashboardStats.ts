@@ -1,11 +1,11 @@
 import { useQueries } from '@tanstack/react-query';
 import { client } from '../utils/client';
-import type {
-  OverviewStats,
-  ItineraryStats,
-  UserStats,
-  EngagementStats,
-} from '../types/dashboard';
+import {
+  OverviewStatsSchema,
+  ItineraryStatsSchema,
+  UserStatsSchema,
+  EngagementStatsSchema,
+} from '../types/schemas';
 
 export function useDashboardStats() {
   const [
@@ -17,19 +17,31 @@ export function useDashboardStats() {
     queries: [
       {
         queryKey: ['stats', 'overview'],
-        queryFn: async () => (await client.get<OverviewStats>('/admin/stats/overview')).data,
+        queryFn: async () => {
+          const { data } = await client.get('/admin/stats/overview');
+          return OverviewStatsSchema.parse(data);
+        },
       },
       {
         queryKey: ['stats', 'itineraries'],
-        queryFn: async () => (await client.get<ItineraryStats>('/admin/stats/itineraries')).data,
+        queryFn: async () => {
+          const { data } = await client.get('/admin/stats/itineraries');
+          return ItineraryStatsSchema.parse(data);
+        },
       },
       {
         queryKey: ['stats', 'users', 14],
-        queryFn: async () => (await client.get<UserStats>('/admin/stats/users?days=14')).data,
+        queryFn: async () => {
+          const { data } = await client.get('/admin/stats/users?days=14');
+          return UserStatsSchema.parse(data);
+        },
       },
       {
         queryKey: ['stats', 'engagement'],
-        queryFn: async () => (await client.get<EngagementStats>('/admin/stats/engagement')).data,
+        queryFn: async () => {
+          const { data } = await client.get('/admin/stats/engagement');
+          return EngagementStatsSchema.parse(data);
+        },
       },
     ],
   });

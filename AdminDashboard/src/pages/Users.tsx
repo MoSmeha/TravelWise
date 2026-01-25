@@ -152,7 +152,7 @@ export default function Users() {
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar
-                          src={user.avatarUrl}
+                          src={user.avatarUrl || undefined}
                           alt={user.name}
                           sx={{ width: 40, height: 40 }}
                         />
@@ -198,7 +198,7 @@ export default function Users() {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" color="text.secondary">
-                        {new Date(user.createdAt).toLocaleDateString()}
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                       </Typography>
                     </TableCell>
                   </TableRow>
