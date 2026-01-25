@@ -1,0 +1,456 @@
+{
+  "name": "TravelWise Fixed AI Loop (Jan 25 at 05:03:35)",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/api/webhooks/add-weather-checklist",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "YOUR_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"itineraryId\": \"{{ $('Aggregate Weather1').item.json.tripDetails.itineraryId }}\",\n  \"items\": {{ JSON.stringify($json.message.content.checklist.map(item => ({ item: item.item, reason: item.reason, category: \"WEATHER\" }))) }}\n}",
+        "options": {}
+      },
+      "id": "625f1233-69b0-4c30-a69f-f2e50fd9c7ac",
+      "name": "Add Checklist to App",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -224,
+        2400
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "da58e9d0-133d-42bc-b31e-d4dbd01a6a16",
+      "name": "Daily Schedule1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -2272,
+        1968
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:3000/api/webhooks/trips-for-weather-check",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "YOUR_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "964b2239-9f24-409d-aa2e-3489af994458",
+      "name": "Fetch Trips1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -2048,
+        1968
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "47480ef1-c1d6-4615-9478-917180f99161",
+      "name": "Limit to 1 Trip (Test Mode)1",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        1968
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a data cleaning assistant. \nI have a raw list of places for a trip to {{ $json.country }}.\n\nTask:\n1. Extract the unique locations that have valid 'lat' and 'lon' coordinates.\n2. Ignore any places with missing coordinates.\n3. Limit the list to the top 3 most distinct locations.\n4. Return ONLY a valid JSON array of objects with keys: \"name\", \"lat\", \"lon\".\n\nRaw Data:\n{{ JSON.stringify($json.places) }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "id": "47a5157f-4577-461e-9af5-b6488d988f0f",
+      "name": "AI Data Cleaner1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        1968
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "d23tjhvkMkg6dvRU",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the raw input\nconst item = $input.first().json;\n\n// Step 1: Locate the content. Based on your screenshot, it's inside message.content\nlet content = item.message?.content;\n\n// Step 2: Handle if content is a string (parse it) or object\nif (typeof content === 'string') {\n  try {\n    content = JSON.parse(content);\n  } catch (e) {\n    // If parsing fails, content remains a string\n  }\n}\n\n// Step 3: Extract the array. \n// Your screenshot shows the array is wrapped inside a \"result\" key.\nlet places = [];\n\nif (Array.isArray(content)) {\n  places = content;\n} else if (content && Array.isArray(content.result)) {\n  places = content.result; // <--- This matches your screenshot structure\n} else if (content && Array.isArray(content.places)) {\n  places = content.places; // Fallback for other common keys\n} else {\n  // Last resort: try to find any array in the object values\n  places = Object.values(content || {}).find(val => Array.isArray(val)) || [];\n}\n\n// Step 4: Return separate items for the Loop node\nreturn places.map(place => ({\n  json: place\n}));"
+      },
+      "id": "c773ac5f-484f-4c67-81d7-91d00d9be85f",
+      "name": "Split AI Response1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1248,
+        1968
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a5aa7ad6-c8a9-444e-b893-65d2ffcece35",
+      "name": "Loop Locations1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1024,
+        1968
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "lat",
+              "value": "={{ $json.lat }}"
+            },
+            {
+              "name": "lon",
+              "value": "={{ $json.lon }}"
+            },
+            {
+              "name": "units",
+              "value": "metric"
+            },
+            {
+              "name": "appid",
+              "value": "e381e6e37db5914755b978ac53566fba"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "071c228a-e150-4e32-a1b6-98ecf142ec73",
+      "name": "Fetch Weather1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -800,
+        1920
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allWeather = $input.all().map(item => item.json);\n\n// --- CRITICAL FIX ---\n// We need to fetch the original trip data (dates, country, etc.)\n// We try multiple common names for your node.\nlet tripDetails = {};\n\ntry {\n  // Try 1: Name from my JSON\n  tripDetails = $('Limit to 1 Trip (Test Mode)1').first().json;\n} catch (e) {\n  try {\n    // Try 2: Name from your screenshot\n    tripDetails = $('Fetch Trips (2 Days Out)1').first().json;\n  } catch (e2) {\n    try {\n      // Try 3: Standard name\n      tripDetails = $('Fetch Trips1').first().json;\n    } catch (e3) {\n      // If all fail, we can't get the date\n      console.log(\"Error: Could not find trip details node.\");\n    }\n  }\n}\n\nreturn [{\n  json: {\n    weatherReports: allWeather,\n    tripDetails: tripDetails\n  }\n}];"
+      },
+      "id": "16a30141-22ed-44ec-94f7-6114e269f172",
+      "name": "Aggregate Weather1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        2112
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a travel assistant for the app 'TravelWise'.\n\nTrip Context:\nDestination: {{ $json.tripDetails.country }}\nFlight Date: {{ $json.tripDetails.flightDate }}\nUser Name: {{ $json.tripDetails.userName }}\nUser Email: {{ $json.tripDetails.userEmail }}\nUser ID: {{ $json.tripDetails.userId }}\n\nWeather Data:\n{{ JSON.stringify($json.weatherReports) }}\n\nTask:\n1. Analyze the weather reports.\n2. Create a short 'Weather Summary' (e.g., 'Expect rain and heavy winds').\n3. Generate 3-5 specific packing items based on the weather (e.g., 'Umbrella - heavy rain expected', 'Sunscreen - UV index is high').\n\nOutput Format:\nReturn a JSON object with keys:\n- \"summary\": string\n- \"checklist\": array of objects { \"item\": string, \"reason\": string }\n- \"emailBodyHtml\": A friendly HTML paragraph for an email summarizing the forecast.\n- \"tripDetails\": {{ JSON.stringify($json.tripDetails) }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "id": "a10d3fcc-8d57-4085-b5fb-3a511c101601",
+      "name": "AI Advisor1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        2112
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "d23tjhvkMkg6dvRU",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "list"
+        },
+        "start": "={{ DateTime.fromISO($('Aggregate Weather1').first().json.tripDetails.flightDate).minus({ days: 1 }).toISO() }}",
+        "end": "={{ DateTime.fromISO($('Aggregate Weather1').first().json.tripDetails.flightDate).minus({ days: 1 }).plus({ hours: 1 }).toISO() }}",
+        "additionalFields": {
+          "description": "==Packing Reminder for your trip to {{ $('Aggregate Weather1').first().json.tripDetails.country }}!\n\nWeather Forecast: {{ $json.message.content.summary }}\n\nDon't forget to pack:\n{{ $json.message.content.checklist.map(i => '- ' + i.item + ': ' + i.reason).join('\\n') }}\n\nSafe travels! ✈️",
+          "summary": "=🌤️ Packing Reminder: {{ $('Aggregate Weather1').first().json.tripDetails.country }}"
+        }
+      },
+      "id": "d57749db-be0e-415d-8374-9f1edbe74d2f",
+      "name": "Create Calendar Reminder1",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        1824
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "KLcuSeWGkAuuxvT7",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.message.content.tripDetails.userEmail }}",
+        "subject": "=🌤️ TravelWise: Packing for {{ $json.message.content.tripDetails.country }}",
+        "message": "=<!DOCTYPE html>\n<html>\n<body style=\"margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"padding:24px 0;\">\n  <tr>\n    <td align=\"center\">\n\n      <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\"\n        style=\"background:#ffffff;border-radius:8px;overflow:hidden;\">\n\n        <!-- Header -->\n        <tr>\n          <td style=\"padding:24px;text-align:center;\">\n            <img\n              src=\"https://res.cloudinary.com/dgsxk7nf5/image/upload/v1769224390/TravelWise-Logo_ogc2ai.png\"\n              alt=\"TravelWise\"\n              width=\"120\"\n              height=\"120\"\n              style=\"display:block;margin:0 auto;border-radius:50%;\"\n            />\n          </td>\n        </tr>\n\n        <!-- Content -->\n        <tr>\n          <td style=\"padding:32px;color:#222222;\">\n\n            <h2 style=\"margin:0 0 16px;font-size:22px;font-weight:600;\">\n              Hi {{ $json.message.content.tripDetails.userName }},\n            </h2>\n\n            <div style=\"font-size:15px;line-height:1.6;margin-bottom:24px;\">\n              {{ $json.message.content.emailBodyHtml }}\n            </div>\n\n            <ul style=\"padding-left:20px;margin:0;\">\n              {{ $json.message.content.checklist.map(i => '<li style=\"margin-bottom:10px;font-size:14px;line-height:1.5;\"><strong>' + i.item + ':</strong> ' + i.reason + '</li>').join('') }}\n            </ul>\n\n            <p style=\"margin-top:32px;font-size:15px;\">\n              Safe travels! ✈️\n            </p>\n\n          </td>\n        </tr>\n\n      </table>\n\n    </td>\n  </tr>\n</table>\n\n</body>\n</html>\n",
+        "options": {}
+      },
+      "id": "a07663be-c252-40a1-9c61-d82f2f5a339d",
+      "name": "Send Gmail1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        2208
+      ],
+      "webhookId": "277fba66-b219-40ed-a71e-f7b734ea69f1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "U3wXgFWvG8seBO93",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/api/webhooks/send-weather-notification",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "YOUR_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $('Aggregate Weather1').item.json.tripDetails.userId }}"
+            },
+            {
+              "name": "message",
+              "value": "=Trip in 2 days! {{ $json.message.content.summary }} . Check your packing list."
+            },
+            {
+              "name": "title",
+              "value": "Weather Alert"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3eaf7875-4c31-4a42-abd8-6a57d7360e7e",
+      "name": "In-App Notification1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -224,
+        2016
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Schedule1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Trips1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Trips1": {
+      "main": [
+        [
+          {
+            "node": "Limit to 1 Trip (Test Mode)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit to 1 Trip (Test Mode)1": {
+      "main": [
+        [
+          {
+            "node": "AI Data Cleaner1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Data Cleaner1": {
+      "main": [
+        [
+          {
+            "node": "Split AI Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split AI Response1": {
+      "main": [
+        [
+          {
+            "node": "Loop Locations1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Locations1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Weather1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Weather1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Weather1": {
+      "main": [
+        [
+          {
+            "node": "Loop Locations1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Weather1": {
+      "main": [
+        [
+          {
+            "node": "AI Advisor1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Advisor1": {
+      "main": [
+        [
+          {
+            "node": "Create Calendar Reminder1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Gmail1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "In-App Notification1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add Checklist to App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "availableInMCP": false
+  },
+  "versionId": "055e25a6-605a-4bc3-b2f1-79ab162110e4",
+  "meta": {
+    "instanceId": "64f8fc1476caacfa5504615092ac60f5126478b404f8c540e06d976fd9924093"
+  },
+  "id": "qHb6hjIb8puZfA3H",
+  "tags": []
+}

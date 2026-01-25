@@ -47,6 +47,13 @@ class ChecklistPgProvider implements IChecklistProvider {
     });
   }
 
+  async deleteAll(itineraryId: string): Promise<{ count: number }> {
+    const result = await prisma.checklistItem.deleteMany({
+      where: { itineraryId },
+    });
+    return { count: result.count };
+  }
+
   async createMany(items: CreateChecklistItemData[]): Promise<{ count: number }> {
     const result = await prisma.checklistItem.createMany({
       data: items.map((item) => ({

@@ -24,3 +24,25 @@ export const useAddChecklistItem = () => {
     },
   });
 };
+
+export const useDeleteChecklistItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (itemId: string) => checklistService.deleteChecklistItem(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['checklist'] });
+    },
+  });
+};
+
+export const useDeleteAllChecklistItems = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (itineraryId: string) => checklistService.deleteAllChecklistItems(itineraryId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['checklist'] });
+    },
+  });
+};

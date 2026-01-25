@@ -3,7 +3,9 @@ import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/c
 import {
   getItineraryChecklist,
   updateItem as updateChecklistItem,
-  createItem as createChecklistItem
+  createItem as createChecklistItem,
+  deleteItem as deleteChecklistItem,
+  deleteAllItems as deleteAllChecklistItems
 } from '../services/checklist.service.js';
 
 //GET /api/checklist/:itineraryId
@@ -50,5 +52,35 @@ export async function createItem(req: Request, res: Response) {
   } catch (error: any) {
     console.error('Create checklist item error:', error);
     return res.status(500).json({ error: 'Failed to create checklist item', message: error.message });
+  }
+}
+
+//DELETE /api/checklist/:itemId
+//Delete a single checklist item
+export async function deleteItem(req: Request, res: Response) {
+  try {
+    const { itemId } = req.params;
+
+    await deleteChecklistItem(itemId);
+
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error('Delete checklist item error:', error);
+    return res.status(500).json({ error: 'Failed to delete checklist item', message: error.message });
+  }
+}
+
+//DELETE /api/checklist/all/:itineraryId
+//Delete all checklist items for an itinerary
+export async function deleteAllItems(req: Request, res: Response) {
+  try {
+    const { itineraryId } = req.params;
+
+    const result = await deleteAllChecklistItems(itineraryId);
+
+    return res.json({ success: true, deleted: result.count });
+  } catch (error: any) {
+    console.error('Delete all checklist items error:', error);
+    return res.status(500).json({ error: 'Failed to delete checklist items', message: error.message });
   }
 }

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getChecklist, updateItem, createItem } from '../controllers/checklist.controller.js';
+import { getChecklist, updateItem, createItem, deleteItem, deleteAllItems } from '../controllers/checklist.controller.js';
 import { requireOwnership } from '../middleware/ownership.middleware.js';
 import { validate } from '../middleware/validate.js';
 import { 
@@ -17,5 +17,12 @@ router.patch('/:itemId', requireOwnership('checklistItem', 'itemId'), validate(u
 
 // POST /api/checklist/:itineraryId - Add custom item (requires itinerary ownership)
 router.post('/:itineraryId', requireOwnership('itinerary', 'itineraryId'), validate(createChecklistItemSchema), createItem);
+
+// DELETE /api/checklist/all/:itineraryId - Delete all items (requires itinerary ownership)
+// Note: This route must come BEFORE the /:itemId route to avoid route conflicts
+router.delete('/all/:itineraryId', requireOwnership('itinerary', 'itineraryId'), deleteAllItems);
+
+// DELETE /api/checklist/:itemId - Delete single item (requires checklistItem ownership)
+router.delete('/:itemId', requireOwnership('checklistItem', 'itemId'), deleteItem);
 
 export default router;
