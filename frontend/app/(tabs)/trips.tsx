@@ -142,7 +142,7 @@ export default function TripsScreen() {
                 </View>
                 <Text className="text-xl font-bold text-gray-900 mb-2">No trips planned yet</Text>
                 <Text className="text-gray-500 text-center leading-6 mb-8">
-                  It looks like you haven't created any trips yet. Start planning your next adventure!
+                  It looks like you haven&apos;t created any trips yet. Start planning your next adventure!
                 </Text>
                 <TouchableOpacity 
                   onPress={() => router.push('/new-trip')}

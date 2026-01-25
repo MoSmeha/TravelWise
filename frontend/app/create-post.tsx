@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CreatePostModal } from '../components/post/CreatePostModal';

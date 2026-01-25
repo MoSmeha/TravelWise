@@ -45,7 +45,7 @@ export default function ActivityScreen() {
         if (activeTab === 'notifications') {
             markAllReadMutation.mutate();
         }
-    }, [activeTab]);
+    }, [activeTab, markAllReadMutation]);
 
     // Friend Request Mutations
     const acceptMutation = useAcceptFriendRequest();

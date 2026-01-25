@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View } from 'react-native';
+
 import { Users, Globe } from 'lucide-react-native';
 import { SegmentedTabs, TabOption } from '../common/SegmentedTabs';
 
