@@ -13,6 +13,7 @@ import friendshipRouter from './routes/friendship.js';
 import notificationRouter from './routes/notifications.js';
 import messagingRouter from './routes/messaging.js';
 import postsRouter from './routes/posts.js';
+import adminRouter from './routes/admin.js';
 import { createServer } from 'http';
 import { socketService } from './services/socket.service.js';
 
@@ -52,6 +53,7 @@ app.use('/api/friends', authenticate, friendshipRouter);
 app.use('/api/notifications', authenticate, notificationRouter);
 app.use('/api/messages', authenticate, messagingRouter);
 app.use('/api/posts', authenticate, postsRouter);
+app.use('/api/admin', adminRouter); // Admin routes have their own auth
 
 // Health check
 app.get('/', (_req: Request, res: Response) => {
