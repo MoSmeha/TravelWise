@@ -1,106 +1,121 @@
 {
-  "name": "TravelWise Weather-Based Trip Preparation (Advanced)",
+  "name": "TravelWise Fixed AI Loop",
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "triggerAtHour": 0
+              "field": "hours"
             }
           ]
         }
       },
-      "id": "schedule-trigger",
-      "name": "Daily Trigger (Midnight)",
+      "id": "dfffe12d-30a4-46df-a5b3-b621da1fbbc8",
+      "name": "Daily Schedule",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [0, 0]
+      "typeVersion": 1.1,
+      "position": [
+        -1952,
+        1952
+      ]
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "=http://127.0.0.1:3000/api/webhooks/trips-for-weather-check",
+        "url": "http://127.0.0.1:3000/api/webhooks/trips-for-weather-check",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "X-API-Key",
-              "value": "=YOUR_WEBHOOK_API_KEY_HERE"
+              "value": "YOUR_API_KEY"
             }
           ]
         },
         "options": {}
       },
-      "id": "fetch-trips",
-      "name": "Fetch Trips (2 Days Out)",
+      "id": "f305cdc3-52b9-4872-9f07-42c80d56fcfd",
+      "name": "Fetch Trips",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [220, 0]
+      "typeVersion": 4.1,
+      "position": [
+        -1728,
+        1952
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e4c2287f-d318-4787-a31e-4b4c7a9360a4",
+      "name": "Limit to 1 Trip (Test Mode)",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -1504,
+        1952
+      ]
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "check-has-trips",
-              "leftValue": "={{ $json.count }}",
-              "rightValue": 0,
-              "operator": {
-                "type": "number",
-                "operation": "gt"
-              }
-            }
-          ],
-          "combinator": "and"
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
         },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a data cleaning assistant. \nI have a raw list of places for a trip to {{ $json.country }}.\n\nTask:\n1. Extract the unique locations that have valid 'lat' and 'lon' coordinates.\n2. Ignore any places with missing coordinates.\n3. Limit the list to the top 3 most distinct locations.\n4. Return ONLY a valid JSON array of objects with keys: \"name\", \"lat\", \"lon\".\n\nRaw Data:\n{{ JSON.stringify($json.places) }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
         "options": {}
       },
-      "id": "if-has-trips",
-      "name": "Has Trips?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [440, 0]
+      "id": "822b93c0-8ef4-49d0-a516-f5632df7cd32",
+      "name": "AI Data Cleaner",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        1952
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "d23tjhvkMkg6dvRU",
+          "name": "OpenAi account 2"
+        }
+      }
     },
     {
       "parameters": {
-        "options": {}
+        "jsCode": "// Get the raw input\nconst item = $input.first().json;\n\n// Step 1: Locate the content. Based on your screenshot, it's inside message.content\nlet content = item.message?.content;\n\n// Step 2: Handle if content is a string (parse it) or object\nif (typeof content === 'string') {\n  try {\n    content = JSON.parse(content);\n  } catch (e) {\n    // If parsing fails, content remains a string\n  }\n}\n\n// Step 3: Extract the array. \n// Your screenshot shows the array is wrapped inside a \"result\" key.\nlet places = [];\n\nif (Array.isArray(content)) {\n  places = content;\n} else if (content && Array.isArray(content.result)) {\n  places = content.result; // <--- This matches your screenshot structure\n} else if (content && Array.isArray(content.places)) {\n  places = content.places; // Fallback for other common keys\n} else {\n  // Last resort: try to find any array in the object values\n  places = Object.values(content || {}).find(val => Array.isArray(val)) || [];\n}\n\n// Step 4: Return separate items for the Loop node\nreturn places.map(place => ({\n  json: place\n}));"
       },
-      "id": "loop-trips",
-      "name": "Loop Over Trips",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [660, -80]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Extract unique coordinates from all places in the trip\nconst trip = $input.first().json;\nconst places = trip.places || [];\n\n// Get unique lat/lon coordinates (deduplicated)\nconst uniqueCoords = [];\nconst seen = new Set();\n\nfor (const place of places) {\n  const key = `${place.lat.toFixed(2)},${place.lon.toFixed(2)}`;\n  if (!seen.has(key)) {\n    seen.add(key);\n    uniqueCoords.push({\n      lat: place.lat,\n      lon: place.lon,\n      name: place.name,\n      category: place.category\n    });\n  }\n}\n\n// Limit to 5 unique locations to avoid too many API calls\nconst limitedCoords = uniqueCoords.slice(0, 5);\n\nreturn [{\n  json: {\n    ...trip,\n    uniqueLocations: limitedCoords,\n    locationCount: limitedCoords.length\n  }\n}];"
-      },
-      "id": "extract-coords",
-      "name": "Extract Unique Coordinates",
+      "id": "3f919669-452e-4247-9528-85b7734a98e2",
+      "name": "Split AI Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [880, -80]
+      "position": [
+        -928,
+        1952
+      ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "loop-locations",
-      "name": "Loop Over Locations",
+      "id": "c224fbae-091d-4115-80d3-3881fd28d2e6",
+      "name": "Loop Locations",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [1100, -80]
+      "position": [
+        -704,
+        1952
+      ]
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "=https://api.openweathermap.org/data/2.5/forecast",
+        "url": "https://api.openweathermap.org/data/2.5/forecast",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -117,173 +132,130 @@
               "value": "metric"
             },
             {
-              "name": "cnt",
-              "value": "40"
-            },
-            {
               "name": "appid",
-              "value": "={{$env.OPENWEATHERMAP_API_KEY}}"
+              "value": "e381e6e37db5914755b978ac53566fba"
             }
           ]
         },
         "options": {}
       },
-      "id": "openweather-api",
-      "name": "OpenWeather API (Per Location)",
+      "id": "9051a146-e20c-42cf-b41c-2c91622e5aac",
+      "name": "Fetch Weather",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1320, -160]
+      "typeVersion": 4.1,
+      "position": [
+        -480,
+        1856
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// Aggregate weather data from the inner loop back to the trip\n// This node collects all weather responses for a single trip\nconst allItems = $input.all();\nconst tripData = $('Extract Unique Coordinates').first().json;\n\n// Aggregate weather conditions from all locations\nconst allWeatherConditions = new Set();\nlet minTemp = Infinity;\nlet maxTemp = -Infinity;\n\nfor (const item of allItems) {\n  const weatherData = item.json;\n  if (weatherData.list && Array.isArray(weatherData.list)) {\n    for (const forecast of weatherData.list) {\n      const weather = (forecast.weather?.[0]?.main || '').toLowerCase();\n      const temp = forecast.main?.temp || 20;\n      \n      minTemp = Math.min(minTemp, temp);\n      maxTemp = Math.max(maxTemp, temp);\n      \n      if (weather.includes('rain') || weather.includes('drizzle')) {\n        allWeatherConditions.add('rain');\n      }\n      if (weather.includes('snow')) {\n        allWeatherConditions.add('snow');\n      }\n      if (weather.includes('thunderstorm')) {\n        allWeatherConditions.add('storm');\n      }\n      if (weather.includes('clear') || weather.includes('sun')) {\n        allWeatherConditions.add('sunny');\n      }\n      if (weather.includes('cloud')) {\n        allWeatherConditions.add('cloudy');\n      }\n    }\n  }\n}\n\n// Add temperature-based conditions\nif (minTemp < 10) allWeatherConditions.add('cold');\nif (maxTemp > 30) allWeatherConditions.add('hot');\n\nreturn [{\n  json: {\n    ...tripData,\n    aggregatedWeather: {\n      conditions: Array.from(allWeatherConditions),\n      minTemp: minTemp === Infinity ? 20 : Math.round(minTemp),\n      maxTemp: maxTemp === -Infinity ? 25 : Math.round(maxTemp),\n      locationsChecked: allItems.length\n    }\n  }\n}];"
+        "jsCode": "const allWeather = $input.all().map(item => item.json);\n\n// --- CRITICAL FIX ---\n// We need to fetch the original trip data (dates, country, etc.)\n// We try multiple common names for your node.\nlet tripDetails = {};\n\ntry {\n  // Try 1: Name from my JSON\n  tripDetails = $('Limit to 1 Trip (Test Mode)').first().json;\n} catch (e) {\n  try {\n    // Try 2: Name from your screenshot\n    tripDetails = $('Fetch Trips (2 Days Out)1').first().json;\n  } catch (e2) {\n    try {\n      // Try 3: Standard name\n      tripDetails = $('Fetch Trips').first().json;\n    } catch (e3) {\n      // If all fail, we can't get the date\n      console.log(\"Error: Could not find trip details node.\");\n    }\n  }\n}\n\nreturn [{\n  json: {\n    weatherReports: allWeather,\n    tripDetails: tripDetails\n  }\n}];"
       },
-      "id": "aggregate-weather",
-      "name": "Aggregate Weather Data",
+      "id": "d0050a3c-412c-4aed-88a6-5211e0231946",
+      "name": "Aggregate Weather",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1540, -80]
+      "position": [
+        -480,
+        2048
+      ]
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "=https://api.exchangerate-api.com/v4/latest/USD",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a travel assistant for the app 'TravelWise'.\n\nTrip Context:\nDestination: {{ $json.tripDetails.country }}\nFlight Date: {{ $json.tripDetails.flightDate }}\n\nWeather Data:\n{{ JSON.stringify($json.weatherReports) }}\n\nTask:\n1. Analyze the weather reports.\n2. Create a short 'Weather Summary' (e.g., 'Expect rain and heavy winds').\n3. Generate 3-5 specific packing items based on the weather (e.g., 'Umbrella - heavy rain expected', 'Sunscreen - UV index is high').\n\nOutput Format:\nReturn a JSON object with keys:\n- \"summary\": string\n- \"checklist\": array of objects { \"item\": string, \"reason\": string }\n- \"emailBodyHtml\": A friendly HTML paragraph for an email summarizing the forecast."
+            }
+          ]
+        },
+        "jsonOutput": true,
         "options": {}
       },
-      "id": "currency-api",
-      "name": "Fetch Exchange Rates",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1760, -80]
+      "id": "d0c033cc-ad46-4581-a486-cce3c6379043",
+      "name": "AI Advisor",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        2048
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "d23tjhvkMkg6dvRU",
+          "name": "OpenAi account 2"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "// Map country names to currency codes\nconst COUNTRY_CURRENCIES = {\n  'lebanon': 'LBP',\n  'egypt': 'EGP',\n  'turkey': 'TRY',\n  'jordan': 'JOD',\n  'morocco': 'MAD',\n  'uae': 'AED',\n  'greece': 'EUR',\n  'spain': 'EUR',\n  'italy': 'EUR',\n  'france': 'EUR',\n  'germany': 'EUR',\n  'uk': 'GBP',\n  'japan': 'JPY',\n  'thailand': 'THB',\n  'india': 'INR',\n  'australia': 'AUD',\n  'canada': 'CAD',\n  'mexico': 'MXN',\n  'brazil': 'BRL'\n};\n\nconst tripData = $('Aggregate Weather Data').first().json;\nconst exchangeData = $input.first().json;\n\nconst countryLower = (tripData.country || '').toLowerCase();\nconst currencyCode = COUNTRY_CURRENCIES[countryLower] || 'USD';\nconst exchangeRate = exchangeData.rates?.[currencyCode] || 1;\n\nreturn [{\n  json: {\n    ...tripData,\n    currency: {\n      code: currencyCode,\n      rate: exchangeRate,\n      example: `$100 USD = ${(100 * exchangeRate).toFixed(2)} ${currencyCode}`\n    }\n  }\n}];"
-      },
-      "id": "process-currency",
-      "name": "Process Currency Data",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1980, -80]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Generate checklist items based on aggregated weather\nconst trip = $input.first().json;\nconst weather = trip.aggregatedWeather || { conditions: [], minTemp: 20, maxTemp: 25 };\nconst conditions = new Set(weather.conditions);\n\nconst checklistItems = [];\n\n// Check for activity types\nconst places = trip.places || [];\nconst hasHiking = places.some(p => p.category === 'HIKING' || p.category === 'PARK');\nconst hasBeach = places.some(p => p.category === 'BEACH');\nconst hasNightlife = places.some(p => p.category === 'BAR' || p.category === 'NIGHTCLUB');\nconst hasMuseum = places.some(p => p.category === 'MUSEUM');\nconst hasReligious = places.some(p => p.category === 'RELIGIOUS_SITE');\n\n// Weather-based items\nif (conditions.has('rain')) {\n  checklistItems.push({ category: 'WEATHER', item: 'Umbrella', reason: 'Rain expected during your trip' });\n  checklistItems.push({ category: 'WEATHER', item: 'Waterproof jacket/raincoat', reason: 'Rain expected during your trip' });\n  if (hasHiking) {\n    checklistItems.push({ category: 'WEATHER', item: 'Waterproof hiking boots', reason: 'Rain + hiking planned' });\n  }\n}\n\nif (conditions.has('snow')) {\n  checklistItems.push({ category: 'WEATHER', item: 'Warm winter jacket', reason: 'Snow expected' });\n  checklistItems.push({ category: 'WEATHER', item: 'Winter boots', reason: 'Snow expected' });\n  checklistItems.push({ category: 'WEATHER', item: 'Gloves and warm hat', reason: 'Snow expected' });\n  checklistItems.push({ category: 'WEATHER', item: 'Thermal underwear', reason: 'Cold/snowy conditions' });\n}\n\nif (conditions.has('cold')) {\n  checklistItems.push({ category: 'WEATHER', item: 'Warm layers (sweaters, fleece)', reason: `Min temp: ${weather.minTemp}°C` });\n}\n\nif (conditions.has('hot') || conditions.has('sunny')) {\n  checklistItems.push({ category: 'WEATHER', item: 'Sunscreen (SPF 30+)', reason: `Max temp: ${weather.maxTemp}°C` });\n  checklistItems.push({ category: 'WEATHER', item: 'Sunglasses', reason: 'Sunny conditions expected' });\n  checklistItems.push({ category: 'WEATHER', item: 'Reusable water bottle', reason: 'Stay hydrated in heat' });\n  checklistItems.push({ category: 'WEATHER', item: 'Light, breathable clothing', reason: 'Hot weather expected' });\n}\n\nif (conditions.has('storm')) {\n  checklistItems.push({ category: 'SAFETY', item: 'Check weather alerts daily', reason: 'Thunderstorms possible' });\n}\n\n// Activity-based items\nif (hasHiking && !conditions.has('rain')) {\n  checklistItems.push({ category: 'ACTIVITY', item: 'Hiking shoes/boots', reason: 'Hiking activities planned' });\n}\nif (hasHiking) {\n  checklistItems.push({ category: 'ACTIVITY', item: 'First aid kit', reason: 'Essential for hiking' });\n  checklistItems.push({ category: 'ACTIVITY', item: 'Hiking poles (optional)', reason: 'Helpful for trails' });\n}\n\nif (hasBeach) {\n  checklistItems.push({ category: 'ACTIVITY', item: 'Swimwear', reason: 'Beach activities planned' });\n  checklistItems.push({ category: 'ACTIVITY', item: 'Beach towel', reason: 'Beach activities planned' });\n  checklistItems.push({ category: 'ACTIVITY', item: 'Flip flops/sandals', reason: 'Beach activities planned' });\n}\n\nif (hasNightlife) {\n  checklistItems.push({ category: 'ACTIVITY', item: 'Smart casual outfit', reason: 'Nightlife venues planned' });\n}\n\nif (hasReligious) {\n  checklistItems.push({ category: 'ACTIVITY', item: 'Modest clothing (cover shoulders/knees)', reason: 'Visiting religious sites' });\n}\n\n// Format date\nconst flightDate = trip.flightDate ? new Date(trip.flightDate).toLocaleDateString('en-US', {\n  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'\n}) : 'your trip date';\n\n// Weather summary\nconst weatherSummary = weather.conditions.length > 0 \n  ? `Expect ${weather.conditions.join(', ')} conditions (${weather.minTemp}°C - ${weather.maxTemp}°C)`\n  : `Mild weather expected (${weather.minTemp}°C - ${weather.maxTemp}°C)`;\n\n// Build activities list for OpenAI\nconst activities = [];\nif (hasHiking) activities.push('hiking');\nif (hasBeach) activities.push('beach');\nif (hasNightlife) activities.push('nightlife');\nif (hasMuseum) activities.push('museums');\nif (hasReligious) activities.push('religious sites');\n\nreturn [{\n  json: {\n    itineraryId: trip.itineraryId,\n    userId: trip.userId,\n    userEmail: trip.userEmail,\n    userName: trip.userName || 'Traveler',\n    country: trip.country,\n    flightDate: flightDate,\n    rawFlightDate: trip.flightDate,\n    numberOfDays: trip.numberOfDays,\n    currency: trip.currency,\n    weatherData: weather,\n    weatherSummary: weatherSummary,\n    checklistItems: checklistItems,\n    existingItemNames: checklistItems.map(i => i.item),\n    activities: activities,\n    hasNewItems: checklistItems.length > 0\n  }\n}];"
-      },
-      "id": "generate-checklist",
-      "name": "Generate Weather Checklist",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2200, -80]
-    },
-    {
-      "parameters": {
-        "model": "gpt-4o-mini",
-        "options": {
-          "temperature": 0.7,
-          "maxTokens": 500
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "list"
+        },
+        "start": "={{ DateTime.fromISO($('Aggregate Weather').first().json.tripDetails.flightDate).minus({ days: 1 }).toISO() }}",
+        "end": "={{ DateTime.fromISO($('Aggregate Weather').first().json.tripDetails.flightDate).minus({ days: 1 }).plus({ hours: 1 }).toISO() }}",
+        "additionalFields": {
+          "description": "==Packing Reminder for your trip to {{ $('Aggregate Weather').first().json.tripDetails.country }}!\n\nWeather Forecast: {{ $json.message.content.summary }}\n\nDon't forget to pack:\n{{ $json.message.content.checklist.map(i => '- ' + i.item + ': ' + i.reason).join('\\n') }}\n\nSafe travels! ✈️",
+          "summary": "=🌤️ Packing Reminder: {{ $('Aggregate Weather').first().json.tripDetails.country }}"
         }
       },
-      "id": "openai-node",
-      "name": "AI Packing Suggestions",
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "typeVersion": 1.8,
-      "position": [2420, -80]
+      "id": "1ad58119-a16b-4a94-a6cb-b74c7d5d9f9f",
+      "name": "Create Calendar Reminder",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        1856
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "KLcuSeWGkAuuxvT7",
+          "name": "Google Calendar account"
+        }
+      }
     },
     {
       "parameters": {
-        "promptType": "define",
-        "text": "=Based on a trip to {{ $json.country }} with the following conditions:\n- Weather: {{ $json.weatherData.conditions.join(', ') || 'mild' }}\n- Temperature range: {{ $json.weatherData.minTemp }}°C to {{ $json.weatherData.maxTemp }}°C\n- Activities: {{ $json.activities.join(', ') || 'general sightseeing' }}\n- Duration: {{ $json.numberOfDays }} days\n- Local currency: {{ $json.currency.code }} ({{ $json.currency.example }})\n\nSuggest 5 additional packing items NOT already covered by these items: {{ $json.existingItemNames.join(', ') }}\n\nFocus on practical, trip-specific items. Respond ONLY with a valid JSON array in this exact format, with no additional text:\n[{\"item\": \"item name\", \"reason\": \"brief reason\"}]"
-      },
-      "id": "openai-prompt",
-      "name": "AI Prompt",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [2420, -160]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Parse AI suggestions and merge with weather-based checklist\nconst tripData = $('Generate Weather Checklist').first().json;\nconst aiResponse = $input.first().json;\n\nlet aiItems = [];\n\ntry {\n  // Try to parse AI response - it should be a JSON array\n  let responseText = aiResponse.text || aiResponse.message?.content || '';\n  \n  // Extract JSON array from response if wrapped in markdown\n  const jsonMatch = responseText.match(/\\[.*\\]/s);\n  if (jsonMatch) {\n    aiItems = JSON.parse(jsonMatch[0]);\n  }\n  \n  // Add category to AI items\n  aiItems = aiItems.map(item => ({\n    ...item,\n    category: 'ESSENTIALS',\n    reason: item.reason + ' (AI suggested)'\n  }));\n} catch (e) {\n  console.log('Failed to parse AI response:', e.message);\n  aiItems = [];\n}\n\n// Merge weather checklist with AI suggestions\nconst allItems = [...tripData.checklistItems, ...aiItems];\n\nreturn [{\n  json: {\n    ...tripData,\n    checklistItems: allItems,\n    aiSuggestions: aiItems,\n    totalItemCount: allItems.length\n  }\n}];"
-      },
-      "id": "merge-ai-suggestions",
-      "name": "Merge AI Suggestions",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2640, -80]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "check-has-items",
-              "leftValue": "={{ $json.totalItemCount }}",
-              "rightValue": 0,
-              "operator": {
-                "type": "number",
-                "operation": "gt"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
+        "sendTo": "={{ $('Aggregate Weather').item.json.tripDetails.userEmail }}",
+        "subject": "=🌤️ TravelWise: Packing for {{ $('Aggregate Weather').item.json.tripDetails.country }}",
+        "message": "=Hi {{ $('Aggregate Weather').item.json.tripDetails.userName }},\n\n{{ $json.message.content.emailBodyHtml }}\n\n<ul>\n{{ $json.message.content.checklist.map(i => '<li><strong>' + i.item + ':</strong> ' + i.reason + '</li>').join('') }}\n</ul>",
         "options": {}
       },
-      "id": "if-has-checklist",
-      "name": "Has Checklist Items?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [2860, -80]
+      "id": "b5541e0d-0893-44f6-8771-5e908c8c03ac",
+      "name": "Send Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        96,
+        2240
+      ],
+      "webhookId": "277fba66-b219-40ed-a71e-f7b734ea69f1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "U3wXgFWvG8seBO93",
+          "name": "Gmail account"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://127.0.0.1:3000/api/webhooks/add-weather-checklist",
+        "url": "http://127.0.0.1:3000/api/webhooks/send-weather-notification",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "X-API-Key",
-              "value": "=YOUR_WEBHOOK_API_KEY_HERE"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "itineraryId",
-              "value": "={{ $json.itineraryId }}"
-            },
-            {
-              "name": "items",
-              "value": "={{ $json.checklistItems }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "add-checklist",
-      "name": "Add Checklist Items to DB",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [3080, -160]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=http://127.0.0.1:3000/api/webhooks/send-weather-notification",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-API-Key",
-              "value": "=YOUR_WEBHOOK_API_KEY_HERE"
+              "value": "YOUR_API_KEY"
             }
           ]
         },
@@ -292,344 +264,178 @@
           "parameters": [
             {
               "name": "userId",
-              "value": "={{ $('Merge AI Suggestions').item.json.userId }}"
-            },
-            {
-              "name": "itineraryId",
-              "value": "={{ $('Merge AI Suggestions').item.json.itineraryId }}"
-            },
-            {
-              "name": "title",
-              "value": "🌤️ Trip Prep Alert: {{ $('Merge AI Suggestions').item.json.country }}"
+              "value": "={{ $('Aggregate Weather').item.json.tripDetails.userId }}"
             },
             {
               "name": "message",
-              "value": "={{ 'Your trip is in 2 days! ' + $('Merge AI Suggestions').item.json.weatherSummary + '. We\\'ve added ' + $('Merge AI Suggestions').item.json.totalItemCount + ' items to your packing checklist including AI-powered suggestions.' }}"
+              "value": "=Trip in 2 days! {{ $json.message.content.summary }} . Check your packing list."
             },
             {
-              "name": "weatherSummary",
-              "value": "={{ $('Merge AI Suggestions').item.json.weatherSummary }}"
+              "name": "title",
+              "value": "Weather Alert"
             }
           ]
         },
         "options": {}
       },
-      "id": "send-notification",
-      "name": "Create In-App Notification",
+      "id": "4db7a045-0a6a-47cc-b919-0190a5c61d1f",
+      "name": "In-App Notification",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [3300, -160]
+      "typeVersion": 4.1,
+      "position": [
+        96,
+        2048
+      ]
     },
     {
       "parameters": {
-        "resource": "event",
-        "calendar": {
-          "__rl": true,
-          "value": "primary",
-          "mode": "list"
+        "method": "POST",
+        "url": "http://127.0.0.1:3000/api/webhooks/add-weather-checklist",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "YOUR_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
         },
-        "summary": "=🧳 Pack for {{ $('Merge AI Suggestions').item.json.country }} Trip!",
-        "start": "={{ DateTime.fromISO($('Merge AI Suggestions').item.json.rawFlightDate).minus({ days: 1 }).toISO() }}",
-        "end": "={{ DateTime.fromISO($('Merge AI Suggestions').item.json.rawFlightDate).minus({ days: 1 }).plus({ hours: 1 }).toISO() }}",
-        "additionalFields": {
-          "description": "=Time to pack for your {{ $('Merge AI Suggestions').item.json.numberOfDays }}-day trip to {{ $('Merge AI Suggestions').item.json.country }}!\n\n🌡️ Weather: {{ $('Merge AI Suggestions').item.json.weatherSummary }}\n\n💱 Currency: {{ $('Merge AI Suggestions').item.json.currency.example }}\n\n📋 Checklist items added: {{ $('Merge AI Suggestions').item.json.totalItemCount }}\n\nOpen TravelWise to see your full packing checklist!",
-          "colorId": "9",
-          "sendUpdates": "all"
-        }
-      },
-      "id": "google-calendar",
-      "name": "Create Calendar Reminder",
-      "type": "n8n-nodes-base.googleCalendar",
-      "typeVersion": 1.3,
-      "position": [3520, -160]
-    },
-    {
-      "parameters": {
-        "sendTo": "={{ $('Merge AI Suggestions').item.json.userEmail }}",
-        "subject": "=🌤️ Weather Alert: {{ $('Merge AI Suggestions').item.json.country }} Trip in 2 Days!",
-        "emailType": "html",
-        "message": "=<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\">\n  <div style=\"background: linear-gradient(135deg, #004e89 0%, #1a73e8 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;\">\n    <h1 style=\"color: white; margin: 0; font-size: 24px;\">🌤️ Trip Preparation Alert</h1>\n    <p style=\"color: rgba(255,255,255,0.9); margin: 10px 0 0 0;\">{{ $('Merge AI Suggestions').item.json.country }} - {{ $('Merge AI Suggestions').item.json.flightDate }}</p>\n  </div>\n  <div style=\"background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none;\">\n    <h2 style=\"color: #1f2937; margin-top: 0;\">Hi {{ $('Merge AI Suggestions').item.json.userName }}! 👋</h2>\n    <p style=\"color: #4b5563; font-size: 16px; line-height: 1.6;\">Your trip to <strong>{{ $('Merge AI Suggestions').item.json.country }}</strong> is in <strong>2 days</strong>!</p>\n    \n    <div style=\"background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #1a73e8;\">\n      <h3 style=\"color: #1f2937; margin: 0 0 10px 0;\">🌡️ Weather Forecast</h3>\n      <p style=\"color: #4b5563; margin: 0;\">{{ $('Merge AI Suggestions').item.json.weatherSummary }}</p>\n    </div>\n    \n    <div style=\"background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #10b981;\">\n      <h3 style=\"color: #1f2937; margin: 0 0 10px 0;\">💱 Currency Info</h3>\n      <p style=\"color: #4b5563; margin: 0;\">{{ $('Merge AI Suggestions').item.json.currency.example }}</p>\n    </div>\n    \n    <h3 style=\"color: #1f2937;\">📋 Packing Checklist ({{ $('Merge AI Suggestions').item.json.totalItemCount }} items)</h3>\n    <p style=\"color: #6b7280; font-size: 14px;\">We've added weather-based and AI-suggested items to your checklist:</p>\n    <ul style=\"color: #4b5563; line-height: 1.8;\">\n      {{ $('Merge AI Suggestions').item.json.checklistItems.slice(0, 8).map(item => '<li><strong>' + item.item + '</strong> - ' + item.reason + '</li>').join('') }}\n      {{ $('Merge AI Suggestions').item.json.checklistItems.length > 8 ? '<li><em>...and ' + ($('Merge AI Suggestions').item.json.checklistItems.length - 8) + ' more items</em></li>' : '' }}\n    </ul>\n    \n    <div style=\"background: #fef3c7; border-radius: 8px; padding: 15px; margin: 20px 0;\">\n      <p style=\"color: #92400e; margin: 0; font-size: 14px;\">📅 <strong>Calendar reminder created</strong> for packing day (1 day before departure)</p>\n    </div>\n    \n    <p style=\"color: #6b7280; font-size: 14px; margin-top: 30px;\">Open the TravelWise app to view your complete itinerary and checklist.</p>\n    <hr style=\"border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;\">\n    <p style=\"color: #9ca3af; font-size: 12px; text-align: center; margin: 0;\">Happy travels! 🧳✈️<br>The TravelWise Team</p>\n  </div>\n</div>",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"itineraryId\": \"{{ $('Aggregate Weather').item.json.tripDetails.itineraryId }}\",\n  \"items\": {{ JSON.stringify($json.message.content.checklist.map(item => ({ item: item.item, reason: item.reason, category: \"WEATHER\" }))) }}\n}",
         "options": {}
       },
-      "id": "send-gmail",
-      "name": "Send Gmail Alert",
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.1,
-      "position": [3740, -160]
-    },
-    {
-      "parameters": {},
-      "id": "complete",
-      "name": "Trip Processed",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [3960, -160]
-    },
-    {
-      "parameters": {},
-      "id": "no-op",
-      "name": "No Trips - End",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [660, 100]
-    },
-    {
-      "parameters": {},
-      "id": "no-checklist",
-      "name": "No Items - Skip Notifications",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [3080, 0]
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Add Checklist to App",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        96,
+        2432
+      ]
     }
   ],
+  "pinData": {},
   "connections": {
-    "Daily Trigger (Midnight)": {
+    "Daily Schedule": {
       "main": [
         [
           {
-            "node": "Fetch Trips (2 Days Out)",
+            "node": "Fetch Trips",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Fetch Trips (2 Days Out)": {
+    "Fetch Trips": {
       "main": [
         [
           {
-            "node": "Has Trips?",
+            "node": "Limit to 1 Trip (Test Mode)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Has Trips?": {
+    "Limit to 1 Trip (Test Mode)": {
       "main": [
         [
           {
-            "node": "Loop Over Trips",
+            "node": "AI Data Cleaner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Data Cleaner": {
+      "main": [
+        [
+          {
+            "node": "Split AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split AI Response": {
+      "main": [
+        [
+          {
+            "node": "Loop Locations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Locations": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Weather",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "No Trips - End",
+            "node": "Fetch Weather",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Loop Over Trips": {
+    "Fetch Weather": {
       "main": [
         [
           {
-            "node": "Extract Unique Coordinates",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "Extract Unique Coordinates": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Locations",
+            "node": "Loop Locations",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Loop Over Locations": {
+    "Aggregate Weather": {
       "main": [
         [
           {
-            "node": "OpenWeather API (Per Location)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Aggregate Weather Data",
+            "node": "AI Advisor",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "OpenWeather API (Per Location)": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Locations",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Aggregate Weather Data": {
-      "main": [
-        [
-          {
-            "node": "Fetch Exchange Rates",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch Exchange Rates": {
-      "main": [
-        [
-          {
-            "node": "Process Currency Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Process Currency Data": {
-      "main": [
-        [
-          {
-            "node": "Generate Weather Checklist",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Generate Weather Checklist": {
-      "main": [
-        [
-          {
-            "node": "AI Prompt",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Prompt": {
-      "main": [
-        [
-          {
-            "node": "AI Packing Suggestions",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Packing Suggestions": {
-      "main": [
-        [
-          {
-            "node": "Merge AI Suggestions",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge AI Suggestions": {
-      "main": [
-        [
-          {
-            "node": "Has Checklist Items?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Has Checklist Items?": {
-      "main": [
-        [
-          {
-            "node": "Add Checklist Items to DB",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "No Items - Skip Notifications",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Add Checklist Items to DB": {
-      "main": [
-        [
-          {
-            "node": "Create In-App Notification",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create In-App Notification": {
+    "AI Advisor": {
       "main": [
         [
           {
             "node": "Create Calendar Reminder",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Calendar Reminder": {
-      "main": [
-        [
+          },
           {
-            "node": "Send Gmail Alert",
+            "node": "Send Gmail",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Send Gmail Alert": {
-      "main": [
-        [
+          },
           {
-            "node": "Trip Processed",
+            "node": "In-App Notification",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Trip Processed": {
-      "main": [
-        [
+          },
           {
-            "node": "Loop Over Trips",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "No Items - Skip Notifications": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Trips",
+            "node": "Add Checklist to App",
             "type": "main",
             "index": 0
           }
@@ -637,30 +443,35 @@
       ]
     }
   },
+  "active": false,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "availableInMCP": false
   },
-  "staticData": null,
+  "versionId": "272044f5-6838-4d7b-81f4-7a9e23278ccd",
   "meta": {
-    "instanceId": "travelwise-weather-workflow-advanced"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "64f8fc1476caacfa5504615092ac60f5126478b404f8c540e06d976fd9924093"
   },
-  "pinData": {},
-  "versionId": "2.0.0",
+  "id": "7RBma2ANxIkA141yHGDvF",
   "tags": [
     {
-      "name": "TravelWise",
-      "createdAt": "2026-01-24T00:00:00.000Z",
-      "updatedAt": "2026-01-24T00:00:00.000Z"
+      "updatedAt": "2026-01-24T06:33:43.208Z",
+      "createdAt": "2026-01-24T06:33:43.208Z",
+      "id": "IsXGgjiJMhBT8YLO",
+      "name": "Weather"
     },
     {
-      "name": "Weather",
-      "createdAt": "2026-01-24T00:00:00.000Z",
-      "updatedAt": "2026-01-24T00:00:00.000Z"
+      "updatedAt": "2026-01-24T06:33:43.198Z",
+      "createdAt": "2026-01-24T06:33:43.198Z",
+      "id": "jQPrIXn3dvEaeFJ4",
+      "name": "TravelWise"
     },
     {
-      "name": "AI",
-      "createdAt": "2026-01-24T00:00:00.000Z",
-      "updatedAt": "2026-01-24T00:00:00.000Z"
+      "updatedAt": "2026-01-24T06:33:43.219Z",
+      "createdAt": "2026-01-24T06:33:43.219Z",
+      "id": "lrwKvZSe597QVx4N",
+      "name": "AI"
     }
   ]
 }

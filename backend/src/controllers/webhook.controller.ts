@@ -70,7 +70,8 @@ export async function getTripsForWeatherCheck(_req: Request, res: Response) {
   try {
     const trips = await fetchTripsForWeatherCheck();
     
-    res.json({ data: trips, count: trips.length });
+    // Return array directly for n8n compatibility
+    res.json(trips);
   } catch (error) {
     console.error('Error fetching trips for weather check:', error);
     res.status(500).json({ error: 'Failed to fetch trips' });
