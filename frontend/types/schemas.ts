@@ -159,7 +159,6 @@ export const ItineraryResponseSchema = z.object({
   routeSummary: z.string().optional(),
 });
 
-// ============ NEW FEATURES ============
 
 export const PlaceSchema = z.object({
   id: z.string(),
@@ -169,19 +168,19 @@ export const PlaceSchema = z.object({
   description: z.string(),
   sources: z.array(z.string()),
   popularity: z.number(),
-  rating: z.number().optional(),
-  totalRatings: z.number().optional(),
+  rating: z.number().nullable().optional().transform(nullToUndefined),
+  totalRatings: z.number().nullable().optional().transform(nullToUndefined),
   priceLevel: PriceLevelSchema.optional(),
   city: z.string(),
   latitude: z.number(),
   longitude: z.number(),
   activityTypes: z.array(z.string()),
-  costMinUSD: z.number().nullable().optional(),
-  costMaxUSD: z.number().nullable().optional(),
-  localTip: z.string().optional(),
-  scamWarning: z.string().optional(),
-  imageUrl: z.string().optional(),
-  imageUrls: z.array(z.string()).optional(),
+  costMinUSD: z.number().nullable().optional().transform(nullToUndefined),
+  costMaxUSD: z.number().nullable().optional().transform(nullToUndefined),
+  localTip: z.string().nullable().optional().transform(nullToUndefined),
+  scamWarning: z.string().nullable().optional().transform(nullToUndefined),
+  imageUrl: z.string().nullable().optional().transform(nullToUndefined),
+  imageUrls: z.array(z.string()).nullable().optional().transform(nullToUndefined),
   openingHours: z.any().optional(),
 });
 
@@ -267,6 +266,67 @@ export const PaginatedMessagesSchema = z.object({
 });
 
 // Export types
+export const PostVisibilitySchema = z.enum(['PUBLIC', 'FRIENDS', 'PRIVATE']);
+
+export const PostAuthorSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  username: z.string(),
+  avatarUrl: z.string().optional(),
+});
+
+export const PostSchema = z.object({
+  id: z.string(),
+  authorId: z.string(),
+  author: PostAuthorSchema,
+  imageUrl: z.string(),
+  description: z.string().nullable().optional().transform(val => val ?? undefined),
+  visibility: PostVisibilitySchema,
+  likesCount: z.number(),
+  commentsCount: z.number(),
+  isLiked: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const CommentSchema = z.object({
+  id: z.string(),
+  postId: z.string(),
+  authorId: z.string(),
+  author: PostAuthorSchema,
+  content: z.string(),
+  createdAt: z.string(),
+});
+
+export const PaginatedPostResponseSchema = z.object({
+  data: z.array(PostSchema),
+  nextCursor: z.string().nullable(),
+  hasMore: z.boolean(),
+});
+
+export const PaginatedCommentResponseSchema = z.object({
+  data: z.array(CommentSchema),
+  nextCursor: z.string().nullable(),
+  hasMore: z.boolean(),
+});
+
+export const PlacesResponseSchema = z.object({
+  data: z.array(PlaceSchema),
+  pagination: z.object({
+    total: z.number(),
+    limit: z.number(),
+    offset: z.number(),
+    hasMore: z.boolean(),
+  }),
+});
+
+export type PostVisibility = z.infer<typeof PostVisibilitySchema>;
+export type PostAuthor = z.infer<typeof PostAuthorSchema>;
+export type Post = z.infer<typeof PostSchema>;
+export type Comment = z.infer<typeof CommentSchema>;
+export type PaginatedPostResponse = z.infer<typeof PaginatedPostResponseSchema>;
+export type PaginatedCommentResponse = z.infer<typeof PaginatedCommentResponseSchema>;
+export type PlacesResponse = z.infer<typeof PlacesResponseSchema>;
 export type ConversationType = z.infer<typeof ConversationTypeSchema>;
 export type MessageUserInfo = z.infer<typeof MessageUserInfoSchema>;
 export type ConversationParticipant = z.infer<typeof ConversationParticipantSchema>;
@@ -275,4 +335,76 @@ export type Conversation = z.infer<typeof ConversationSchema>;
 export type Pagination = z.infer<typeof PaginationSchema>;
 export type PaginatedConversations = z.infer<typeof PaginatedConversationsSchema>;
 export type PaginatedMessages = z.infer<typeof PaginatedMessagesSchema>;
+
+// ============ AUTH SCHEMAS ============
+
+export const UserSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  name: z.string(),
+  username: z.string(),
+  avatarUrl: z.string().optional(),
+  emailVerified: z.boolean(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export const AuthResponseSchema = z.object({
+  user: UserSchema,
+  token: z.string(), // Mapped from accessToken in service
+  refreshToken: z.string(),
+});
+
+export const RegisterResponseSchema = z.object({
+  message: z.string(),
+  user: UserSchema,
+});
+
+export const AuthMessageResponseSchema = z.object({
+  message: z.string(),
+});
+
+export const RefreshTokenResponseSchema = z.object({
+  token: z.string(),
+  refreshToken: z.string(),
+});
+
+export type User = z.infer<typeof UserSchema>;
+export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+export type RegisterResponse = z.infer<typeof RegisterResponseSchema>;
+
+// ============ ITINERARY SHARE SCHEMAS ============
+
+export const ItineraryShareSchema = z.object({
+  id: z.string(),
+  itineraryId: z.string(),
+  userId: z.string(),
+  permission: z.enum(['OWNER', 'VIEWER']),
+  status: z.enum(['PENDING', 'ACCEPTED', 'REJECTED']),
+  invitedBy: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  user: z.object({
+    id: z.string(),
+    name: z.string(),
+    username: z.string(),
+    avatarUrl: z.string(),
+  }).optional(),
+  inviter: z.object({
+    id: z.string(),
+    name: z.string(),
+    username: z.string(),
+    avatarUrl: z.string(),
+  }).optional(),
+  itinerary: z.object({
+    id: z.string(),
+    country: z.string(),
+    numberOfDays: z.number(),
+    budgetUSD: z.number().optional(),
+    travelStyles: z.array(z.string()).optional(),
+    createdAt: z.string().optional(),
+  }).optional(),
+});
+
+export type ItineraryShare = z.infer<typeof ItineraryShareSchema>;
 
