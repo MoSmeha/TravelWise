@@ -56,7 +56,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
   return (
     <View className="bg-[#004e89] pb-10 pt-6 px-6 rounded-b-3xl shadow-md">
       <View className="flex-row items-center mb-6">
-        <Text className="text-white text-2xl font-bold">Profile</Text>
+        <Text className="text-white text-3xl font-extrabold">Profile</Text>
       </View>
 
       <View className="flex-row items-center">

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Plane, Users } from 'lucide-react-native';
 import { SegmentedTabs, TabOption } from '../../components/common/SegmentedTabs';
@@ -90,12 +91,12 @@ export default function TripsScreen() {
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
       {/* Header */}
-      <View className="px-5 pt-16 pb-4 bg-white border-b border-gray-200">
+      <View className="px-5 pt-1 pb-4 bg-white border-b border-gray-200">
         <View className="flex-row justify-between items-start mb-4">
           <View>
-            <Text className="text-[#094772] text-3xl font-extrabold tracking-tight">Trips</Text>
+            <Text className="text-[#094772] text-3xl font-extrabold">Trips</Text>
             <Text className="text-gray-500 text-base mt-0.5">
               {activeTab === 'my-trips' 
                 ? `${itineraries ? itineraries.length : 0} saved itineraries`
@@ -180,6 +181,6 @@ export default function TripsScreen() {
           }}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }

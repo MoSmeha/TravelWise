@@ -287,6 +287,11 @@ export default function ActivityScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+            {/* Header */}
+            <View className="px-5 pt-1 pb-2 bg-white">
+                <Text className="text-[#094772] text-3xl font-extrabold">Activity</Text>
+            </View>
+
             {/* Tabs */}
             <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
 

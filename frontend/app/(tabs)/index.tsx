@@ -37,7 +37,7 @@ const ExploreHeader = ({
     setFeedMode: (mode: FeedMode) => void;
 }) => (
     <View className="px-5 pt-1 pb-2 bg-white">
-        <Text className="text-3xl font-bold text-gray-900 mb-4">Explore</Text>
+        <Text className="text-[#094772] text-3xl font-extrabold mb-4">Explore</Text>
         
         <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-1 mb-4">
             <Search size={15} color="#9ca3af" />
