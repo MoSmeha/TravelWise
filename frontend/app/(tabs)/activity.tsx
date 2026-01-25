@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, FlatList, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bell, MessageCircle, Search } from 'lucide-react-native';
@@ -39,6 +39,13 @@ export default function ActivityScreen() {
     const { data: notifications = [], isLoading, refetch } = useNotifications();
     const markAllReadMutation = useMarkAllNotificationsRead();
     const markReadMutation = useMarkNotificationRead();
+
+    // Mark all notifications as read when viewing the notifications tab
+    useEffect(() => {
+        if (activeTab === 'notifications') {
+            markAllReadMutation.mutate();
+        }
+    }, [activeTab]);
 
     // Friend Request Mutations
     const acceptMutation = useAcceptFriendRequest();

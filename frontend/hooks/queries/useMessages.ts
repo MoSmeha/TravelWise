@@ -147,9 +147,27 @@ export const useMarkConversationRead = () => {
       await api.put(`/messages/conversations/${conversationId}/read`);
     },
     onSuccess: () => {
-      // Only invalidate the conversations list (for unread count update)
-      // Don't invalidate the individual conversation to avoid loops
+      // Invalidate conversations list and unread count for tab badge
       queryClient.invalidateQueries({ queryKey: ['conversations', 'infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations', 'unread-count'] });
     },
+  });
+};
+
+// Calculate total unread message count across all conversations
+export const useUnreadMessageCount = () => {
+  const { isAuthenticated, isRestoring } = useAuth();
+  
+  return useQuery({
+    queryKey: ['conversations', 'unread-count'],
+    queryFn: async (): Promise<number> => {
+      const response = await api.get('/messages/conversations', {
+        params: { page: 1, limit: 100 },
+      });
+      const data = PaginatedConversationsSchema.parse(response.data);
+      return data.data.reduce((total, conv) => total + (conv.unreadCount || 0), 0);
+    },
+    enabled: isAuthenticated && !isRestoring,
+    staleTime: 30000, // Cache for 30 seconds
   });
 };

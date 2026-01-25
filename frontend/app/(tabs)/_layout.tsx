@@ -5,11 +5,18 @@ import { Compass, Activity, Map, User } from 'lucide-react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FabOverlay, FabTrigger } from '../../components/navigation/TabBarFab';
+import { useUnreadNotificationCount } from '../../hooks/queries/useNotifications';
+import { useUnreadMessageCount } from '../../hooks/queries/useMessages';
 
 function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Get unread counts for badge
+  const { data: unreadNotifications = 0 } = useUnreadNotificationCount();
+  const { data: unreadMessages = 0 } = useUnreadMessageCount();
+  const totalUnread = unreadNotifications + unreadMessages;
   
   const toggleMenu = () => {
     setIsExpanded(!isExpanded);
@@ -97,6 +104,9 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           else if (route.name === 'trips') IconComponent = Map;
           else if (route.name === 'profile') IconComponent = User;
 
+          // Check if this is the activity tab and has unread items
+          const showBadge = route.name === 'activity' && totalUnread > 0;
+
           return (
             <TouchableOpacity
               key={route.key}
@@ -107,11 +117,22 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               onLongPress={onLongPress}
               className="flex-1 items-center justify-center"
             >
-              <IconComponent 
-                  size={26} 
-                  color={isFocused ? '#094772' : '#9ca3af'} 
-                  strokeWidth={isFocused ? 2.5 : 2}
-              />
+              <View className="relative">
+                <IconComponent 
+                    size={26} 
+                    color={isFocused ? '#094772' : '#9ca3af'} 
+                    strokeWidth={isFocused ? 2.5 : 2}
+                />
+                {showBadge && (
+                  <View 
+                    className="absolute -top-1 -right-2 bg-red-500 rounded-full  h-4 items-center justify-center px-1"
+                  >
+                    <Text className="text-white text-[10px] font-bold">
+                      {totalUnread > 99 ? '99+' : totalUnread}
+                    </Text>
+                  </View>
+                )}
+              </View>
               <Text className={`text-[10px] mt-1 font-medium ${isFocused ? 'text-[#094772]' : 'text-gray-400'}`}>
                   {options.title}
               </Text>
