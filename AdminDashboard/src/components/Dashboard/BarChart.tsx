@@ -1,10 +1,4 @@
-/**
- * Bar Chart Component
- * Displays data in a bar chart format
- */
-
-import React from 'react';
-import { Paper, Typography, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box } from '@mui/material';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -37,7 +31,7 @@ export default function BarChart({
   title,
   data,
   height = 300,
-  color = '#1a237e',
+  color = '#004e89',
 }: BarChartProps) {
   const chartData = {
     labels: data.map((d) => d.label),
@@ -45,12 +39,11 @@ export default function BarChart({
       {
         label: title,
         data: data.map((d) => d.value),
-        backgroundColor: `${color}cc`,
-        borderColor: color,
-        borderWidth: 1,
-        borderRadius: 6,
+        backgroundColor: color,
+        borderRadius: 8,
+        borderSkipped: false,
         barThickness: 'flex' as const,
-        maxBarThickness: 50,
+        maxBarThickness: 40,
       },
     ],
   };
@@ -63,14 +56,18 @@ export default function BarChart({
         display: false,
       },
       tooltip: {
-        backgroundColor: 'rgba(0,0,0,0.8)',
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
         padding: 12,
         titleFont: {
+          family: "'Inter', sans-serif",
           size: 14,
         },
         bodyFont: {
+          family: "'Inter', sans-serif",
           size: 13,
         },
+        cornerRadius: 8,
+        displayColors: false,
       },
     },
     scales: {
@@ -79,39 +76,44 @@ export default function BarChart({
           display: false,
         },
         ticks: {
-          maxRotation: 45,
-          minRotation: 0,
+          maxRotation: 0,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12,
+          },
+          color: '#64748b',
         },
       },
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(0,0,0,0.05)',
+          color: '#f1f5f9',
         },
         ticks: {
-          stepSize: 1,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12,
+          },
+          color: '#64748b',
+          padding: 8,
+        },
+        border: {
+          display: false,
         },
       },
     },
   };
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        borderRadius: 3,
-        background: 'white',
-        border: '1px solid #e0e0e0',
-        height: '100%',
-      }}
-    >
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
-        {title}
-      </Typography>
-      <Box sx={{ height }}>
-        <Bar data={chartData} options={options} />
-      </Box>
-    </Paper>
+    <Card variant="outlined" sx={{ height: '100%' }}>
+      <CardContent>
+        <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+          {title}
+        </Typography>
+        <Box sx={{ height: height }}>
+          <Bar data={chartData} options={options} />
+        </Box>
+      </CardContent>
+    </Card>
   );
 }

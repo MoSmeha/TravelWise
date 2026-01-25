@@ -1,9 +1,4 @@
-/**
- * Users Page
- * Admin view of all users with search and pagination
- */
-
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -23,55 +18,33 @@ import {
   Alert,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { api } from '../services/api';
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  username: string;
-  avatarUrl: string;
-  emailVerified: boolean;
-  isAdmin: boolean;
-  createdAt: string;
-  itineraryCount: number;
-  postCount: number;
-}
+
+
+
+import { useUsersQuery } from '../hooks/useUserQueries';
 
 export default function Users() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const data = await api.getUsers(page + 1, rowsPerPage, search || undefined);
-      setUsers(data.users);
-      setTotal(data.total);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to load users';
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, rowsPerPage, search]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
-  // Debounce search
+  // Debounce search for the query
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  
   useEffect(() => {
     const timer = setTimeout(() => {
-      setPage(0); // Reset to first page on search
+      setDebouncedSearch(search);
+      setPage(0);
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  const { data, isLoading, error: queryError } = useUsersQuery(page + 1, rowsPerPage, debouncedSearch || undefined);
+  
+  const users = data?.users || [];
+  const total = data?.total || 0;
+  const error = queryError instanceof Error ? queryError.message : (queryError ? 'Failed to load users' : '');
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -84,18 +57,23 @@ export default function Users() {
 
   return (
     <Box>
-      <Typography variant="h4" fontWeight="bold" sx={{ mb: 4 }}>
-        Users
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
+          Users
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Manage user accounts and permissions
+        </Typography>
+      </Box>
 
-      {/* Search */}
       <Paper
         elevation={0}
         sx={{
           p: 2,
           mb: 3,
-          borderRadius: 2,
-          border: '1px solid #e0e0e0',
+          borderRadius: 3,
+          backgroundColor: 'white',
+          border: '1px solid #f1f5f9',
         }}
       >
         <TextField
@@ -110,6 +88,7 @@ export default function Users() {
                 <SearchIcon color="action" />
               </InputAdornment>
             ),
+            sx: { borderRadius: 2 },
           }}
         />
       </Paper>
@@ -120,29 +99,29 @@ export default function Users() {
         </Alert>
       )}
 
-      {/* Users Table */}
       <Paper
         elevation={0}
         sx={{
           borderRadius: 3,
-          border: '1px solid #e0e0e0',
+          border: '1px solid #f1f5f9',
           overflow: 'hidden',
+          backgroundColor: 'white',
         }}
       >
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                <TableCell sx={{ fontWeight: 600 }}>User</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 600 }} align="center">
+              <TableRow sx={{ backgroundColor: '#f8fafc' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>User</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#64748b' }} align="center">
                   Itineraries
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600 }} align="center">
+                <TableCell sx={{ fontWeight: 600, color: '#64748b' }} align="center">
                   Posts
                 </TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Joined</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#64748b' }}>Joined</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -165,7 +144,10 @@ export default function Users() {
                   <TableRow
                     key={user.id}
                     hover
-                    sx={{ '&:last-child td': { border: 0 } }}
+                    sx={{
+                      '&:last-child td': { border: 0 },
+                      transition: 'background-color 0.2s',
+                    }}
                   >
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -175,14 +157,18 @@ export default function Users() {
                           sx={{ width: 40, height: 40 }}
                         />
                         <Box>
-                          <Typography fontWeight={500}>{user.name}</Typography>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography fontWeight={600} variant="body2">{user.name}</Typography>
+                          <Typography variant="caption" color="text.secondary">
                             @{user.username}
                           </Typography>
                         </Box>
                       </Box>
                     </TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {user.email}
+                      </Typography>
+                    </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         {user.isAdmin && (
@@ -190,22 +176,30 @@ export default function Users() {
                             label="Admin"
                             size="small"
                             color="primary"
-                            sx={{ fontWeight: 500 }}
+                            sx={{ fontWeight: 600, bgcolor: '#ebf5ff', color: '#004e89' }}
                           />
                         )}
                         <Chip
                           label={user.emailVerified ? 'Verified' : 'Unverified'}
                           size="small"
-                          color={user.emailVerified ? 'success' : 'default'}
-                          variant={user.emailVerified ? 'filled' : 'outlined'}
-                          sx={{ fontWeight: 500 }}
+                          sx={{
+                            fontWeight: 600,
+                            bgcolor: user.emailVerified ? '#ecfdf5' : '#fef2f2',
+                            color: user.emailVerified ? '#059669' : '#dc2626',
+                          }}
                         />
                       </Box>
                     </TableCell>
-                    <TableCell align="center">{user.itineraryCount}</TableCell>
-                    <TableCell align="center">{user.postCount}</TableCell>
+                    <TableCell align="center">
+                      <Typography variant="body2" fontWeight={500}>{user.itineraryCount}</Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Typography variant="body2" fontWeight={500}>{user.postCount}</Typography>
+                    </TableCell>
                     <TableCell>
-                      {new Date(user.createdAt).toLocaleDateString()}
+                      <Typography variant="body2" color="text.secondary">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ))

@@ -4,13 +4,20 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { api } from '../services/api';
+import { client } from '../utils/client';
+
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}
 
 interface User {
   id: string;
   email: string;
   name: string;
   isAdmin?: boolean;
+  avatarUrl?: string;
 }
 
 interface AuthContextType {
@@ -40,7 +47,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-        api.setAccessToken(storedToken);
       } catch {
         // Invalid stored data, clear it
         localStorage.removeItem(TOKEN_KEY);
@@ -52,25 +58,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const response = await api.login(email, password);
+    const response = await client.post<LoginResponse>('/auth/login', { email, password });
+    const { accessToken, refreshToken, user } = response.data;
 
     // Store tokens
-    localStorage.setItem(TOKEN_KEY, response.accessToken);
-    localStorage.setItem(REFRESH_KEY, response.refreshToken);
-    localStorage.setItem(USER_KEY, JSON.stringify(response.user));
-
-    // Update API service
-    api.setAccessToken(response.accessToken);
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    localStorage.setItem(REFRESH_KEY, refreshToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
 
     // Update state
-    setUser(response.user);
+    setUser(user);
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_KEY);
-    api.setAccessToken(null);
+    localStorage.removeItem(USER_KEY);
     setUser(null);
   }, []);
 

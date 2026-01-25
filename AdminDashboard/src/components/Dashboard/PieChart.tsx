@@ -1,10 +1,4 @@
-/**
- * Pie Chart Component
- * Displays data in a doughnut/pie chart format
- */
-
-import React from 'react';
-import { Paper, Typography, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box } from '@mui/material';
 import { Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -23,16 +17,16 @@ interface PieChartProps {
 }
 
 const COLORS = [
-  '#1a237e',
-  '#3949ab',
-  '#5c6bc0',
-  '#7986cb',
-  '#9fa8da',
-  '#c5cae9',
-  '#303f9f',
-  '#3f51b5',
-  '#536dfe',
-  '#8c9eff',
+  '#3b82f6', // Bright Blue
+  '#ef4444', // Red
+  '#10b981', // Emerald
+  '#f59e0b', // Amber
+  '#8b5cf6', // Violet
+  '#ec4899', // Pink
+  '#06b6d4', // Cyan
+  '#f97316', // Orange
+  '#6366f1', // Indigo
+  '#14b8a6', // Teal
 ];
 
 export default function PieChart({ title, data, height = 300 }: PieChartProps) {
@@ -44,6 +38,7 @@ export default function PieChart({ title, data, height = 300 }: PieChartProps) {
         backgroundColor: COLORS.slice(0, data.length),
         borderWidth: 2,
         borderColor: '#ffffff',
+        hoverOffset: 4,
       },
     ],
   };
@@ -51,28 +46,34 @@ export default function PieChart({ title, data, height = 300 }: PieChartProps) {
   const options: ChartOptions<'doughnut'> = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '60%',
+    cutout: '70%',
     plugins: {
       legend: {
         position: 'right' as const,
         labels: {
           usePointStyle: true,
           pointStyle: 'circle',
-          padding: 15,
+          padding: 20,
           font: {
-            size: 12,
+            family: "'Inter', sans-serif",
+            size: 13,
+            weight: 500,
           },
+          color: '#64748b',
         },
       },
       tooltip: {
-        backgroundColor: 'rgba(0,0,0,0.8)',
+        backgroundColor: 'rgba(15, 23, 42, 0.9)',
         padding: 12,
         titleFont: {
+          family: "'Inter', sans-serif",
           size: 14,
         },
         bodyFont: {
+          family: "'Inter', sans-serif",
           size: 13,
         },
+        cornerRadius: 8,
         displayColors: true,
         callbacks: {
           label: (context) => {
@@ -86,22 +87,15 @@ export default function PieChart({ title, data, height = 300 }: PieChartProps) {
   };
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        borderRadius: 3,
-        background: 'white',
-        border: '1px solid #e0e0e0',
-        height: '100%',
-      }}
-    >
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
-        {title}
-      </Typography>
-      <Box sx={{ height }}>
-        <Doughnut data={chartData} options={options} />
-      </Box>
-    </Paper>
+    <Card variant="outlined" sx={{ height: '100%' }}>
+      <CardContent>
+        <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+          {title}
+        </Typography>
+        <Box sx={{ height: height }}>
+          <Doughnut data={chartData} options={options} />
+        </Box>
+      </CardContent>
+    </Card>
   );
 }
