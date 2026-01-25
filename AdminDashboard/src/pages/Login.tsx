@@ -1,8 +1,3 @@
-/**
- * Login Page
- * Admin authentication form
- */
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,7 +13,6 @@ import {
 } from '@mui/material';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import FlightIcon from '@mui/icons-material/Flight';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
@@ -54,44 +48,52 @@ export default function Login() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #5c6bc0 100%)',
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fstatic.vecteezy.com%2Fsystem%2Fresources%2Fpreviews%2F020%2F458%2F477%2Flarge_2x%2Fhand-drawn-travel-template-background-on-blue-background-travel-illustration-vector.jpg&f=1&nofb=1&ipt=39b2ccc53004b2b212976e65799a1597ccb145815b80826eb2f99181633e99e4')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         p: 2,
       }}
     >
       <Paper
-        elevation={10}
+        elevation={0}
         sx={{
           p: 5,
           borderRadius: 4,
           maxWidth: 420,
           width: '100%',
           textAlign: 'center',
+          backdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
         }}
       >
-        {/* Logo */}
-        <Box
-          sx={{
-            width: 70,
-            height: 70,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #1a237e 0%, #3949ab 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 24px',
-            boxShadow: '0 4px 20px rgba(26, 35, 126, 0.3)',
-          }}
-        >
-          <FlightIcon sx={{ color: 'white', fontSize: 36 }} />
+        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
+          <Box
+            sx={{
+              width: 100,
+              height: 100,
+              borderRadius: '50%',
+              bgcolor: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              overflow: 'hidden',
+            }}
+          >
+            <img
+              src="https://res.cloudinary.com/dgsxk7nf5/image/upload/v1769224390/TravelWise-Logo_ogc2ai.png"
+              alt="TravelWise Logo"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </Box>
         </Box>
 
-        <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
-          TravelWise
+        <Typography variant="h5" fontWeight="bold" sx={{ mb: 4, color: '#1e293b' }}>
+          Welcome Back
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          Admin Dashboard
-        </Typography>
-
+        
         {error && (
           <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>
             {error}
@@ -100,7 +102,7 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Email"
+            label="Email Address"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -141,13 +143,8 @@ export default function Login() {
             disabled={isLoading}
             sx={{
               py: 1.5,
-              borderRadius: 2,
-              fontWeight: 600,
               fontSize: '1rem',
-              background: 'linear-gradient(135deg, #1a237e 0%, #3949ab 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #0d1642 0%, #283593 100%)',
-              },
+              mb: 2,
             }}
           >
             {isLoading ? (
@@ -157,10 +154,6 @@ export default function Login() {
             )}
           </Button>
         </form>
-
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
-          Only authorized administrators can access this dashboard.
-        </Typography>
       </Paper>
     </Box>
   );
