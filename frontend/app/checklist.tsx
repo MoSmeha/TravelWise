@@ -13,10 +13,10 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Trash2 } from 'lucide-react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { useChecklist } from '../hooks/queries/useChecklist';
-import { useAddChecklistItem, useToggleChecklistItem } from '../hooks/mutations/useChecklist';
+import { useAddChecklistItem, useToggleChecklistItem, useDeleteChecklistItem, useDeleteAllChecklistItems } from '../hooks/mutations/useChecklist';
 import { useItineraryStore } from '../store/itineraryStore';
 import type { ChecklistItem } from '../types/api';
 
@@ -39,6 +39,8 @@ export default function ChecklistScreen() {
   const { data: items = [], isLoading, refetch, isRefetching } = useChecklist(itineraryId || '');
   const toggleMutation = useToggleChecklistItem();
   const addMutation = useAddChecklistItem();
+  const deleteMutation = useDeleteChecklistItem();
+  const deleteAllMutation = useDeleteAllChecklistItems();
 
   const [newItemText, setNewItemText] = useState('');
 
@@ -65,6 +67,59 @@ export default function ChecklistScreen() {
     // Trigger mutation
     toggleMutation.mutate({ itemId, isChecked: !item.isChecked });
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  };
+
+  const handleDeleteItem = (itemId: string, itemName: string) => {
+    Alert.alert(
+      'Delete Item',
+      `Are you sure you want to delete "${itemName}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteMutation.mutate(itemId, {
+              onSuccess: () => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              },
+              onError: () => {
+                Alert.alert('Error', 'Failed to delete item');
+              }
+            });
+          }
+        }
+      ]
+    );
+  };
+
+  const handleDeleteAll = () => {
+    if (items.length === 0) {
+      Alert.alert('No Items', 'There are no items to delete.');
+      return;
+    }
+
+    Alert.alert(
+      'Delete All Items',
+      `Are you sure you want to delete all ${items.length} items? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete All',
+          style: 'destructive',
+          onPress: () => {
+            deleteAllMutation.mutate(itineraryId, {
+              onSuccess: () => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              },
+              onError: () => {
+                Alert.alert('Error', 'Failed to delete items');
+              }
+            });
+          }
+        }
+      ]
+    );
   };
 
   const addNewItem = () => {
@@ -128,7 +183,17 @@ export default function ChecklistScreen() {
             <ArrowLeft size={24} color="#374151" />
           </TouchableOpacity>
           <Text className="text-lg font-bold text-gray-800">Trip Checklist</Text>
-          <View style={{ width: 40 }} /> 
+          <TouchableOpacity 
+            className="w-10 h-10 justify-center items-end"
+            onPress={handleDeleteAll}
+            disabled={deleteAllMutation.isPending || items.length === 0}
+          >
+            {deleteAllMutation.isPending ? (
+              <ActivityIndicator size="small" color="#EF4444" />
+            ) : (
+              <Trash2 size={22} color={items.length === 0 ? "#D1D5DB" : "#EF4444"} />
+            )}
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
@@ -154,23 +219,34 @@ export default function ChecklistScreen() {
             <View key={category} className="mb-5">
               <Text className="text-sm font-bold text-gray-400 mb-2 tracking-wide">{category.replace('_', ' ')}</Text>
               {groupedItems[category].map(item => (
-                <TouchableOpacity
+                <View
                   key={item.id}
-                  className={`bg-white rounded-xl p-4 mb-2 flex-row items-center shadow-sm ${item.isChecked ? 'opacity-80 bg-gray-50' : ''}`}
-                  onPress={() => toggleItem(item.id)}
+                  className={`bg-white rounded-xl mb-2 flex-row items-center shadow-sm overflow-hidden ${item.isChecked ? 'opacity-80 bg-gray-50' : ''}`}
                 >
-                  <View className={`w-6 h-6 rounded-full border-2 mr-3 items-center justify-center ${item.isChecked ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>
-                    {item.isChecked && <Text className="text-white text-sm font-bold">✓</Text>}
-                  </View>
-                  <View className="flex-1">
-                    <Text className={`text-base font-medium ${item.isChecked ? 'line-through text-gray-400' : 'text-gray-900'}`}>
-                      {item.item}
-                    </Text>
-                    {item.reason && (
-                      <Text className="text-xs text-gray-500 mt-0.5">{item.reason}</Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    className="flex-1 flex-row items-center p-4"
+                    onPress={() => toggleItem(item.id)}
+                  >
+                    <View className={`w-6 h-6 rounded-full border-2 mr-3 items-center justify-center ${item.isChecked ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>
+                      {item.isChecked && <Text className="text-white text-sm font-bold">✓</Text>}
+                    </View>
+                    <View className="flex-1">
+                      <Text className={`text-base font-medium ${item.isChecked ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+                        {item.item}
+                      </Text>
+                      {item.reason && (
+                        <Text className="text-xs text-gray-500 mt-0.5">{item.reason}</Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="px-4 py-4"
+                    onPress={() => handleDeleteItem(item.id, item.item)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    <Trash2 size={18} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
               ))}
             </View>
           ))}

@@ -43,6 +43,13 @@ export async function deleteItem(itemId: string): Promise<void> {
 }
 
 /**
+ * Delete all checklist items for an itinerary
+ */
+export async function deleteAllItems(itineraryId: string): Promise<{ count: number }> {
+  return checklistProvider.deleteAll(itineraryId);
+}
+
+/**
  * Bulk create checklist items (used by itinerary generation)
  */
 export async function createBulkItems(items: CreateChecklistItemData[]): Promise<{ count: number }> {

@@ -232,6 +232,15 @@ export const checklistService = {
     });
     return ChecklistItemSchema.parse(response.data.data);
   },
+
+  async deleteChecklistItem(itemId: string): Promise<void> {
+    await api.delete(`/checklist/${itemId}`);
+  },
+
+  async deleteAllChecklistItems(itineraryId: string): Promise<{ deleted: number }> {
+    const response = await api.delete<{ success: boolean; deleted: number }>(`/checklist/all/${itineraryId}`);
+    return { deleted: response.data.deleted };
+  },
 };
 
 import type { Post, Comment, PaginatedResponse, PostVisibility } from '../types/post';

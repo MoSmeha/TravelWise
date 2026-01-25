@@ -41,5 +41,8 @@ export interface IChecklistProvider {
   delete(id: string): Promise<void>;
 
   
+  deleteAll(itineraryId: string): Promise<{ count: number }>;
+
+  
   createMany(items: CreateChecklistItemData[]): Promise<{ count: number }>;
 }
