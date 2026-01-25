@@ -11,10 +11,10 @@ interface FriendsTabsProps {
 
 export function FriendsTabs({ activeTab, onTabChange, pendingCount }: FriendsTabsProps) {
   return (
-    <View className="flex-row px-4 py-2 border-b border-gray-100">
+    <View className="flex-row border-b border-gray-100 bg-white">
       <TouchableOpacity 
         onPress={() => onTabChange('friends')}
-        className={`mr-6 pb-2 border-b-2 ${activeTab === 'friends' ? 'border-indigo-600' : 'border-transparent'}`}
+        className={`flex-1 items-center justify-center py-3 border-b-2 ${activeTab === 'friends' ? 'border-indigo-600' : 'border-transparent'}`}
       >
         <Text className={`font-medium ${activeTab === 'friends' ? 'text-indigo-600' : 'text-gray-500'}`}>
           Your Friends
@@ -22,7 +22,7 @@ export function FriendsTabs({ activeTab, onTabChange, pendingCount }: FriendsTab
       </TouchableOpacity>
       <TouchableOpacity 
         onPress={() => onTabChange('pending')}
-        className={`mr-6 pb-2 border-b-2 ${activeTab === 'pending' ? 'border-indigo-600' : 'border-transparent'}`}
+        className={`flex-1 items-center justify-center py-3 border-b-2 ${activeTab === 'pending' ? 'border-indigo-600' : 'border-transparent'}`}
       >
         <Text className={`font-medium ${activeTab === 'pending' ? 'text-indigo-600' : 'text-gray-500'}`}>
           Requests

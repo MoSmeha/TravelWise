@@ -54,6 +54,7 @@ function RootLayoutNav() {
       <Stack.Screen name="chat" options={{ headerShown: false }} />
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen name="itinerary" options={{ headerShown: false }} />
+      <Stack.Screen name="friends" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
       <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
     </Stack>
