@@ -491,6 +491,14 @@ export async function getDirections(
     return null;
   }
 
+  // Check cache first
+  const cacheKey = CACHE_KEYS.directions(origin, destination, waypoints);
+  const cached = cacheGet<{ points: string; distance: string; duration: string }>(cacheKey);
+  if (cached) {
+    console.log(`[CACHE] Directions cache hit: ${origin} -> ${destination}`);
+    return cached;
+  }
+
   try {
     const result = await withCircuitBreaker(
       CIRCUIT_BREAKERS.googlePlaces,
@@ -522,11 +530,17 @@ export async function getDirections(
       // Actually if waypoints are used, there are multiple legs.
       // But usually we want the overview_polyline for the whole route.
       
-      return {
+      const directionsResult = {
         points: route.overview_polyline.points,
         distance: leg.distance?.text || '', // This might be just the first leg if multiple
         duration: leg.duration?.text || '',
       };
+
+      // Cache the result for 7 days
+      cacheSet(cacheKey, directionsResult, CACHE_TTL.directions);
+      console.log(`[CACHE] Directions cached: ${origin} -> ${destination}`);
+
+      return directionsResult;
     }
     
     return null;

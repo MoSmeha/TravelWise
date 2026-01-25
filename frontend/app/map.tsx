@@ -5,9 +5,9 @@ import { ActivityIndicator, Alert, Linking, Text, View, TouchableOpacity } from 
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { MapPin, MapPinOff } from 'lucide-react-native';
 import { placesService } from '../services/api';
-import { decodePolyline } from '../lib/polyline';
 import { DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
+import { useMultipleDirections } from '../hooks/queries/useDirections';
 import { useItineraryStore } from '../store/itineraryStore';
 import { useLocationSharing } from '../hooks/useLocationSharing';
 import type { Hotel, ItineraryResponse, Location } from '../types/api';
@@ -51,7 +51,6 @@ export default function MapScreen() {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [locationPhotos, setLocationPhotos] = useState<Record<string, LocationPhotosData>>({});
-  const [realRoutes, setRealRoutes] = useState<Record<number, { latitude: number; longitude: number }[]>>({});
 
   // Location sharing
   const { 
@@ -150,72 +149,60 @@ export default function MapScreen() {
     longitudeDelta: 0.5,
   };
 
-  const [connectorRoutes, setConnectorRoutes] = useState<Record<number, { latitude: number; longitude: number }[]>>({});
+  // Build direction query params for each day route
+  const dayRouteQueries = useMemo(() => {
+    return dayRoutes.map((route) => {
+      if (route.length < 2) return null;
+      return {
+        origin: route[0],
+        destination: route[route.length - 1],
+        waypoints: route.slice(1, route.length - 1),
+      };
+    });
+  }, [dayRoutes]);
 
-  // Fetch real routes for each day AND connectors
-  useEffect(() => {
-    if (!data) return;
-
-    const fetchRoutes = async () => {
-      // 1. Fetch Day Routes
-      for (let i = 0; i < dayRoutes.length; i++) {
-        const route = dayRoutes[i];
-        if (route.length < 2) continue;
-        
-        if (realRoutes[i]) continue;
-
-        try {
-          const origin = route[0];
-          const destination = route[route.length - 1];
-          const waypoints = route.slice(1, route.length - 1);
-
-          const result = await placesService.getDirections(
-            origin.latitude,
-            origin.longitude,
-            destination.latitude,
-            destination.longitude,
-            waypoints.map(p => ({ lat: p.latitude, lng: p.longitude }))
-          );
-
-          if (result?.points) {
-            setRealRoutes(prev => ({ ...prev, [i]: decodePolyline(result.points) }));
-          }
-        } catch (error) {
-          console.error(`Failed to fetch route for day ${i + 1}:`, error);
-        }
+  // Build connector query params (day N end -> day N+1 start)
+  const connectorQueries = useMemo(() => {
+    const queries: ({ origin: { latitude: number; longitude: number }; destination: { latitude: number; longitude: number }; waypoints?: undefined } | null)[] = [];
+    for (let i = 0; i < dayRoutes.length - 1; i++) {
+      const currentRoute = dayRoutes[i];
+      const nextRoute = dayRoutes[i + 1];
+      if (currentRoute.length > 0 && nextRoute.length > 0) {
+        queries.push({
+          origin: currentRoute[currentRoute.length - 1],
+          destination: nextRoute[0],
+        });
+      } else {
+        queries.push(null);
       }
+    }
+    return queries;
+  }, [dayRoutes]);
 
-      // 2. Fetch Connectors (Day N End -> Day N+1 Start)
-      for (let i = 0; i < dayRoutes.length - 1; i++) {
-        if (connectorRoutes[i]) continue;
-        
-        const currentDayRoute = dayRoutes[i];
-        const nextDayRoute = dayRoutes[i+1];
+  // Fetch all directions with React Query (cached + deduplicated)
+  const dayDirectionsResults = useMultipleDirections(dayRouteQueries);
+  const connectorDirectionsResults = useMultipleDirections(connectorQueries);
 
-        if (currentDayRoute.length > 0 && nextDayRoute.length > 0) {
-            // End of today -> Start of tomorrow
-            const start = currentDayRoute[currentDayRoute.length - 1];
-            const end = nextDayRoute[0];
-
-            try {
-                const result = await placesService.getDirections(
-                    start.latitude, start.longitude,
-                    end.latitude, end.longitude,
-                    [] // No waypoints
-                );
-
-                if (result?.points) {
-                    setConnectorRoutes(prev => ({ ...prev, [i]: decodePolyline(result.points) }));
-                }
-            } catch (error) {
-                console.error(`Failed to fetch connector ${i}:`, error);
-            }
-        }
+  // Extract route data from query results
+  const realRoutes = useMemo(() => {
+    const routes: Record<number, { latitude: number; longitude: number }[]> = {};
+    dayDirectionsResults.forEach((result, index) => {
+      if (result.data) {
+        routes[index] = result.data;
       }
-    };
+    });
+    return routes;
+  }, [dayDirectionsResults]);
 
-    fetchRoutes();
-  }, [data, dayRoutes, realRoutes, connectorRoutes]);
+  const connectorRoutes = useMemo(() => {
+    const routes: Record<number, { latitude: number; longitude: number }[]> = {};
+    connectorDirectionsResults.forEach((result, index) => {
+      if (result.data) {
+        routes[index] = result.data;
+      }
+    });
+    return routes;
+  }, [connectorDirectionsResults]);
 
   // Loading state
   if (loadingItinerary && !passedData && itineraryId) {

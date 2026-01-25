@@ -18,6 +18,8 @@ export const CACHE_KEYS = {
   weather: (lat: number, lng: number) => `wx:${lat.toFixed(2)},${lng.toFixed(2)}`,
   weatherHistory: (lat: number, lng: number, month: number) => 
     `wxh:${lat.toFixed(2)},${lng.toFixed(2)}:${month}`,
+  directions: (origin: string, dest: string, waypoints: string[]) =>
+    `dir:${origin}:${dest}:${waypoints.join('|')}`,
 };
 
 // TTLs by data type (in seconds)
@@ -26,6 +28,7 @@ export const CACHE_TTL = {
   weather: parseInt(process.env.CACHE_TTL_WEATHER || '3600'), // 1 hour
   placeSearch: 604800, // 7 days
   weatherHistory: 2592000, // 30 days
+  directions: 604800, // 7 days - routes rarely change
 };
 
 // Generic cache get
