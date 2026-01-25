@@ -1,6 +1,8 @@
+import React, { useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { Plane, Users } from 'lucide-react-native';
+import { SegmentedTabs, TabOption } from '../../components/common/SegmentedTabs';
 import { useUserItineraries } from '../../hooks/queries/useItineraries';
 import { useUser } from '../../hooks/queries/useUser';
 import { TripCard } from '../../components/trips/TripCard';
@@ -19,6 +21,19 @@ export default function TripsScreen() {
   const [collaboratorsModalVisible, setCollaboratorsModalVisible] = useState(false);
   const [selectedItineraryId, setSelectedItineraryId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'my-trips' | 'shared'>('my-trips');
+
+  const tabs: TabOption[] = useMemo(() => [
+    {
+      id: 'my-trips',
+      label: 'My Trips',
+      icon: Plane
+    },
+    {
+      id: 'shared',
+      label: 'Shared with me',
+      icon: Users
+    }
+  ], []);
 
   const handlePress = (id: string, data: any) => {
     router.push({
@@ -99,25 +114,12 @@ export default function TripsScreen() {
         </View>
 
         {/* Tabs */}
-        <View className="flex-row">
-          <TouchableOpacity
-            onPress={() => setActiveTab('my-trips')}
-            className={`flex-1 items-center pb-3 border-b-2 ${activeTab === 'my-trips' ? 'border-[#094772]' : 'border-transparent'}`}
-          >
-            <Text className={`font-semibold ${activeTab === 'my-trips' ? 'text-[#094772]' : 'text-gray-500'}`}>
-              My Trips
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setActiveTab('shared')}
-            className={`flex-1 items-center pb-3 border-b-2 ${activeTab === 'shared' ? 'border-[#094772]' : 'border-transparent'}`}
-          >
-            <Text className={`font-semibold ${activeTab === 'shared' ? 'text-[#094772]' : 'text-gray-500'}`}>
-              Shared with Me
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <SegmentedTabs 
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as 'my-trips' | 'shared')}
+          containerClassName="mt-2"
+        />
       </View>
 
       {/* Content */}
@@ -127,14 +129,26 @@ export default function TripsScreen() {
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 100, flexGrow: 1 }}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }
           ListEmptyComponent={
             !isLoading ? (
-              <View className="items-center justify-center mt-20">
-                <Text className="text-gray-500 text-lg">No trips yet.</Text>
+              <View className="items-center justify-center py-20 px-10">
+                <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-6">
+                  <Plane size={40} color="#94a3b8" strokeWidth={1.5} />
+                </View>
+                <Text className="text-xl font-bold text-gray-900 mb-2">No trips planned yet</Text>
+                <Text className="text-gray-500 text-center leading-6 mb-8">
+                  It looks like you haven't created any trips yet. Start planning your next adventure!
+                </Text>
+                <TouchableOpacity 
+                  onPress={() => router.push('/new-trip')}
+                  className="bg-[#094772] px-6 py-3 rounded-full flex-row items-center"
+                >
+                  <Text className="text-white font-semibold">Create New Trip</Text>
+                </TouchableOpacity>
               </View>
             ) : null
           }
