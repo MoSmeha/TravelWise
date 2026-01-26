@@ -1,46 +1,49 @@
-FROM node:22-alpine AS builder
+# Dependencies
+node_modules
 
-WORKDIR /app
+# Build output
+dist
 
-COPY package*.json ./
-COPY prisma ./prisma/
+# Environment files
+.env
+.env.local
+.env.*.local
 
-RUN npm ci
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
 
-COPY . .
+# OS files
+.DS_Store
+Thumbs.db
 
-ENV DATABASE_URL="postgresql://placeholder:placeholder@placeholder:5432/placeholder"
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
 
-RUN npx prisma generate
+# Git
+.git
+.gitignore
+.gitattributes
 
-RUN npm run build
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
 
-FROM node:22-alpine
+# Documentation
+README.md
+docs
 
-WORKDIR /app
+# Test files
+*.test.ts
+*.spec.ts
+__tests__
+coverage
 
-RUN apk add --no-cache dumb-init
-
-COPY package*.json ./
-COPY prisma ./prisma/
-
-RUN npm ci --only=production
-
-ENV DATABASE_URL="postgresql://placeholder:placeholder@placeholder:5432/placeholder"
-
-RUN npx prisma generate
-
-COPY --from=builder /app/dist ./dist
-
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-
-RUN chown -R nodejs:nodejs /app
-
-USER nodejs
-
-EXPOSE 3000
-
-ENTRYPOINT ["dumb-init", "--"]
-
-CMD ["node", "dist/index.js"]
+# CI/CD
+.github
