@@ -1,12 +1,3 @@
-/**
- * Standardized API result types
- * Used across all services for consistent response handling
- */
-
-/**
- * Generic service result wrapper
- * Provides consistent structure for all external API responses
- */
 export interface ServiceResult<T> {
   data: T | null;
   source: 'live' | 'cache' | 'fallback' | 'unavailable';
@@ -15,9 +6,6 @@ export interface ServiceResult<T> {
   lastUpdated?: Date | null;
 }
 
-/**
- * Create a successful result
- */
 export function successResult<T>(
   data: T,
   source: ServiceResult<T>['source'] = 'live'
@@ -30,9 +18,6 @@ export function successResult<T>(
   };
 }
 
-/**
- * Create an error/unavailable result
- */
 export function errorResult<T>(error: string): ServiceResult<T> {
   return {
     data: null,
@@ -43,9 +28,6 @@ export function errorResult<T>(error: string): ServiceResult<T> {
   };
 }
 
-/**
- * Create a cached result
- */
 export function cachedResult<T>(data: T, isStale = false): ServiceResult<T> {
   return {
     data,

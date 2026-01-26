@@ -3,21 +3,20 @@ import { AskQuestionInput } from '../schemas/itinerary.schema.js';
 import { askAboutItinerary } from '../services/rag-retrieval.service.js';
 import { ragProvider } from '../providers/rag.provider.pg.js';
 
-//POST /api/itinerary/:id/ask
-//Ask a question about an itinerary
+
 export async function askQuestion(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const { question } = req.body as AskQuestionInput;
 
-    // Check if itinerary exists
+
     const itineraryExists = await ragProvider.itineraryExists(id);
 
     if (!itineraryExists) {
       return res.status(404).json({ error: 'Itinerary not found' });
     }
 
-    // Check if embeddings exist
+
     const embeddingCount = await ragProvider.countEmbeddings(id);
 
     if (embeddingCount === 0) {
@@ -30,12 +29,11 @@ export async function askQuestion(req: Request, res: Response) {
 
     console.log(` RAG Q&A for itinerary ${id}: "${question}"`);
 
-    // Run RAG pipeline
+
     const result = await askAboutItinerary(question, id);
 
     return res.json({
       answer: result.answer,
-      actions: result.actions,
       sources: result.sources,
       confidence: result.confidence,
       staleWarning: result.staleWarning,
@@ -47,8 +45,7 @@ export async function askQuestion(req: Request, res: Response) {
 }
 
 
-//GET /api/itinerary/:id/embeddings/status
-//Check embedding status for an itinerary
+
 
 export async function getEmbeddingStatus(req: Request, res: Response) {
   try {

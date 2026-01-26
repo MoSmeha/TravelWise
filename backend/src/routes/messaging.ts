@@ -19,15 +19,15 @@ import {
 
 const router = Router();
 
-// All messaging routes require authentication
+
 router.use(authenticate);
 
-// Conversations
+
 router.get('/conversations', validate(paginationSchema, 'query'), getConversations);
 router.get('/conversations/:id', validate(conversationIdSchema, 'params'), getConversation);
 router.post('/conversations', validate(createConversationSchema), createConversation);
 
-// Messages within a conversation
+
 router.get(
   '/conversations/:id/messages',
   validateMultiple([
@@ -45,7 +45,7 @@ router.post(
   sendMessage
 );
 
-// Mark as read
+
 router.put('/conversations/:id/read', validate(conversationIdSchema, 'params'), markConversationRead);
 
 export default router;

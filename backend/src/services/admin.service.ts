@@ -1,17 +1,11 @@
-/**
- * Admin Statistics Service
- * Provides aggregated data for the admin dashboard
- * Uses the admin provider for data access (provider-contract pattern)
- */
+
 
 import { adminProvider } from '../providers/admin.provider.pg.js';
 import {
   AdminUserListItem,
 } from '../provider-contract/admin.provider-contract.js';
 
-// ============================================================================
-// Types
-// ============================================================================
+
 
 export interface OverviewStats {
   totalUsers: number;
@@ -47,9 +41,7 @@ export interface PaginatedUsers {
   totalPages: number;
 }
 
-// ============================================================================
-// Overview Statistics
-// ============================================================================
+
 
 export async function getOverviewStats(): Promise<OverviewStats> {
   const now = new Date();
@@ -86,9 +78,7 @@ export async function getOverviewStats(): Promise<OverviewStats> {
   };
 }
 
-// ============================================================================
-// Itinerary Statistics
-// ============================================================================
+
 
 export async function getItinerariesByCountry(): Promise<CountryBreakdown[]> {
   const results = await adminProvider.getItinerariesGroupedByCountry();
@@ -102,7 +92,7 @@ export async function getItinerariesByCountry(): Promise<CountryBreakdown[]> {
 export async function getTravelStyleBreakdown(): Promise<TravelStyleBreakdown[]> {
   const itineraries = await adminProvider.getAllItineraryStyles();
 
-  // Count occurrences of each style
+
   const styleCounts: Record<string, number> = {};
   
   for (const itinerary of itineraries) {
@@ -111,7 +101,7 @@ export async function getTravelStyleBreakdown(): Promise<TravelStyleBreakdown[]>
     }
   }
 
-  // Convert to array and sort
+
   return Object.entries(styleCounts)
     .map(([style, count]) => ({ style, count }))
     .sort((a, b) => b.count - a.count)
@@ -139,9 +129,7 @@ export async function getBudgetDistribution(): Promise<{ range: string; count: n
   return distribution;
 }
 
-// ============================================================================
-// User Statistics
-// ============================================================================
+
 
 export async function getUserGrowth(days: number = 30): Promise<UserGrowth[]> {
   const startDate = new Date();
@@ -150,10 +138,10 @@ export async function getUserGrowth(days: number = 30): Promise<UserGrowth[]> {
 
   const users = await adminProvider.getUsersCreatedSince(startDate);
 
-  // Group by date
+
   const growthMap: Record<string, number> = {};
   
-  // Initialize all dates
+
   for (let i = 0; i <= days; i++) {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
@@ -161,7 +149,7 @@ export async function getUserGrowth(days: number = 30): Promise<UserGrowth[]> {
     growthMap[dateStr] = 0;
   }
 
-  // Count users per date
+
   for (const user of users) {
     const dateStr = user.createdAt.toISOString().split('T')[0];
     if (growthMap[dateStr] !== undefined) {
@@ -190,9 +178,7 @@ export async function getUsers(
   };
 }
 
-// ============================================================================
-// Category Statistics
-// ============================================================================
+
 
 export async function getLocationCategoryBreakdown(): Promise<{ category: string; count: number }[]> {
   const results = await adminProvider.getPlacesGroupedByCategory();
@@ -203,9 +189,7 @@ export async function getLocationCategoryBreakdown(): Promise<{ category: string
   }));
 }
 
-// ============================================================================
-// Engagement Statistics
-// ============================================================================
+
 
 export async function getEngagementStats(): Promise<{
   totalLikes: number;

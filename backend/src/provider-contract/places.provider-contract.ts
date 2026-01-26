@@ -92,23 +92,18 @@ export interface IPlacesProvider {
   findByName(name: string): Promise<PlaceRecord | null>;
 
   
-  findByGooglePlaceId(googlePlaceId: string): Promise<PlaceRecord | null>;
-
-  
   findById(id: string): Promise<PlaceRecord | null>;
 
   
   findMany(filters: PlaceFilters): Promise<PaginatedPlaces>;
 
+  findByGooglePlaceId(googlePlaceId: string): Promise<PlaceRecord | null>;
   
   groupByCity(): Promise<CityCount[]>;
-
   
   groupByCategory(): Promise<CategoryCount[]>;
 
 
-
-  
   create(data: CreatePlaceData): Promise<PlaceRecord>;
 
   

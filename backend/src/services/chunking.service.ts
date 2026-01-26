@@ -24,7 +24,7 @@ interface PlaceData {
   localTip?: string | null;
   scamWarning?: string | null;
   activityTypes: string[];
-  // Google Places data
+
   rating?: number | null;
   totalRatings?: number | null;
   topReviews?: Array<{ authorName: string; rating: number; text: string }> | null;
@@ -60,7 +60,7 @@ interface ItineraryData {
 }
 
 
-// Format a day into readable text
+
 function formatDayChunk(day: DayData): string {
   const lines: string[] = [];
   
@@ -98,7 +98,7 @@ function formatDayChunk(day: DayData): string {
   return lines.join('\n').trim();
 }
 
-// Format a place with context
+
 function formatPlaceChunk(place: PlaceData, dayContext: string): string {
   const lines: string[] = [];
   
@@ -106,7 +106,7 @@ function formatPlaceChunk(place: PlaceData, dayContext: string): string {
   lines.push(`Classification: ${place.classification} | Category: ${place.category}`);
   lines.push(`Activities: ${place.activityTypes.join(', ')}`);
   
-  // Google Places rating
+
   if (place.rating && place.totalRatings) {
     lines.push(`Rating: ${place.rating} stars (${place.totalRatings} reviews)`);
   }
@@ -126,7 +126,7 @@ function formatPlaceChunk(place: PlaceData, dayContext: string): string {
     });
   }
   
-  // Opening hours
+
   if (place.openingHours?.weekdayText && place.openingHours.weekdayText.length > 0) {
     lines.push('\nOpening Hours:');
     place.openingHours.weekdayText.forEach(day => lines.push(`- ${day}`));
@@ -145,7 +145,7 @@ function formatPlaceChunk(place: PlaceData, dayContext: string): string {
   return lines.join('\n');
 }
 
-// Format checklist items
+
 function formatChecklistChunk(items: Array<{ category: string; item: string; reason?: string }>): string {
   const grouped: Record<string, string[]> = {};
   
@@ -169,7 +169,7 @@ function formatChecklistChunk(items: Array<{ category: string; item: string; rea
   return lines.join('\n').trim();
 }
 
-// Format full itinerary summary
+
 function formatFullSummary(itinerary: ItineraryData): string {
   const lines: string[] = [];
   
@@ -189,7 +189,7 @@ function formatFullSummary(itinerary: ItineraryData): string {
     lines.push(`- Day ${day.dayNumber}${day.theme ? ` (${day.theme})` : ''}: ${placeNames}`);
   }
   
-  // Collect all unique activity types
+
   const allActivities = new Set<string>();
   for (const day of itinerary.days) {
     for (const item of day.places) {
@@ -203,7 +203,7 @@ function formatFullSummary(itinerary: ItineraryData): string {
   return lines.join('\n');
 }
 
-// Format route overview
+
 function formatRouteOverview(itinerary: ItineraryData): string {
   const lines: string[] = [];
   
@@ -215,7 +215,7 @@ function formatRouteOverview(itinerary: ItineraryData): string {
     
     const regions = new Set<string>();
     for (const item of day.places) {
-      // Placeholder - in real implementation, would extract region from place
+
       regions.add(item.place.category);
     }
     
@@ -233,12 +233,12 @@ function formatRouteOverview(itinerary: ItineraryData): string {
   return lines.join('\n');
 }
 
-// Main chunking function
+
 export function chunkItinerary(itinerary: ItineraryData): ItineraryChunk[] {
   const chunks: ItineraryChunk[] = [];
   let chunkIndex = 0;
   
-  // Collect all place IDs and activity types
+
   const allPlaceIds: string[] = [];
   const allActivityTypes = new Set<string>();
   
@@ -249,7 +249,7 @@ export function chunkItinerary(itinerary: ItineraryData): ItineraryChunk[] {
     }
   }
   
-  // 1. Full summary chunk
+
   chunks.push({
     type: 'FULL_SUMMARY',
     chunkIndex: chunkIndex++,
@@ -262,7 +262,7 @@ export function chunkItinerary(itinerary: ItineraryData): ItineraryChunk[] {
     },
   });
   
-  // 2. Day plan chunks
+
   for (const day of itinerary.days) {
     const dayPlaceIds = day.places.map(p => p.place.id);
     const dayActivityTypes = new Set<string>();
@@ -281,7 +281,7 @@ export function chunkItinerary(itinerary: ItineraryData): ItineraryChunk[] {
     });
   }
   
-  // 3. Place detail chunks
+
   for (const day of itinerary.days) {
     for (const item of day.places) {
       const dayContext = `Day ${day.dayNumber}${day.theme ? ` - ${day.theme}` : ''}`;
@@ -300,7 +300,7 @@ export function chunkItinerary(itinerary: ItineraryData): ItineraryChunk[] {
     }
   }
   
-  // 4. Checklist chunk (if available)
+
   if (itinerary.checklist && itinerary.checklist.length > 0) {
     chunks.push({
       type: 'CHECKLIST',
@@ -315,7 +315,7 @@ export function chunkItinerary(itinerary: ItineraryData): ItineraryChunk[] {
     });
   }
   
-  // 5. Route overview chunk
+
   chunks.push({
     type: 'ROUTE_OVERVIEW',
     chunkIndex: chunkIndex++,
@@ -331,6 +331,6 @@ export function chunkItinerary(itinerary: ItineraryData): ItineraryChunk[] {
   return chunks;
 }
 
-// Export types and helpers
+
 export type { DayData, ItineraryData, PlaceData };
 

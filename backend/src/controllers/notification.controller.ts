@@ -10,9 +10,9 @@ import {
 export async function getNotifications(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
-    const unreadOnly = req.query.unread === 'true';
+    const { unread } = req.query;
     
-    const notifications = await listNotifications(userId, unreadOnly);
+    const notifications = await listNotifications(userId, unread === 'true');
     res.json(notifications);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

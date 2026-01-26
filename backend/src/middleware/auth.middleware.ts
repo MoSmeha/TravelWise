@@ -1,15 +1,10 @@
-/**
- * Auth Middleware
- * JWT verification and user authentication for protected routes
- */
+
 
 import { NextFunction, Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { verifyAccessToken } from '../services/auth.service.js';
 
-/**
- * Extended Request interface with user data
- */
+
 export interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
@@ -19,11 +14,7 @@ export interface AuthenticatedRequest extends Request {
 
 export type AuthRequest = AuthenticatedRequest;
 
-/**
- * Authenticate middleware
- * Verifies JWT access token from Authorization header
- * Attaches user info to req.user
- */
+
 export async function authenticate(
   req: AuthenticatedRequest,
   res: Response,
@@ -68,10 +59,7 @@ export async function authenticate(
   }
 }
 
-/**
- * Require verified email middleware
- * Must be used after authenticate middleware
- */
+
 export async function requireVerified(
   req: AuthenticatedRequest,
   res: Response,
@@ -109,10 +97,7 @@ export async function requireVerified(
   }
 }
 
-/**
- * Optional auth middleware
- * Attaches user info if token is valid, but doesn't require it
- */
+
 export async function optionalAuth(
   req: AuthenticatedRequest,
   _res: Response,

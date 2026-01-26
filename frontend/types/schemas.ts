@@ -210,18 +210,10 @@ export const ChecklistItemSchema = z.object({
   isChecked: z.boolean(),
 });
 
-export const RAGActionSchema = z.object({
-  type: z.enum(['ADD_PLACE', 'REPLACE_PLACE', 'REORDER', 'SUGGEST_ADD_DB']),
-  placeId: z.string().optional(),
-  placeName: z.string().optional(),
-  dayNumber: z.number().optional(),
-  order: z.number().optional(),
-  reason: z.string(),
-});
+
 
 export const RAGResponseSchema = z.object({
   answer: z.string(),
-  actions: z.array(RAGActionSchema).optional(),
   sources: z.array(z.string()),
   confidence: z.number(),
   staleWarning: z.string().optional(),
@@ -487,7 +479,7 @@ export type Warning = z.infer<typeof WarningSchema>;
 export type ItineraryResponse = z.infer<typeof ItineraryResponseSchema>;
 export type Place = z.infer<typeof PlaceSchema>;
 export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
-export type RAGAction = z.infer<typeof RAGActionSchema>;
+
 export type RAGResponse = z.infer<typeof RAGResponseSchema>;
 
 export type BudgetLevel = z.infer<typeof BudgetLevelSchema>;

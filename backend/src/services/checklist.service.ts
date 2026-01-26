@@ -8,23 +8,17 @@ import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/c
 
 
 
-/**
- * Get all checklist items for an itinerary
- */
+
 export async function getItineraryChecklist(itineraryId: string): Promise<ChecklistItemRecord[]> {
   return checklistProvider.findByItineraryId(itineraryId);
 }
 
-/**
- * Update a checklist item's checked status
- */
+
 export async function updateItem(itemId: string, input: UpdateChecklistItemInput): Promise<ChecklistItemRecord> {
   return checklistProvider.updateIsChecked(itemId, input.isChecked);
 }
 
-/**
- * Create a custom checklist item
- */
+
 export async function createItem(itineraryId: string, input: CreateChecklistItemInput): Promise<ChecklistItemRecord> {
   return checklistProvider.create({
     itineraryId,
@@ -35,27 +29,20 @@ export async function createItem(itineraryId: string, input: CreateChecklistItem
   });
 }
 
-/**
- * Delete a checklist item
- */
+
 export async function deleteItem(itemId: string): Promise<void> {
   return checklistProvider.delete(itemId);
 }
 
-/**
- * Delete all checklist items for an itinerary
- */
+
 export async function deleteAllItems(itineraryId: string): Promise<{ count: number }> {
   return checklistProvider.deleteAll(itineraryId);
 }
 
-/**
- * Bulk create checklist items (used by itinerary generation)
- */
+
 export async function createBulkItems(items: CreateChecklistItemData[]): Promise<{ count: number }> {
   return checklistProvider.createMany(items);
 }
 
-// Helper functions for logic
-// (Dead weather logic removed)
+
 

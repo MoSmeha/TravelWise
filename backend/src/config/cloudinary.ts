@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Configure Cloudinary with environment variables
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_API_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -19,12 +19,7 @@ export interface CloudinaryUploadResult {
   resource_type: string;
 }
 
-/**
- * Upload a buffer to Cloudinary
- * @param buffer - The file buffer to upload
- * @param folder - The folder in Cloudinary to upload to
- * @param publicId - Optional custom public ID for the file
- */
+
 export async function uploadToCloudinary(
   buffer: Buffer,
   folder: string,
@@ -70,9 +65,7 @@ export async function uploadToCloudinary(
   });
 }
 
-/**
- * Delete an image from Cloudinary by public ID
- */
+
 export async function deleteFromCloudinary(publicId: string): Promise<void> {
   await cloudinary.uploader.destroy(publicId);
 }

@@ -1,27 +1,24 @@
-/**
- * Email Service
- * Handles sending verification emails and other email communications
- */
+
 
 import nodemailer from 'nodemailer';
 
-// Gmail SMTP configuration
+
 const SMTP_GMAIL = process.env.SMTP_GMAIL;
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
 const EMAIL_FROM = process.env.EMAIL_FROM || `TravelWise <${SMTP_GMAIL}>`;
 
-// Logo URL
+
 const LOGO_URL = 'https://res.cloudinary.com/dgsxk7nf5/image/upload/v1769224390/TravelWise-Logo_ogc2ai.png';
 const PRIMARY_COLOR = '#004e89';
 
-// Create transporter - configured for Gmail SMTP
+
 let transporter: nodemailer.Transporter | null = null;
 
 if (SMTP_GMAIL && SMTP_PASSWORD) {
   transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
-    secure: true, // use SSL
+    secure: true,
     auth: {
       user: SMTP_GMAIL,
       pass: SMTP_PASSWORD,
@@ -32,9 +29,7 @@ if (SMTP_GMAIL && SMTP_PASSWORD) {
   console.log('[INFO] Email service running in console mode (SMTP credentials not configured)');
 }
 
-/**
- * Send verification email with OTP
- */
+
 export async function sendVerificationEmail(
   email: string,
   name: string,
@@ -80,7 +75,7 @@ This code will expire in 10 minutes.
 If you did not create an account, you can safely ignore this email.
   `;
 
-  // If SMTP is not configured, log to console instead
+
   if (!transporter) {
     console.log('');
     console.log('[EMAIL] ═══════════════════════════════════════════════════════════');
@@ -111,9 +106,7 @@ If you did not create an account, you can safely ignore this email.
   }
 }
 
-/**
- * Send welcome email after verification
- */
+
 export async function sendWelcomeEmail(email: string, name: string): Promise<boolean> {
   const htmlContent = `
     <!DOCTYPE html>

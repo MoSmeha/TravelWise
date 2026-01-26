@@ -6,7 +6,7 @@ const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';
 const GOOGLE_DIRECTIONS_BASE_URL = 'https://maps.googleapis.com/maps/api/directions';
 
-// Types
+
 export interface PlaceEnrichment {
   googlePlaceId: string;
   name: string;
@@ -52,19 +52,19 @@ export interface PlaceEnrichmentResult {
   error?: string;
 }
 
-// Check if API is configured
+
 export function isGooglePlacesConfigured(): boolean {
   return !!GOOGLE_PLACES_API_KEY && GOOGLE_PLACES_API_KEY !== 'your_google_places_api_key_here';
 }
 
-// Search for places by text query (e.g. "Hiking trails in Lebanon")
+
 export async function searchPlacesByText(
   query: string,
   minRating: number = 4.0
 ): Promise<{ places: HotelSearchResult[]; source: 'live' | 'cache' | 'unavailable' }> {
-  const cacheKey = CACHE_KEYS.googlePlaceSearch(query, 0, 0); // Reuse or adjust key logic
+  const cacheKey = CACHE_KEYS.googlePlaceSearch(query, 0, 0);
   
-  // Check cache
+
   const cached = cacheGet<HotelSearchResult[]>(cacheKey);
   if (cached) {
       return { places: cached, source: 'cache' };
@@ -94,11 +94,11 @@ export async function searchPlacesByText(
         const filtered = data.results
             .filter((p: any) => (p.rating || 0) >= minRating)
             .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
-            .slice(0, 5); // Take top 5
+            .slice(0, 5);
 
         const places: HotelSearchResult[] = [];
         for (const place of filtered) {
-            // Get details for photos/website
+
             const details = await getPlaceDetails(place.place_id);
             
             places.push({
@@ -110,7 +110,7 @@ export async function searchPlacesByText(
                 longitude: place.geometry?.location?.lng || 0,
                 formattedAddress: place.formatted_address || '',
                 websiteUrl: details.data?.website || null,
-                bookingUrl: '', // Not needed for general activities
+                bookingUrl: '',
                 photos: details.data?.photos || [],
                 priceLevel: place.price_level ?? null,
             });
@@ -127,7 +127,7 @@ export async function searchPlacesByText(
   }
 }
 
-// Search for a place by name and location (Find Place)
+
 export async function searchPlace(
   name: string,
   lat?: number,
@@ -136,7 +136,7 @@ export async function searchPlace(
 ): Promise<PlaceEnrichmentResult> {
   const cacheKey = CACHE_KEYS.googlePlaceSearch(name, lat || 0, lng || 0);
   
-  // Check cache first
+
   const cached = cacheGet<PlaceEnrichment>(cacheKey);
   if (cached) {
     return { 
@@ -186,7 +186,7 @@ export async function searchPlace(
     if (data.status === 'OK' && data.candidates?.[0]) {
       const candidate = data.candidates[0];
       
-      // Get detailed info
+
       const details = await getPlaceDetails(candidate.place_id);
       
       if (details.data) {
@@ -218,11 +218,11 @@ export async function searchPlace(
   }
 }
 
-// Get detailed place information by Place ID
+
 export async function getPlaceDetails(googlePlaceId: string): Promise<PlaceEnrichmentResult> {
   const cacheKey = CACHE_KEYS.googlePlace(googlePlaceId);
   
-  // Check cache first
+
   const cached = cacheGet<PlaceEnrichment>(cacheKey);
   if (cached) {
     return { 
@@ -303,7 +303,7 @@ export async function getPlaceDetails(googlePlaceId: string): Promise<PlaceEnric
         editorialSummary: place.editorial_summary?.overview || null,
       };
       
-      // Cache the result
+
       cacheSet(cacheKey, enrichment, CACHE_TTL.googlePlace);
       
       return {
@@ -337,7 +337,7 @@ export async function getPlaceDetails(googlePlaceId: string): Promise<PlaceEnric
   }
 }
 
-// Validate if a place still exists
+
 export async function validatePlaceExists(googlePlaceId: string): Promise<boolean> {
   const result = await getPlaceDetails(googlePlaceId);
   return result.data !== null;
@@ -350,7 +350,7 @@ export async function enrichPlaceWithGoogleData(
 ): Promise<PlaceEnrichmentResult> {
   console.log(`[SEARCH] Enriching "${name}" with Google Places data...`);
   
-  // Search for the place
+
   const searchResult = await searchPlace(name, lat, lng, 2000);
   
   if (!searchResult.data) {
@@ -363,7 +363,7 @@ export async function enrichPlaceWithGoogleData(
   return searchResult;
 }
 
-// Hotel search result with booking links
+
 export interface HotelSearchResult {
   googlePlaceId: string;
   name: string;
@@ -378,7 +378,7 @@ export interface HotelSearchResult {
   priceLevel: number | null;
 }
 
-// Search for nearby hotels using Google Places Nearby Search API
+
 export async function searchNearbyHotels(
   lat: number,
   lng: number,
@@ -387,7 +387,7 @@ export async function searchNearbyHotels(
 ): Promise<{ hotels: HotelSearchResult[]; source: 'live' | 'cache' | 'unavailable' }> {
   const cacheKey = `nearby-hotels:${lat.toFixed(4)},${lng.toFixed(4)}:${radiusMeters}`;
   
-  // Check cache first
+
   const cached = cacheGet<HotelSearchResult[]>(cacheKey);
   if (cached) {
     console.log(`[CACHE] Found ${cached.length} cached hotels near ${lat},${lng}`);
@@ -423,24 +423,24 @@ export async function searchNearbyHotels(
     const data: any = result as any;
     
     if (data.status === 'OK' && data.results?.length > 0) {
-      // Filter by rating and sort by rating descending
+
       const filteredResults = data.results
         .filter((place: any) => (place.rating || 0) >= minRating)
         .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
-        .slice(0, 5); // Top 5 results
+        .slice(0, 5);
       
-      // Enrich each hotel with details (for website URL)
+
       const hotels: HotelSearchResult[] = [];
       
       for (const place of filteredResults) {
-        // Get detailed info for website URL
+
         const details = await getPlaceDetails(place.place_id);
         
         const hotelName = place.name || 'Unknown Hotel';
         const hotelLat = place.geometry?.location?.lat || lat;
         const hotelLng = place.geometry?.location?.lng || lng;
         
-        // Build Booking.com fallback URL
+
         const bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotelName)}&latitude=${hotelLat}&longitude=${hotelLng}`;
         
         hotels.push({
@@ -460,7 +460,7 @@ export async function searchNearbyHotels(
       
       console.log(`[HOTEL] Found ${hotels.length} hotels near ${lat},${lng} with rating >= ${minRating}`);
       
-      // Cache for 24 hours
+
       cacheSet(cacheKey, hotels, 24 * 60 * 60 * 1000);
       
       return { hotels, source: 'live' };
@@ -480,7 +480,7 @@ export async function searchNearbyHotels(
   }
 }
 
-// Get directions between points
+
 export async function getDirections(
   origin: string,
   destination: string,
@@ -491,7 +491,7 @@ export async function getDirections(
     return null;
   }
 
-  // Check cache first
+
   const cacheKey = CACHE_KEYS.directions(origin, destination, waypoints);
   const cached = cacheGet<{ points: string; distance: string; duration: string }>(cacheKey);
   if (cached) {
@@ -536,7 +536,7 @@ export async function getDirections(
         duration: leg.duration?.text || '',
       };
 
-      // Cache the result for 7 days
+
       cacheSet(cacheKey, directionsResult, CACHE_TTL.directions);
       console.log(`[CACHE] Directions cached: ${origin} -> ${destination}`);
 

@@ -22,6 +22,21 @@ export interface IRagProvider {
   
   countEmbeddings(itineraryId: string): Promise<number>;
 
-  
   getEmbeddingTypeBreakdown(itineraryId: string): Promise<EmbeddingTypeBreakdown[]>;
+
+  storeEmbedding(data: any): Promise<number>;
+
+  retrieveSimilarChunks(
+    embeddingVector: string,
+    itineraryId: string,
+    limit: number
+  ): Promise<any[]>;
+
+  retrieveKnowledgeChunks(
+    embeddingVector: string,
+    countryCode: string,
+    limit: number
+  ): Promise<any[]>;
+
+  deleteEmbeddings(itineraryId: string): Promise<number>;
 }

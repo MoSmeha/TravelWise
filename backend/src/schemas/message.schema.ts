@@ -1,22 +1,15 @@
-/**
- * Message Zod Schemas
- * Validation schemas for messaging endpoints
- */
+
 
 import { z } from 'zod';
 
-/**
- * Schema for creating/getting a conversation
- */
+
 export const createConversationSchema = z.object({
   friendId: z.string().min(1, 'Friend ID is required'),
 });
 
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 
-/**
- * Schema for sending a message
- */
+
 export const sendMessageSchema = z.object({
   content: z.string()
     .min(1, 'Message content is required')
@@ -26,9 +19,7 @@ export const sendMessageSchema = z.object({
 
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 
-/**
- * Schema for pagination query params
- */
+
 export const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -36,9 +27,7 @@ export const paginationSchema = z.object({
 
 export type PaginationInput = z.infer<typeof paginationSchema>;
 
-/**
- * Schema for message pagination (higher default limit)
- */
+
 export const messagePaginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -46,16 +35,14 @@ export const messagePaginationSchema = z.object({
 
 export type MessagePaginationInput = z.infer<typeof messagePaginationSchema>;
 
-/**
- * Schema for conversation ID param
- */
+
 export const conversationIdSchema = z.object({
   id: z.string().min(1, 'Conversation ID is required'),
 });
 
 export type ConversationIdInput = z.infer<typeof conversationIdSchema>;
 
-// Response schemas (for documentation/validation)
+
 
 export const UserInfoSchema = z.object({
   id: z.string(),

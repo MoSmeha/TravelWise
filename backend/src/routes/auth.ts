@@ -1,7 +1,4 @@
-/**
- * Auth Routes
- * Authentication endpoints with validation and rate limiting
- */
+
 
 import { Router } from 'express';
 import {
@@ -30,7 +27,7 @@ import {
 
 const router = Router();
 
-// POST /api/auth/register - Register new user
+
 router.post(
   '/register',
   registerRateLimiter,
@@ -38,7 +35,7 @@ router.post(
   register
 );
 
-// POST /api/auth/login - Login (rate-limited)
+
 router.post(
   '/login',
   loginRateLimiter,
@@ -46,7 +43,7 @@ router.post(
   login
 );
 
-// POST /api/auth/refresh - Refresh access token
+
 router.post(
   '/refresh',
   refreshRateLimiter,
@@ -54,14 +51,14 @@ router.post(
   refresh
 );
 
-// POST /api/auth/verify-email - Verify email with OTP
+
 router.post(
   '/verify-email',
   validate(verifyEmailSchema),
   verifyEmail
 );
 
-// POST /api/auth/resend-verification - Resend verification email
+
 router.post(
   '/resend-verification',
   resendVerificationRateLimiter,
@@ -69,7 +66,7 @@ router.post(
   resendVerification
 );
 
-// GET /api/auth/me - Get current user (protected)
+
 router.get('/me', authenticate, me);
 
 export default router;

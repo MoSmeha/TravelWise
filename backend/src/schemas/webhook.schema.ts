@@ -1,15 +1,8 @@
-/**
- * Webhook Zod Schemas
- * Validation schemas for webhook endpoints
- */
+
 
 import { z } from 'zod';
 
-// ============= Query Schemas =============
 
-/**
- * Schema for upcoming trips query params
- */
 export const upcomingTripsQuerySchema = z.object({
   hoursAhead: z
     .string()
@@ -23,20 +16,14 @@ export const upcomingTripsQuerySchema = z.object({
 
 export type UpcomingTripsQuery = z.infer<typeof upcomingTripsQuerySchema>;
 
-// ============= Body Schemas =============
 
-/**
- * Schema for weather checklist item
- */
 const weatherChecklistItemSchema = z.object({
   category: z.string().optional().default('WEATHER'),
   item: z.string().min(1, 'Item name is required'),
   reason: z.string().optional(),
 });
 
-/**
- * Schema for adding weather checklist items
- */
+
 export const addWeatherChecklistSchema = z.object({
   itineraryId: z.string().min(1, 'Itinerary ID is required'),
   items: z
@@ -46,9 +33,7 @@ export const addWeatherChecklistSchema = z.object({
 
 export type AddWeatherChecklistInput = z.infer<typeof addWeatherChecklistSchema>;
 
-/**
- * Schema for sending weather notification
- */
+
 export const sendWeatherNotificationSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
   itineraryId: z.string().optional(),

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// New schema matching the redesigned flow
 export const generateItinerarySchema = z.object({
   country: z.string().min(1, 'Country is required'),
   airportCode: z.string().min(2, 'Airport code is required'),

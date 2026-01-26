@@ -15,9 +15,7 @@ export interface CreateNotificationParams {
   requesterId?: string;
 }
 
-/**
- * Create a new notification and emit via socket for real-time delivery
- */
+
 export async function createNotification(
   userId: string,
   type: NotificationType,
@@ -27,8 +25,7 @@ export async function createNotification(
   postId?: string,
   commentId?: string
 ) {
-  // Check if we should group notifications (e.g. multiple likes on same post)
-  // For now, simple implementation
+
   const notification = await prisma.notification.create({
     data: {
       userId,
@@ -42,7 +39,7 @@ export async function createNotification(
     },
   });
 
-  // Emit real-time notification via Socket.io
+
   socketService.emitToUser(userId, 'notification:new', {
     id: notification.id,
     type,
@@ -57,9 +54,7 @@ export async function createNotification(
   return notification;
 }
 
-/**
- * Get notifications for a user
- */
+
 export async function getNotifications(
   userId: string,
   unreadOnly: boolean = false,
@@ -110,9 +105,7 @@ export async function getNotifications(
   };
 }
 
-/**
- * Mark a notification as read
- */
+
 export async function markAsRead(notificationId: string, userId: string) {
   const notification = await prisma.notification.findUnique({
     where: { id: notificationId },
@@ -128,9 +121,7 @@ export async function markAsRead(notificationId: string, userId: string) {
   });
 }
 
-/**
- * Mark all notifications as read for a user
- */
+
 export async function markAllAsRead(userId: string) {
   return prisma.notification.updateMany({
     where: {
@@ -141,9 +132,7 @@ export async function markAllAsRead(userId: string) {
   });
 }
 
-/**
- * Get unread notification count
- */
+
 export async function getUnreadCount(userId: string) {
   return prisma.notification.count({
     where: {

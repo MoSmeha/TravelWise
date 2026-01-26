@@ -1,4 +1,4 @@
-// Usage: npx tsx prisma/seed-admin.ts
+
 import 'dotenv/config';
 import { PrismaClient } from '../src/generated/prisma/client';
 import { hash } from 'argon2';

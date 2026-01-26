@@ -1,7 +1,4 @@
-/**
- * Webhook Controller
- * Handles n8n automation webhook endpoints
- */
+
 
 import { Request, Response } from 'express';
 import {
@@ -17,10 +14,7 @@ import {
   SendWeatherNotificationInput,
 } from '../schemas/webhook.schema.js';
 
-/**
- * GET /api/webhooks/health
- * Health check for n8n to verify connectivity
- */
+
 export async function getHealth(_req: Request, res: Response) {
   res.json({
     status: 'healthy',
@@ -29,10 +23,7 @@ export async function getHealth(_req: Request, res: Response) {
   });
 }
 
-/**
- * GET /api/webhooks/upcoming-trips
- * Returns itineraries with flights in the next N hours (default 48)
- */
+
 export async function getUpcomingTrips(req: Request, res: Response) {
   try {
     // Query is validated by middleware
@@ -47,10 +38,7 @@ export async function getUpcomingTrips(req: Request, res: Response) {
   }
 }
 
-/**
- * GET /api/webhooks/unchecked-items
- * Returns itineraries with unchecked checklist items, flight in <24 hours
- */
+
 export async function getUncheckedItems(_req: Request, res: Response) {
   try {
     const trips = await fetchUncheckedItems();
@@ -62,10 +50,7 @@ export async function getUncheckedItems(_req: Request, res: Response) {
   }
 }
 
-/**
- * GET /api/webhooks/trips-for-weather-check
- * Returns trips with flight in exactly 2 days, with place coordinates
- */
+
 export async function getTripsForWeatherCheck(_req: Request, res: Response) {
   try {
     const trips = await fetchTripsForWeatherCheck();
@@ -78,10 +63,7 @@ export async function getTripsForWeatherCheck(_req: Request, res: Response) {
   }
 }
 
-/**
- * POST /api/webhooks/add-weather-checklist
- * Bulk add checklist items from n8n weather analysis
- */
+
 export async function addWeatherChecklist(req: Request, res: Response) {
   try {
     // Body is validated by middleware
@@ -99,10 +81,7 @@ export async function addWeatherChecklist(req: Request, res: Response) {
   }
 }
 
-/**
- * POST /api/webhooks/send-weather-notification
- * Create in-app notification and emit via socket.io
- */
+
 export async function sendWeatherNotification(req: Request, res: Response) {
   try {
     // Body is validated by middleware

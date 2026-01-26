@@ -10,7 +10,7 @@ import {
 
 const DEFAULT_LIMIT = 10;
 
-// Common select for author info
+
 const authorSelect = {
   id: true,
   name: true,
@@ -19,7 +19,7 @@ const authorSelect = {
 };
 
 export class PostgresPostProvider implements IPostProvider {
-  // ==================== POST CRUD ====================
+
 
   async createPost(
     authorId: string,
@@ -66,10 +66,10 @@ export class PostgresPostProvider implements IPostProvider {
         author: { select: authorSelect },
       },
       orderBy: { createdAt: 'desc' },
-      take: limit + 1, // Fetch one extra to check if there's more
+      take: limit + 1,
       ...(cursor && {
         cursor: { id: cursor },
-        skip: 1, // Skip the cursor itself
+        skip: 1,
       }),
     });
 
@@ -123,7 +123,7 @@ export class PostgresPostProvider implements IPostProvider {
       where: {
         visibility: 'PUBLIC',
         deletedAt: null,
-        authorId: { not: excludeUserId }, // Exclude current user's posts
+        authorId: { not: excludeUserId },
       },
       include: {
         author: { select: authorSelect },
@@ -150,10 +150,10 @@ export class PostgresPostProvider implements IPostProvider {
     });
   }
 
-  // ==================== LIKES ====================
+
 
   async likePost(postId: string, userId: string): Promise<Like> {
-    // Use transaction to create like and increment counter atomically
+
     const [like] = await prisma.$transaction([
       prisma.like.create({
         data: { postId, userId },
@@ -167,7 +167,7 @@ export class PostgresPostProvider implements IPostProvider {
   }
 
   async unlikePost(postId: string, userId: string): Promise<void> {
-    // Use transaction to delete like and decrement counter atomically
+
     await prisma.$transaction([
       prisma.like.delete({
         where: {
@@ -186,8 +186,7 @@ export class PostgresPostProvider implements IPostProvider {
     cursor?: string,
     limit: number = DEFAULT_LIMIT
   ): Promise<PaginatedResult<LikeWithUser>> {
-    // For composite key, we need a different cursor approach
-    // Using createdAt as cursor instead
+
     const likes = await prisma.like.findMany({
       where: { postId },
       include: {
@@ -222,14 +221,14 @@ export class PostgresPostProvider implements IPostProvider {
     return like !== null;
   }
 
-  // ==================== COMMENTS ====================
+
 
   async addComment(
     postId: string,
     authorId: string,
     content: string
   ): Promise<CommentWithAuthor> {
-    // Use transaction to create comment and increment counter atomically
+
     const [comment] = await prisma.$transaction([
       prisma.comment.create({
         data: { postId, authorId, content },
@@ -258,7 +257,7 @@ export class PostgresPostProvider implements IPostProvider {
       include: {
         author: { select: authorSelect },
       },
-      orderBy: { createdAt: 'asc' }, // Oldest first for comments
+      orderBy: { createdAt: 'asc' },
       take: limit + 1,
       ...(cursor && {
         cursor: { id: cursor },

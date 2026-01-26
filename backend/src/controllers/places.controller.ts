@@ -3,8 +3,7 @@ import { GetPhotosInput, ListPlacesInput, SearchPlaceInput } from '../schemas/pl
 import { placesService } from '../services/places.service.js';
 
 
-//GET /api/places/photos
-//Get Google Places photos for a location
+
 export async function getPhotos(req: Request, res: Response) {
   try {
     const { name, lat, lng, id } = req.query as unknown as GetPhotosInput & { id?: string };
@@ -23,8 +22,7 @@ export async function getPhotos(req: Request, res: Response) {
   }
 }
 
-//GET /api/places/directions
-//Get directions between two points
+
 export async function getDirections(req: Request, res: Response) {
   try {
     const { originLat, originLng, destLat, destLng, waypoints } = req.query;
@@ -48,8 +46,7 @@ export async function getDirections(req: Request, res: Response) {
   }
 }
 
-//GET /api/places/search
-//Search for a place (DB first, then Google with ingestion)
+
 export async function searchPlace(req: Request, res: Response) {
   try {
     const { name, lat, lng } = req.query as unknown as SearchPlaceInput;
@@ -71,8 +68,7 @@ export async function searchPlace(req: Request, res: Response) {
   }
 }
 
-//GET /api/places/meta/cities
-//Get list of cities with place counts
+
 export async function getCities(_req: Request, res: Response) {
   try {
     const cities = await placesService.getCities();
@@ -83,8 +79,7 @@ export async function getCities(_req: Request, res: Response) {
   }
 }
 
-//GET /api/places/meta/categories
-//Get list of categories
+
 export async function getCategories(_req: Request, res: Response) {
   try {
     const categories = await placesService.getCategories();
@@ -95,8 +90,7 @@ export async function getCategories(_req: Request, res: Response) {
   }
 }
 
-//GET /api/places
-//Query places with filters
+
 export async function listPlaces(req: Request, res: Response) {
   try {
     const input = req.query as unknown as ListPlacesInput;
@@ -117,8 +111,7 @@ export async function listPlaces(req: Request, res: Response) {
   }
 }
 
-//GET /api/places/:id
-//Get single place by ID
+
 export async function getPlaceById(req: Request, res: Response) {
   try {
     const { id } = req.params;

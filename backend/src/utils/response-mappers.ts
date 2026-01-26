@@ -1,41 +1,22 @@
-/**
- * Response Mappers
- * Reusable functions for mapping domain objects to API response formats
- * Follows DRY principle - used across multiple controllers
- */
-
 import { LocationCategory, LocationClassification } from '../generated/prisma/client.js';
-
-// ============================================================================
-// Photo URL Helpers
-// ============================================================================
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';
 
-/**
- * Convert a photo reference to a full Google Places photo URL
- * Photo references from the new API look like: places/ChIJ.../photos/AZLasHr...
- * Full URLs start with https://
- */
 function convertPhotoRefToUrl(photoRef: string | null | undefined): string | null {
   if (!photoRef) return null;
   
-  // Already a full URL
   if (photoRef.startsWith('http')) {
     return photoRef;
   }
   
-  // Photo reference from Google Places API (New) - starts with 'places/'
   if (photoRef.startsWith('places/')) {
-    // Extract the photo reference part (after 'photos/')
     const match = photoRef.match(/photos\/(.+)$/);
     if (match && GOOGLE_PLACES_API_KEY) {
       return `${GOOGLE_PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${match[1]}&key=${GOOGLE_PLACES_API_KEY}`;
     }
   }
   
-  // Assume it's a raw photo reference (older format)
   if (GOOGLE_PLACES_API_KEY && photoRef.length > 50) {
     return `${GOOGLE_PLACES_BASE_URL}/photo?maxwidth=800&photo_reference=${photoRef}&key=${GOOGLE_PLACES_API_KEY}`;
   }
@@ -43,9 +24,6 @@ function convertPhotoRefToUrl(photoRef: string | null | undefined): string | nul
   return null;
 }
 
-/**
- * Convert an array of photo references to full URLs
- */
 function convertPhotoRefsToUrls(photoRefs: string[] | undefined): string[] {
   if (!photoRefs || photoRefs.length === 0) return [];
   
@@ -53,10 +31,6 @@ function convertPhotoRefsToUrls(photoRefs: string[] | undefined): string[] {
     .map(ref => convertPhotoRefToUrl(ref))
     .filter((url): url is string => url !== null);
 }
-
-// ============================================================================
-// Place Mappers
-// ============================================================================
 
 export interface PlaceLike {
   id: string;
@@ -123,9 +97,6 @@ export interface AirportResponse {
   longitude: number;
 }
 
-/**
- * Map a place to full location response format
- */
 export function mapPlaceToLocation(place: PlaceLike, notes?: string | null): LocationResponse {
   return {
     id: place.id,
@@ -149,9 +120,6 @@ export function mapPlaceToLocation(place: PlaceLike, notes?: string | null): Loc
   };
 }
 
-/**
- * Map a place to minimal meal response format
- */
 export function mapPlaceToMeal(place: PlaceLike | null): MealResponse | null {
   if (!place) return null;
   return {
@@ -161,9 +129,6 @@ export function mapPlaceToMeal(place: PlaceLike | null): MealResponse | null {
   };
 }
 
-/**
- * Map a place to hotel response format
- */
 export function mapPlaceToHotel(place: PlaceLike | null): HotelResponse | null {
   if (!place) return null;
   return {
@@ -176,9 +141,6 @@ export function mapPlaceToHotel(place: PlaceLike | null): HotelResponse | null {
   };
 }
 
-/**
- * Map airport config to response format
- */
 export function mapAirportToResponse(
   airportConfig: { name: string; code: string; latitude: number; longitude: number } | null,
   fallback: { country: string; code: string }
@@ -199,9 +161,6 @@ export function mapAirportToResponse(
   };
 }
 
-/**
- * Map a place for generate response (includes optional index-based id fallback)
- */
 export function mapPlaceForGenerateResponse(
   loc: PlaceLike | null,
   idx: number,

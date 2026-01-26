@@ -1,49 +1,46 @@
-# Dependencies
-node_modules
+FROM node:22-alpine AS builder
 
-# Build output
-dist
+WORKDIR /app
 
-# Environment files
-.env
-.env.local
-.env.*.local
+COPY package*.json ./
+COPY prisma ./prisma/
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-*.log
+RUN npm ci
 
-# OS files
-.DS_Store
-Thumbs.db
+COPY . .
 
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
+ENV DATABASE_URL="postgresql://placeholder:placeholder@placeholder:5432/placeholder"
 
-# Git
-.git
-.gitignore
-.gitattributes
+RUN npx prisma generate
 
-# Docker
-Dockerfile
-.dockerignore
-docker-compose*.yml
+RUN npm run build
 
-# Documentation
-README.md
-docs
+FROM node:22-alpine
 
-# Test files
-*.test.ts
-*.spec.ts
-__tests__
-coverage
+WORKDIR /app
 
-# CI/CD
-.github
+RUN apk add --no-cache dumb-init
+
+COPY package*.json ./
+COPY prisma ./prisma/
+
+RUN npm ci --only=production
+
+ENV DATABASE_URL="postgresql://placeholder:placeholder@placeholder:5432/placeholder"
+
+RUN npx prisma generate
+
+COPY --from=builder /app/dist ./dist
+
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+RUN chown -R nodejs:nodejs /app
+
+USER nodejs
+
+EXPOSE 3000
+
+ENTRYPOINT ["dumb-init", "--"]
+
+CMD ["node", "dist/index.js"]

@@ -1,15 +1,9 @@
-/**
- * Webhook Provider Contract
- * Interfaces and types for webhook data access layer
- */
+
 
 import { LocationCategory, NotificationType, ChecklistCategory } from '../generated/prisma/client.js';
 
-// ============= Raw Database Record Types (from Prisma) =============
 
-/**
- * Raw trip record from database (before transformation)
- */
+
 export interface RawUpcomingTripRecord {
   id: string;
   country: string;
@@ -30,9 +24,6 @@ export interface RawUpcomingTripRecord {
   }>;
 }
 
-/**
- * Raw trip with unchecked items from database
- */
 export interface RawUncheckedItemsRecord {
   id: string;
   country: string;
@@ -44,9 +35,6 @@ export interface RawUncheckedItemsRecord {
   }>;
 }
 
-/**
- * Raw trip for weather check from database
- */
 export interface RawTripForWeatherCheckRecord {
   id: string;
   userId: string | null;
@@ -78,7 +66,7 @@ export interface RawTripForWeatherCheckRecord {
   }>;
 }
 
-// ============= Transformed/Output Types (for service layer) =============
+
 
 export interface UpcomingTripRecord {
   id: string;
@@ -122,7 +110,7 @@ export interface TripForWeatherCheckRecord {
   }>;
 }
 
-// ============= Input Types =============
+
 
 export interface WeatherChecklistItem {
   category?: string;
@@ -153,31 +141,21 @@ export interface NotificationRecord {
   createdAt: Date;
 }
 
-// ============= Provider Interface =============
+
 
 export interface IWebhookProvider {
-  /**
-   * Find trips with flight in date range (raw data)
-   */
+
   findUpcomingTrips(startDate: Date, endDate: Date): Promise<RawUpcomingTripRecord[]>;
 
-  /**
-   * Find trips with unchecked items in date range (raw data)
-   */
+
   findTripsWithUncheckedItems(startDate: Date, endDate: Date): Promise<RawUncheckedItemsRecord[]>;
 
-  /**
-   * Find trips for weather check in date range (raw data)
-   */
+
   findTripsForWeatherCheck(startDate: Date, endDate: Date): Promise<RawTripForWeatherCheckRecord[]>;
 
-  /**
-   * Bulk create checklist items
-   */
+
   createWeatherChecklist(data: CreateWeatherChecklistData): Promise<{ count: number }>;
 
-  /**
-   * Create a notification
-   */
+
   createWeatherNotification(data: CreateWeatherNotificationData): Promise<NotificationRecord>;
 }

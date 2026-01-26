@@ -1,7 +1,4 @@
-/**
- * Webhook Service
- * Business logic for webhook operations - transformations, calculations, side effects
- */
+
 
 import { webhookProvider } from '../providers/webhook.provider.pg.js';
 import { socketService } from './socket.service.js';
@@ -18,20 +15,16 @@ import {
   RawTripForWeatherCheckRecord,
 } from '../provider-contract/webhook.provider-contract.js';
 
-// ============= Transformation Helpers =============
 
-/**
- * Calculate hours until flight from now
- */
+
+
 function calculateHoursUntilFlight(flightDate: Date | null): number | null {
   if (!flightDate) return null;
   const now = new Date();
   return Math.round((flightDate.getTime() - now.getTime()) / (1000 * 60 * 60));
 }
 
-/**
- * Transform raw upcoming trip to response format
- */
+
 function transformUpcomingTrip(raw: RawUpcomingTripRecord): UpcomingTripRecord {
   const firstDay = raw.days.find(d => d.dayNumber === 1);
   const firstDayPlaces = firstDay?.items.map(i => i.place.name) || [];
@@ -48,9 +41,7 @@ function transformUpcomingTrip(raw: RawUpcomingTripRecord): UpcomingTripRecord {
   };
 }
 
-/**
- * Transform raw unchecked items trip to response format
- */
+
 function transformUncheckedItemsTrip(raw: RawUncheckedItemsRecord): UncheckedItemsRecord {
   return {
     id: raw.id,
@@ -66,12 +57,9 @@ function transformUncheckedItemsTrip(raw: RawUncheckedItemsRecord): UncheckedIte
   };
 }
 
-/**
- * Transform raw weather check trip to response format
- * Includes deduplication of places by lat/lon
- */
+
 function transformWeatherCheckTrip(raw: RawTripForWeatherCheckRecord): TripForWeatherCheckRecord {
-  // Extract all places from all days
+
   const allPlaces = raw.days.flatMap(day =>
     day.items.map(item => ({
       name: item.place.name,
@@ -82,7 +70,7 @@ function transformWeatherCheckTrip(raw: RawTripForWeatherCheckRecord): TripForWe
     }))
   );
 
-  // Deduplicate places by unique lat/lon (business logic)
+
   const uniquePlaces = Array.from(
     new Map(allPlaces.map(p => [`${p.lat},${p.lon}`, p])).values()
   );
@@ -100,11 +88,9 @@ function transformWeatherCheckTrip(raw: RawTripForWeatherCheckRecord): TripForWe
   };
 }
 
-// ============= Service Functions =============
 
-/**
- * Get upcoming trips with flight in next N hours
- */
+
+
 export async function getUpcomingTrips(
   hoursAhead: number = 48,
   provider: IWebhookProvider = webhookProvider
@@ -116,9 +102,7 @@ export async function getUpcomingTrips(
   return rawTrips.map(transformUpcomingTrip);
 }
 
-/**
- * Get trips with unchecked checklist items (flight within 24 hours)
- */
+
 export async function getUncheckedItems(
   provider: IWebhookProvider = webhookProvider
 ): Promise<UncheckedItemsRecord[]> {
@@ -129,9 +113,7 @@ export async function getUncheckedItems(
   return rawTrips.map(transformUncheckedItemsTrip);
 }
 
-/**
- * Get trips for weather check (flight in 2 days)
- */
+
 export async function getTripsForWeatherCheck(
   provider: IWebhookProvider = webhookProvider
 ): Promise<TripForWeatherCheckRecord[]> {
@@ -147,14 +129,12 @@ export async function getTripsForWeatherCheck(
   return rawTrips.map(transformWeatherCheckTrip);
 }
 
-/**
- * Add weather-based checklist items
- */
+
 export async function addWeatherChecklist(
   data: CreateWeatherChecklistData,
   provider: IWebhookProvider = webhookProvider
 ): Promise<{ count: number }> {
-  // Add default reason if not provided (business logic)
+
   const itemsWithDefaults = {
     ...data,
     items: data.items.map(item => ({
@@ -166,16 +146,14 @@ export async function addWeatherChecklist(
   return provider.createWeatherChecklist(itemsWithDefaults);
 }
 
-/**
- * Send weather notification (creates in DB + emits via socket)
- */
+
 export async function sendWeatherNotification(
   data: CreateWeatherNotificationData,
   provider: IWebhookProvider = webhookProvider
 ): Promise<NotificationRecord> {
   const notification = await provider.createWeatherNotification(data);
 
-  // Emit real-time notification via socket.io (side effect - belongs in service)
+
   socketService.emitToUser(data.userId, 'notification:new', {
     id: notification.id,
     type: 'TRIP_REMINDER',

@@ -8,8 +8,7 @@ import {
   deleteAllItems as deleteAllChecklistItems
 } from '../services/checklist.service.js';
 
-//GET /api/checklist/:itineraryId
-//Get all checklist items for an itinerary
+
 export async function getChecklist(req: Request, res: Response) {
   try {
     const { itineraryId } = req.params;
@@ -23,8 +22,7 @@ export async function getChecklist(req: Request, res: Response) {
   }
 }
 
-//PATCH /api/checklist/:itemId
-//Toggle checklist item checked status
+
 export async function updateItem(req: Request, res: Response) {
   try {
     const { itemId } = req.params;
@@ -39,8 +37,7 @@ export async function updateItem(req: Request, res: Response) {
   }
 }
 
-//POST /api/checklist/:itineraryId
-//Add custom checklist item
+
 export async function createItem(req: Request, res: Response) {
   try {
     const { itineraryId } = req.params;
@@ -55,8 +52,7 @@ export async function createItem(req: Request, res: Response) {
   }
 }
 
-//DELETE /api/checklist/:itemId
-//Delete a single checklist item
+
 export async function deleteItem(req: Request, res: Response) {
   try {
     const { itemId } = req.params;
@@ -70,8 +66,7 @@ export async function deleteItem(req: Request, res: Response) {
   }
 }
 
-//DELETE /api/checklist/all/:itineraryId
-//Delete all checklist items for an itinerary
+
 export async function deleteAllItems(req: Request, res: Response) {
   try {
     const { itineraryId } = req.params;

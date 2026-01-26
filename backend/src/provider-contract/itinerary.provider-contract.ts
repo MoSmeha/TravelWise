@@ -176,8 +176,6 @@ export interface CreatedItinerary {
   routeSummary: string | null;
 }
 
-
-// Data for creating a new place from external source
 export interface CreatePlaceData {
   googlePlaceId: string;
   name: string;

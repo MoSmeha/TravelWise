@@ -1,9 +1,3 @@
-/**
- * Enum mapping utilities
- * Convert string values to type-safe enums
- */
-
-// TypeScript enums (not from Prisma as no model uses them)
 export enum BudgetLevel {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
@@ -11,17 +5,14 @@ export enum BudgetLevel {
 }
 
 export enum TravelStyle {
-  ADVENTURE = 'ADVENTURE',           // hiking, trekking, diving, safaris, extreme sports
-  CULTURAL = 'CULTURAL',             // museums, UNESCO sites, local traditions, food tours
-  NATURE_ECO = 'NATURE_ECO',         // national parks, wildlife viewing, sustainable trips
-  BEACH_RELAXATION = 'BEACH_RELAXATION', // resorts, islands, spas, tropical getaways
-  URBAN_CITY = 'URBAN_CITY',         // architecture, nightlife, shopping, entertainment
-  FAMILY_GROUP = 'FAMILY_GROUP',     // multi-generational trips, theme parks, easy hotels
+  ADVENTURE = 'ADVENTURE',
+  CULTURAL = 'CULTURAL',
+  NATURE_ECO = 'NATURE_ECO',
+  BEACH_RELAXATION = 'BEACH_RELAXATION',
+  URBAN_CITY = 'URBAN_CITY',
+  FAMILY_GROUP = 'FAMILY_GROUP',
 }
 
-/**
- * Map budget level string to enum
- */
 export function parseBudgetLevel(value: string | undefined): BudgetLevel {
   const map: Record<string, BudgetLevel> = {
     'LOW': BudgetLevel.LOW,
@@ -31,9 +22,6 @@ export function parseBudgetLevel(value: string | undefined): BudgetLevel {
   return map[value || 'MEDIUM'] || BudgetLevel.MEDIUM;
 }
 
-/**
- * Map travel style string to enum
- */
 export function parseTravelStyle(value: string | undefined): TravelStyle {
   const map: Record<string, TravelStyle> = {
     'ADVENTURE': TravelStyle.ADVENTURE,
@@ -46,9 +34,6 @@ export function parseTravelStyle(value: string | undefined): TravelStyle {
   return map[value || 'CULTURAL'] || TravelStyle.CULTURAL;
 }
 
-/**
- * Parse array of travel styles (max 3)
- */
 export function parseTravelStyles(values: string[] | undefined): TravelStyle[] {
   if (!values || values.length === 0) {
     return [TravelStyle.CULTURAL];
@@ -58,9 +43,6 @@ export function parseTravelStyles(values: string[] | undefined): TravelStyle[] {
 
 import { PriceLevel } from '../generated/prisma/client.js';
 
-/**
- * Map BudgetLevel to PriceLevel for database filtering
- */
 export function mapBudgetToPriceLevel(budget: BudgetLevel): PriceLevel | undefined {
   switch (budget) {
     case BudgetLevel.LOW: return PriceLevel.INEXPENSIVE;
@@ -70,17 +52,11 @@ export function mapBudgetToPriceLevel(budget: BudgetLevel): PriceLevel | undefin
   }
 }
 
-/**
- * List of known Lebanese cities for address parsing
- */
 export const LEBANON_CITIES = [
   'Beirut', 'Byblos', 'Jbeil', 'Batroun', 'Jounieh',
   'Sidon', 'Saida', 'Tyre', 'Sour', 'Tripoli', 'Baalbek', 'Zahle'
 ];
 
-/**
- * Extract city name from a formatted address
- */
 export function extractCityFromAddress(address: string): string {
   const addressLower = address.toLowerCase();
   

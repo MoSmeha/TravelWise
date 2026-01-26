@@ -114,12 +114,10 @@ class AuthPgProvider implements IAuthProvider {
     return result.count;
   }
 
-  // -------------------------------------------------------------------------
-  // Email Verification Token Operations
-  // -------------------------------------------------------------------------
+
 
   async createVerificationToken(data: CreateVerificationTokenData): Promise<void> {
-    // First delete any existing tokens for this user
+
     await this.deleteUserVerificationTokens(data.userId);
     
     await prisma.emailVerificationToken.create({

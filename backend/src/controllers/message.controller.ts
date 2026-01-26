@@ -14,10 +14,7 @@ interface AuthRequest extends Request {
   user?: { userId: string };
 }
 
-/**
- * GET /messages/conversations
- * Get paginated list of conversations for the authenticated user
- */
+
 export async function getConversations(req: AuthRequest, res: Response) {
   try {
     const userId = req.user?.userId;
@@ -25,7 +22,7 @@ export async function getConversations(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Data already validated by middleware
+
     const { page, limit } = req.query as unknown as { page: number; limit: number };
     const result = await listConversations(userId, page, limit);
     return res.json(result);
@@ -35,10 +32,7 @@ export async function getConversations(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * GET /messages/conversations/:id
- * Get a single conversation with participant details
- */
+
 export async function getConversation(req: AuthRequest, res: Response) {
   try {
     const userId = req.user?.userId;
@@ -61,10 +55,7 @@ export async function getConversation(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * POST /messages/conversations
- * Create or get an existing direct conversation with a friend
- */
+
 export async function createConversation(req: AuthRequest, res: Response) {
   try {
     const userId = req.user?.userId;
@@ -87,10 +78,7 @@ export async function createConversation(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * GET /messages/conversations/:id/messages
- * Get paginated messages for a conversation
- */
+
 export async function getMessages(req: AuthRequest, res: Response) {
   try {
     const userId = req.user?.userId;
@@ -113,10 +101,7 @@ export async function getMessages(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * POST /messages/conversations/:id/messages
- * Send a message in a conversation
- */
+
 export async function sendMessage(req: AuthRequest, res: Response) {
   try {
     const userId = req.user?.userId;
@@ -151,10 +136,7 @@ export async function sendMessage(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * PUT /messages/conversations/:id/read
- * Mark a conversation as read
- */
+
 export async function markConversationRead(req: AuthRequest, res: Response) {
   try {
     const userId = req.user?.userId;

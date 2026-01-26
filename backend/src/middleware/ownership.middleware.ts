@@ -1,29 +1,17 @@
-/**
- * Ownership Middleware
- * Scalable user data isolation - verifies the authenticated user owns or has access to a resource
- */
+
 
 import { NextFunction, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { AuthenticatedRequest } from './auth.middleware.js';
 
-/**
- * Result of an ownership lookup
- */
+
 interface OwnershipResult {
   ownerId: string | null;
   sharedUserIds?: string[];  // Future: users invited to this resource
 }
 
-/**
- * Resource lookup functions
- * Maps resource types to their ownership lookup logic
- */
 const resourceLookups: Record<string, (id: string) => Promise<OwnershipResult | null>> = {
-  /**
-   * Itinerary ownership lookup
-   * Also checks ItineraryShare for users with ACCEPTED status
-   */
+
   itinerary: async (id: string) => {
     const itinerary = await prisma.userItinerary.findUnique({
       where: { id },
@@ -43,9 +31,7 @@ const resourceLookups: Record<string, (id: string) => Promise<OwnershipResult | 
       : null;
   },
 
-  /**
-   * ChecklistItem ownership lookup (via parent itinerary)
-   */
+
   checklistItem: async (id: string) => {
     const item = await prisma.checklistItem.findUnique({
       where: { id },
@@ -54,9 +40,7 @@ const resourceLookups: Record<string, (id: string) => Promise<OwnershipResult | 
     return item ? { ownerId: item.itinerary.userId } : null;
   },
 
-  /**
-   * ItineraryItem ownership lookup (via parent day -> itinerary)
-   */
+
   itineraryItem: async (id: string) => {
     const item = await prisma.itineraryItem.findUnique({
       where: { id },
@@ -65,9 +49,7 @@ const resourceLookups: Record<string, (id: string) => Promise<OwnershipResult | 
     return item ? { ownerId: item.day.itinerary.userId } : null;
   },
 
-  /**
-   * ItineraryEmbedding ownership lookup (via parent itinerary)
-   */
+
   itineraryEmbedding: async (id: string) => {
     const embedding = await prisma.itineraryEmbedding.findUnique({
       where: { id },
@@ -77,11 +59,6 @@ const resourceLookups: Record<string, (id: string) => Promise<OwnershipResult | 
   },
 };
 
-/**
- * Check if a user has access to a resource
- * @param userId - The user ID to check
- * @param result - The ownership lookup result
- */
 function hasAccess(userId: string, result: OwnershipResult): boolean {
   // Owner always has access
   if (result.ownerId === userId) {
@@ -96,20 +73,7 @@ function hasAccess(userId: string, result: OwnershipResult): boolean {
   return false;
 }
 
-/**
- * Factory function to create ownership verification middleware
- * 
- * @param resourceType - The type of resource ('itinerary', 'checklistItem', etc.)
- * @param paramName - The request parameter containing the resource ID (default: 'id')
- * @returns Express middleware function
- * 
- * @example
- * // Verify user owns the itinerary with ID from :id param
- * router.get('/:id', requireOwnership('itinerary'), controller.get);
- * 
- * // Verify user owns the itinerary with ID from :itineraryId param
- * router.get('/:itineraryId/items', requireOwnership('itinerary', 'itineraryId'), controller.getItems);
- */
+
 export function requireOwnership(resourceType: string, paramName: string = 'id') {
   return async (
     req: AuthenticatedRequest,
@@ -151,7 +115,7 @@ export function requireOwnership(resourceType: string, paramName: string = 'id')
         return;
       }
       
-      // User has access, continue to the next middleware/handler
+      
       next();
     } catch (error: any) {
       console.error(`Ownership check error for ${resourceType}:`, error.message);

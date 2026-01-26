@@ -31,7 +31,7 @@ class SocketService {
           return next(new Error('Authentication error'));
         }
 
-        // Verify token (strip 'Bearer ' if present)
+
         const tokenString = token.startsWith('Bearer ') ? token.slice(7) : token;
         const payload = verifyAccessToken(tokenString);
 
@@ -51,7 +51,7 @@ class SocketService {
 
       console.log(`[SOCKET] User connected: ${socket.userId}, socketId: ${socket.id}`);
       
-      // Add socket to user's socket list
+
       if (!this.userSockets.has(socket.userId)) {
         this.userSockets.set(socket.userId, new Set());
       }
@@ -59,13 +59,13 @@ class SocketService {
       
       console.log(`[SOCKET] Active users: ${Array.from(this.userSockets.keys()).join(', ')}`);
 
-      // Join a room specifically for this user
+
       socket.join(`user:${socket.userId}`);
 
-      // Location sharing: Join itinerary room
+
       socket.on('join-itinerary', async (itineraryId: string) => {
         try {
-          // Verify user has access to itinerary
+
           const permission = await checkPermission(itineraryId, socket.userId!);
           if (permission) {
             socket.join(`itinerary:${itineraryId}`);
@@ -79,22 +79,22 @@ class SocketService {
         }
       });
 
-      // Location sharing: Leave itinerary room
+
       socket.on('leave-itinerary', (itineraryId: string) => {
         socket.leave(`itinerary:${itineraryId}`);
         console.log(`[SOCKET] User ${socket.userId} left itinerary room: ${itineraryId}`);
       });
 
-      // Location sharing: Update location
+
       socket.on('update-location', async (data: any) => {
         try {
-          // Validate input
+
           const validatedData = UpdateLocationSchema.parse(data);
           
-          // Update location in database
+
           await updateUserLocation(socket.userId!, validatedData);
           
-          // Broadcast to itinerary collaborators
+
           socket.to(`itinerary:${validatedData.itineraryId}`).emit('location-updated', {
             userId: socket.userId,
             location: {
@@ -116,10 +116,10 @@ class SocketService {
         console.log(`[SOCKET] User disconnected: ${socket.userId}, reason: ${reason}`);
         
         if (socket.userId) {
-          // Clean up user locations from all itineraries
+
           await cleanupUserLocations(socket.userId);
           
-          // Notify all itinerary rooms this user was in
+
           const rooms = Array.from(socket.rooms);
           rooms.forEach(room => {
             if (room.startsWith('itinerary:')) {
@@ -129,7 +129,7 @@ class SocketService {
             }
           });
           
-          // Remove from active users
+
           if (this.userSockets.has(socket.userId)) {
             this.userSockets.get(socket.userId)?.delete(socket.id);
             if (this.userSockets.get(socket.userId)?.size === 0) {
@@ -145,19 +145,19 @@ class SocketService {
     console.log('[SYSTEM] Socket.IO initialized');
   }
 
-  // Emit event to a specific user
+
   emitToUser(userId: string, event: string, data: any) {
     if (!this.io) return;
     this.io.to(`user:${userId}`).emit(event, data);
   }
 
-  // Emit event to an itinerary room
+
   emitToItinerary(itineraryId: string, event: string, data: any) {
     if (!this.io) return;
     this.io.to(`itinerary:${itineraryId}`).emit(event, data);
   }
 
-  // Check if a user is online
+
   isUserOnline(userId: string): boolean {
     return this.userSockets.has(userId) && (this.userSockets.get(userId)?.size || 0) > 0;
   }

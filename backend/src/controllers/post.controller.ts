@@ -16,11 +16,7 @@ import {
 } from '../services/post.service.js';
 import { PostVisibility } from '../generated/prisma/client.js';
 
-/**
- * Create a new post
- * POST /api/posts
- * Expects multipart/form-data with 'image' field
- */
+
 export async function createPost(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
@@ -44,10 +40,7 @@ export async function createPost(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Get friends' posts feed
- * GET /api/posts/feed
- */
+
 export async function getFeed(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
@@ -66,10 +59,7 @@ export async function getFeed(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Get public posts feed (discover)
- * GET /api/posts/discover
- */
+
 export async function getPublicFeed(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
@@ -88,10 +78,7 @@ export async function getPublicFeed(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Get posts by a specific user
- * GET /api/posts/user/:userId
- */
+
 export async function getUserPosts(req: AuthRequest, res: Response) {
   try {
     const currentUserId = req.user!.userId;
@@ -112,10 +99,7 @@ export async function getUserPosts(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Get a specific post
- * GET /api/posts/:id
- */
+
 export async function getPost(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
@@ -134,10 +118,7 @@ export async function getPost(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Delete a post
- * DELETE /api/posts/:id
- */
+
 export async function deletePost(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
@@ -158,10 +139,7 @@ export async function deletePost(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Like a post
- * POST /api/posts/:id/like
- */
+
 export async function likePost(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
@@ -182,10 +160,7 @@ export async function likePost(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Unlike a post
- * DELETE /api/posts/:id/like
- */
+
 export async function unlikePost(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
@@ -206,10 +181,7 @@ export async function unlikePost(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Get likes for a post
- * GET /api/posts/:id/likes
- */
+
 export async function getPostLikes(req: AuthRequest, res: Response) {
   try {
     const { id } = req.params;
@@ -228,10 +200,7 @@ export async function getPostLikes(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Add a comment to a post
- * POST /api/posts/:id/comments
- */
+
 export async function addComment(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
@@ -250,10 +219,7 @@ export async function addComment(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Get comments for a post
- * GET /api/posts/:id/comments
- */
+
 export async function getPostComments(req: AuthRequest, res: Response) {
   try {
     const { id } = req.params;
@@ -272,10 +238,7 @@ export async function getPostComments(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Delete a comment
- * DELETE /api/posts/:id/comments/:commentId
- */
+
 export async function deleteComment(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;

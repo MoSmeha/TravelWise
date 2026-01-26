@@ -190,7 +190,7 @@ class ItineraryShareProviderPg implements IItineraryShareProvider {
   }
 
   async getUserPermission(itineraryId: string, userId: string): Promise<SharePermission | null> {
-    // Check if user is the original creator
+
     const itinerary = await this.db.userItinerary.findUnique({
       where: { id: itineraryId },
       select: { userId: true },
@@ -200,7 +200,7 @@ class ItineraryShareProviderPg implements IItineraryShareProvider {
       return SharePermission.OWNER;
     }
 
-    // Check if user has a share
+
     const share = await this.db.itineraryShare.findFirst({
       where: {
         itineraryId,

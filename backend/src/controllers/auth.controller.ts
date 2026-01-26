@@ -20,7 +20,7 @@ import {
 } from '../services/auth.service.js';
 import { sendVerificationEmail, sendWelcomeEmail } from '../services/email.service.js';
 
-//POST /api/auth/register
+
 
 export async function register(req: Request, res: Response): Promise<void> {
   try {
@@ -47,7 +47,7 @@ export async function register(req: Request, res: Response): Promise<void> {
   }
 }
 
-//POST /api/auth/login
+
 
 export async function login(req: Request, res: Response): Promise<void> {
   try {
@@ -78,8 +78,7 @@ export async function login(req: Request, res: Response): Promise<void> {
   }
 }
 
-//POST /api/auth/refresh
-//Refresh access token using refresh token
+
 export async function refresh(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as RefreshTokenInput;
@@ -105,8 +104,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
   }
 }
 
-//POST /api/auth/verify-email
-//Verify email using OTP
+
 export async function verifyEmail(req: Request, res: Response): Promise<void> {
   try {
     const { email, otp } = req.body as VerifyEmailInput;
@@ -137,10 +135,7 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
   }
 }
 
-/**
- * POST /api/auth/resend-verification
- * Resend verification email
- */
+
 export async function resendVerification(req: Request, res: Response): Promise<void> {
   try {
     const input = req.body as ResendVerificationInput;
@@ -174,14 +169,9 @@ export async function resendVerification(req: Request, res: Response): Promise<v
   }
 }
 
-// ============================================================================
-// User Info
-// ============================================================================
 
-/**
- * GET /api/auth/me
- * Get current authenticated user
- */
+
+
 export async function me(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     if (!req.user) {
