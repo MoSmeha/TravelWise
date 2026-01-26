@@ -184,6 +184,7 @@ export default function ProfileScreen() {
         keyExtractor={(item) => item.id}
         numColumns={viewMode === 'grid' ? 3 : 1}
         key={viewMode}
+        columnWrapperStyle={viewMode === 'grid' ? { paddingHorizontal: 16 } : undefined}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={
           postsLoading ? (
