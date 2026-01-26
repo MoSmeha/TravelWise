@@ -137,7 +137,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
             onPress={handleSubmit}
             disabled={!imageUri || createPostMutation.isPending}
             className={`px-4 py-2 rounded-full ${
-              imageUri && !createPostMutation.isPending ? 'bg-blue-600' : 'bg-gray-300'
+              imageUri && !createPostMutation.isPending ? 'bg-primary' : 'bg-gray-300'
             }`}
           >
             {createPostMutation.isPending ? (
@@ -203,7 +203,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
                 key={v}
                 onPress={() => setVisibility(v)}
                 className={`flex-1 py-3 rounded-xl items-center ${
-                  visibility === v ? 'bg-blue-600' : 'bg-gray-100'
+                  visibility === v ? 'bg-primary' : 'bg-gray-100'
                 }`}
               >
                 <Text

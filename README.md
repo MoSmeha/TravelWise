@@ -2,21 +2,34 @@
 
 <br><br>
 
+## License
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+<br><br>
+
 <!-- project overview -->
 <img src="./readme/title2.svg"/>
 
-> Description here.
->
-> Description here.
+> TravelWise is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps. It also lets travelers share experiences, making every journey easier and more enjoyable. 
 
 <br><br>
 
 <!-- System Design -->
 <img src="./readme/title3.svg"/>
 
-### Add Title Here
+### System Design
+<img src="./readme/System_Design.png"/>
 
-- To be decided on later on.
+### Entity Relationship Diagram
+
+<img src="./readme/Database_Architecture.png"/>
+
+### n8n
+
+<img src="./readme/n8n.png"/>
 
 <br><br>
 
