@@ -1,17 +1,10 @@
-/**
- * Admin Auth Middleware
- * Ensures the authenticated user has admin privileges
- */
+
 
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from './auth.middleware.js';
 import prisma from '../lib/prisma.js';
 
-/**
- * Require admin middleware
- * Must be used AFTER authenticate middleware
- * Verifies that the authenticated user has isAdmin: true
- */
+
 export async function requireAdmin(
   req: AuthenticatedRequest,
   res: Response,

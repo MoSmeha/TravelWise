@@ -1,11 +1,8 @@
-/**
- * Message Provider Contract
- * Interface for messaging operations
- */
+
 
 import { Conversation, ConversationParticipant, Message } from '../generated/prisma/client.js';
 
-// Extended types with includes
+
 export interface ConversationWithDetails extends Conversation {
   participants: ConversationParticipantWithUser[];
   messages?: Message[];
@@ -42,19 +39,18 @@ export interface PaginatedResult<T> {
 }
 
 export interface IMessageProvider {
-  // Conversations
   getOrCreateDirectConversation(userId: string, friendId: string): Promise<ConversationWithDetails>;
   getConversations(userId: string, page: number, limit: number): Promise<PaginatedResult<ConversationWithDetails>>;
   getConversation(conversationId: string, userId: string): Promise<ConversationWithDetails | null>;
   
-  // Messages
+
   getMessages(conversationId: string, userId: string, page: number, limit: number): Promise<PaginatedResult<MessageWithSender>>;
   sendMessage(conversationId: string, senderId: string, content: string): Promise<MessageWithSender>;
   
-  // Read status
+
   markConversationRead(conversationId: string, userId: string): Promise<void>;
   
-  // Utilities
+
   getConversationParticipantIds(conversationId: string): Promise<string[]>;
   isUserParticipant(conversationId: string, userId: string): Promise<boolean>;
 }

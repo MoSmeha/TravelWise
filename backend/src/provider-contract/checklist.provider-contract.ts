@@ -9,7 +9,6 @@ export interface CreateChecklistItemData {
   source?: 'ai' | 'user';
 }
 
-
 export interface ChecklistItemRecord {
   id: string;
   itineraryId: string;
@@ -26,12 +25,7 @@ export interface IChecklistProvider {
   
   findByItineraryId(itineraryId: string): Promise<ChecklistItemRecord[]>;
 
-  
-  findById(id: string): Promise<ChecklistItemRecord | null>;
-
-
-
-  
+  findById(id: string): Promise<ChecklistItemRecord | null>;  
   create(data: CreateChecklistItemData): Promise<ChecklistItemRecord>;
 
   
@@ -40,9 +34,6 @@ export interface IChecklistProvider {
   
   delete(id: string): Promise<void>;
 
-  
-  deleteAll(itineraryId: string): Promise<{ count: number }>;
-
-  
+  deleteAll(itineraryId: string): Promise<{ count: number }>;  
   createMany(items: CreateChecklistItemData[]): Promise<{ count: number }>;
 }

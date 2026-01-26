@@ -1,14 +1,8 @@
-/**
- * Rate Limit Middleware
- * Protects authentication endpoints from brute force attacks
- */
+
 
 import rateLimit from 'express-rate-limit';
 
-/**
- * Login rate limiter
- * 5 attempts per 15 minutes per IP
- */
+
 export const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts
@@ -26,10 +20,7 @@ export const loginRateLimiter = rateLimit({
   },
 });
 
-/**
- * Registration rate limiter
- * More lenient: 10 attempts per hour per IP
- */
+
 export const registerRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // 10 attempts
@@ -45,10 +36,7 @@ export const registerRateLimiter = rateLimit({
   },
 });
 
-/**
- * Resend verification rate limiter
- * 3 attempts per 10 minutes per IP
- */
+
 export const resendVerificationRateLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 3, // 3 attempts
@@ -64,11 +52,7 @@ export const resendVerificationRateLimiter = rateLimit({
   },
 });
 
-/**
- * Token refresh rate limiter
- * More lenient as it's used for normal app operation
- * 30 attempts per minute per IP
- */
+
 export const refreshRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 30, // 30 attempts
