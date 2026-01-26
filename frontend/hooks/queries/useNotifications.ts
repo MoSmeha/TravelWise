@@ -13,7 +13,7 @@ export interface Notification {
   createdAt: string;
 }
 
-// Fetch all notifications
+
 export const useNotifications = () => {
   const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
@@ -26,7 +26,7 @@ export const useNotifications = () => {
   });
 };
 
-// Fetch unread count
+
 export const useUnreadNotificationCount = () => {
   const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
@@ -39,7 +39,7 @@ export const useUnreadNotificationCount = () => {
   });
 };
 
-// Mark notification as read
+
 export const useMarkNotificationRead = () => {
   const queryClient = useQueryClient();
   
@@ -55,7 +55,7 @@ export const useMarkNotificationRead = () => {
   });
 };
 
-// Mark all notifications as read
+
 export const useMarkAllNotificationsRead = () => {
   const queryClient = useQueryClient();
   

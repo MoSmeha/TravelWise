@@ -4,9 +4,7 @@ import { BlurView } from 'expo-blur';
 import { DAY_COLORS } from '../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+
 
 interface MapLegendProps {
   days: number;

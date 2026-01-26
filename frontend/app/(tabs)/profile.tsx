@@ -16,7 +16,7 @@ import type { Post } from '../../types/post';
 import Toast from 'react-native-toast-message';
 
 const { width: screenWidth } = Dimensions.get('window');
-const imageSize = (screenWidth - 32 - 8) / 3; // 3 columns with gaps
+const imageSize = (screenWidth - 32 - 8) / 3;
 
 export default function ProfileScreen() {
   const { data: user, isLoading, isError } = useUser();
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
       <View className="px-6 -mt-6">
         <ProfileInfo user={user} />
 
-        {/* Friends Interaction */}
+
         <TouchableOpacity 
           className="flex-row items-center justify-between bg-white p-4 rounded-xl border border-gray-100 mb-4 shadow-sm"
           onPress={() => router.push('/friends')}
@@ -99,7 +99,7 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </TouchableOpacity>
 
-        {/* Logout */}
+
         <TouchableOpacity 
           className="flex-row items-center justify-center bg-red-50 p-4 rounded-xl border border-red-100 mb-4"
           onPress={handleLogout}
@@ -108,7 +108,7 @@ export default function ProfileScreen() {
           <Text className="text-red-600 font-semibold ml-2">Sign Out</Text>
         </TouchableOpacity>
 
-        {/* Posts Section Header */}
+
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-lg font-bold text-gray-900">My Posts</Text>
           <View className="flex-row">
@@ -183,7 +183,7 @@ export default function ProfileScreen() {
         renderItem={viewMode === 'grid' ? renderGridItem : renderListItem}
         keyExtractor={(item) => item.id}
         numColumns={viewMode === 'grid' ? 3 : 1}
-        key={viewMode} // Force re-render when switching modes
+        key={viewMode}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={
           postsLoading ? (
@@ -206,7 +206,7 @@ export default function ProfileScreen() {
         onRefresh={refetchPosts}
       />
 
-      {/* FAB for creating post */}
+
       <TouchableOpacity
         onPress={() => setShowCreateModal(true)}
         className="absolute bottom-6 right-6 bg-[#004e89] w-14 h-14 rounded-full items-center justify-center shadow-lg"
@@ -214,13 +214,13 @@ export default function ProfileScreen() {
         <Plus size={28} color="white" />
       </TouchableOpacity>
 
-      {/* Create Post Modal */}
+
       <CreatePostModal 
         visible={showCreateModal} 
         onClose={() => setShowCreateModal(false)} 
       />
 
-      {/* Comments Sheet */}
+
       {selectedPostForComments && (
         <CommentsSheet
           visible={!!selectedPostForComments}

@@ -1,7 +1,4 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+
 
 import { Platform } from 'react-native';
 
@@ -29,13 +26,9 @@ export const Colors = {
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
@@ -52,33 +45,26 @@ export const Fonts = Platform.select({
   },
 });
 
-// ============================================
-// CLASSIFICATION & PRICE LEVEL CONSTANTS
-// ============================================
-
-// Classification colors for places
 export const CLASSIFICATION_COLORS = {
-  HIDDEN_GEM: '#22c55e',    // Green - authentic local spots
-  CONDITIONAL: '#f97316',    // Orange - good at specific times
-  TOURIST_TRAP: '#ef4444',   // Red - avoid
-  MUST_SEE: '#3b82f6',       // Blue - iconic attractions
+  HIDDEN_GEM: '#22c55e',
+  CONDITIONAL: '#f97316',
+  TOURIST_TRAP: '#ef4444',
+  MUST_SEE: '#3b82f6',
 } as const;
 
-// distinct colors for each day of the trip
 export const DAY_COLORS = [
-  '#0ea5e9', // Sky Blue
-  '#8b5cf6', // Violet
-  '#ec4899', // Pink
-  '#f59e0b', // Amber
-  '#10b981', // Emerald
-  '#6366f1', // Indigo
-  '#f43f5e', // Rose
-  '#84cc16', // Lime
-  '#06b6d4', // Cyan
-  '#d946ef', // Fuchsia
+  '#0ea5e9',
+  '#8b5cf6',
+  '#ec4899',
+  '#f59e0b',
+  '#10b981',
+  '#6366f1',
+  '#f43f5e',
+  '#84cc16',
+  '#06b6d4',
+  '#d946ef',
 ] as const;
 
-// Price level display configuration
 export const PRICE_LEVEL_CONFIG = {
   INEXPENSIVE: {
     label: '$',
@@ -97,7 +83,7 @@ export const PRICE_LEVEL_CONFIG = {
   },
 } as const;
 
-// App color palette
+
 export const APP_COLORS = {
   primary: '#007AFF',
   secondary: '#FF9500',
@@ -109,7 +95,7 @@ export const APP_COLORS = {
   dark: '#1C1C1E',
 } as const;
 
-// Helper to get classification label
+
 export function getClassificationLabel(classification: keyof typeof CLASSIFICATION_COLORS): string {
   const labels: Record<keyof typeof CLASSIFICATION_COLORS, string> = {
     HIDDEN_GEM: '💎 Hidden Gem',
@@ -120,7 +106,7 @@ export function getClassificationLabel(classification: keyof typeof CLASSIFICATI
   return labels[classification] || classification;
 }
 
-// Helper to get price level display
+
 export function getPriceLevelDisplay(priceLevel: keyof typeof PRICE_LEVEL_CONFIG | undefined | null) {
   if (!priceLevel) return null;
   return PRICE_LEVEL_CONFIG[priceLevel] || null;

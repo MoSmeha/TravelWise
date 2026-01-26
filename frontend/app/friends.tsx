@@ -19,15 +19,25 @@ import { FriendsTabs } from '../components/friends/FriendsTabs';
 
 type Tab = 'friends' | 'pending';
 
+const EmptyState = ({ title, message, icon }: { title: string; message: string; icon: keyof typeof Ionicons.glyphMap }) => (
+  <View className="items-center justify-center py-20 px-10">
+    <View className="w-20 h-20 bg-gray-100 rounded-full items-center justify-center mb-4">
+      <Ionicons name={icon} size={40} color="#94a3b8" />
+    </View>
+    <Text className="text-gray-500 font-medium text-lg">{title}</Text>
+    <Text className="text-gray-400 text-center mt-1">{message}</Text>
+  </View>
+);
+
 export default function FriendsScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('friends');
   
-  // React Query hooks
+
   const { data: friends = [], isLoading: friendsLoading, refetch: refetchFriends } = useFriends();
   const { data: pendingRequests = [], isLoading: pendingLoading, refetch: refetchPending } = usePendingRequests();
   
-  // Mutations
+
   const acceptMutation = useAcceptFriendRequest();
   const rejectMutation = useRejectFriendRequest();
 
@@ -81,7 +91,7 @@ export default function FriendsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
+
       <View className="px-4 py-3 border-b border-gray-100 flex-row items-center justify-between">
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -90,14 +100,14 @@ export default function FriendsScreen() {
         <View className="w-6" />
       </View>
 
-      {/* Tabs */}
+
       <FriendsTabs 
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
         pendingCount={pendingRequests.length}
       />
 
-      {/* Content */}
+
       <View className="flex-1 bg-gray-50">
         {activeTab === 'friends' && (
           <FlatList
@@ -108,9 +118,11 @@ export default function FriendsScreen() {
             refreshing={friendsLoading}
             onRefresh={refetchFriends}
             ListEmptyComponent={
-              <View className="items-center justify-center py-20">
-                <Text className="text-gray-400">No friends yet</Text>
-              </View>
+              <EmptyState 
+                title="No friends yet" 
+                message="Start adding friends to share your trips!" 
+                icon="people"
+              />
             }
           />
         )}
@@ -124,9 +136,11 @@ export default function FriendsScreen() {
             refreshing={pendingLoading}
             onRefresh={refetchPending}
             ListEmptyComponent={
-              <View className="items-center justify-center py-20">
-                <Text className="text-gray-400">No pending requests</Text>
-              </View>
+              <EmptyState 
+                title="No pending requests" 
+                message="Friend requests will appear here" 
+                icon="person-add"
+              />
             }
           />
         )}

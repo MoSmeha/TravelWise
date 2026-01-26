@@ -14,18 +14,18 @@ import { usePlaces, usePlacePhotos } from '../hooks/queries/usePlaces';
 import type { Place } from '../types/api';
 
 export default function PlacesScreen() {
-  // Places state
+
   const { data: placesResponse, isLoading: loading, error: queryError, refetch } = usePlaces({ limit: 100 });
   const places = placesResponse?.data || [];
   const error = queryError ? (queryError as Error).message : null;
 
   const [filter, setFilter] = useState<'all' | 'HIDDEN_GEM' | 'CONDITIONAL' | 'TOURIST_TRAP'>('all');
   
-  // Selected place for modal
+
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   
-  // Photos for selected place
+
   const { data: photosData, isLoading: loadingPhotos } = usePlacePhotos(
     selectedPlace?.name || '',
     selectedPlace?.latitude,
@@ -38,12 +38,12 @@ export default function PlacesScreen() {
     ? places 
     : places.filter(p => p.classification === filter);
   
-  // Calculate map region based on places
+
   const getMapRegion = () => {
     const validPlaces = filteredPlaces.filter(p => p.latitude && p.longitude);
     
     if (validPlaces.length === 0) {
-      // Default to Lebanon
+
       return {
         latitude: 33.8547,
         longitude: 35.8623,
@@ -72,7 +72,7 @@ export default function PlacesScreen() {
     setModalVisible(true);
   };
   
-  // Get places with valid coordinates
+
   const validPlaces = filteredPlaces.filter(p => p.latitude && p.longitude);
   
   if (loading) {
@@ -109,7 +109,7 @@ export default function PlacesScreen() {
 
   return (
     <View className="flex-1 bg-gray-100">
-      {/* Header with filter */}
+
       <View className="bg-white p-4 border-b border-gray-200">
         <Text className="text-lg font-bold text-gray-900">
           📍 {validPlaces.length} Places with Coordinates
@@ -118,7 +118,7 @@ export default function PlacesScreen() {
           Total: {places.length} places loaded
         </Text>
         
-        {/* Filter chips */}
+
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
           <View className="flex-row gap-2">
             {filterOptions.map((f) => (
@@ -140,7 +140,7 @@ export default function PlacesScreen() {
         </ScrollView>
       </View>
       
-      {/* Map View */}
+
       <MapView
         className="flex-1"
         initialRegion={getMapRegion()}
@@ -167,7 +167,7 @@ export default function PlacesScreen() {
         ))}
       </MapView>
       
-      {/* Legend */}
+
       <View className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg">
         <Text className="text-xs font-semibold mb-2">Legend</Text>
         <View className="flex-row items-center mb-1">
@@ -184,7 +184,7 @@ export default function PlacesScreen() {
         </View>
       </View>
       
-      {/* Place Detail Modal */}
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -196,7 +196,7 @@ export default function PlacesScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               {selectedPlace && (
                 <>
-                  {/* Close button */}
+
                   <TouchableOpacity 
                     className="absolute right-0 top-0 p-2 z-10"
                     onPress={() => setModalVisible(false)}
@@ -204,7 +204,7 @@ export default function PlacesScreen() {
                     <Text className="text-2xl text-gray-500">✕</Text>
                   </TouchableOpacity>
                   
-                  {/* Google Places Photos */}
+
                   {loadingPhotos && (
                     <View className="flex-row items-center justify-center p-4">
                       <ActivityIndicator color="#007AFF" />
@@ -225,7 +225,7 @@ export default function PlacesScreen() {
                     </ScrollView>
                   )}
                   
-                  {/* Header */}
+
                   <View className="flex-row justify-between items-start mb-3 pr-10">
                     <Text className="text-xl font-bold text-gray-900 flex-1">{selectedPlace.name}</Text>
                     <View 
@@ -241,7 +241,7 @@ export default function PlacesScreen() {
                     </View>
                   </View>
                   
-                  {/* Location & Category */}
+
                   <View className="flex-row gap-2 mb-3">
                     <View className="bg-blue-100 px-2 py-1 rounded">
                       <Text className="text-xs text-blue-700">{selectedPlace.category}</Text>
@@ -251,10 +251,10 @@ export default function PlacesScreen() {
                     </View>
                   </View>
                   
-                  {/* Description */}
+
                   <Text className="text-gray-600 mb-4 leading-6">{selectedPlace.description}</Text>
                   
-                  {/* Sources */}
+
                   <Text className="text-sm font-semibold text-gray-700 mb-2">Data Sources:</Text>
                   <View className="flex-row flex-wrap gap-2 mb-4">
                     {selectedPlace.sources.map((source, idx) => (
@@ -267,7 +267,7 @@ export default function PlacesScreen() {
                     ))}
                   </View>
                   
-                  {/* Rating if available */}
+
                   {selectedPlace.rating && (
                     <View className="bg-amber-100 p-3 rounded-lg mb-3">
                       <Text className="text-amber-800">
@@ -276,14 +276,14 @@ export default function PlacesScreen() {
                     </View>
                   )}
                   
-                  {/* Local tip if available */}
+
                   {selectedPlace.localTip && (
                     <View className="bg-orange-50 p-3 rounded-lg mb-3">
                       <Text className="text-orange-700">💡 {selectedPlace.localTip}</Text>
                     </View>
                   )}
                   
-                  {/* Close button */}
+
                   <TouchableOpacity 
                     className="bg-primary p-4 rounded-lg items-center mt-2"
                     onPress={() => setModalVisible(false)}

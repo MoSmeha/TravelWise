@@ -6,6 +6,6 @@ export const useCountries = () => {
   return useQuery({
     queryKey: ['countries'],
     queryFn: countryService.getCountries,
-    staleTime: Infinity, // Countries data rarely changes
+    staleTime: Infinity,
   });
 };

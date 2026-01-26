@@ -54,7 +54,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const isOwner = user?.id === post.authorId;
   
-  // Get online status for post author
+
   const { data: onlineStatus } = useOnlineStatus([post.authorId]);
   const isOnline = onlineStatus?.[post.authorId] || false;
   
@@ -71,7 +71,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
   return (
     <View className="bg-white mb-2">
-      {/* Header */}
+
       <View className="flex-row items-center p-3">
         <View className="relative">
           <View className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
@@ -89,7 +89,7 @@ export const PostCard: React.FC<PostCardProps> = ({
               </View>
             )}
           </View>
-          {/* Online indicator */}
+
           {isOnline && (
             <View className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
           )}
@@ -97,7 +97,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         <View className="ml-3 flex-1">
           <View className="flex-row items-center">
             <Text className="font-semibold text-gray-900">{post.author.name}</Text>
-            {/* Visibility tag */}
+
             <View className={`flex-row items-center ml-2 px-1.5 py-0.5 rounded ${visibilityConfig.bgColor}`}>
               <VisibilityIcon size={10} color={visibilityConfig.color} />
               <Text className="text-[10px] ml-0.5 font-medium" style={{ color: visibilityConfig.color }}>
@@ -117,7 +117,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         )}
       </View>
 
-      {/* Menu */}
+
       {showMenu && isOwner && (
         <View className="absolute right-4 top-12 bg-white rounded-lg shadow-lg z-10 border border-gray-100">
           <TouchableOpacity
@@ -133,14 +133,14 @@ export const PostCard: React.FC<PostCardProps> = ({
         </View>
       )}
 
-      {/* Image */}
+
       <Image
         source={{ uri: post.imageUrl }}
         style={{ width: screenWidth, height: screenWidth }}
         resizeMode="cover"
       />
 
-      {/* Actions */}
+
       <View className="flex-row items-center px-3 py-2">
         <TouchableOpacity
           onPress={handleLikePress}
@@ -165,7 +165,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         </TouchableOpacity>
       </View>
 
-      {/* Description */}
+
       {post.description && (
         <View className="px-3 pb-3">
           <Text className="text-gray-900">

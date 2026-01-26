@@ -2,7 +2,7 @@ import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tansta
 import { postService } from '../../services/api';
 import type { Post, Comment, PaginatedResponse, PostVisibility } from '../../types/post';
 
-// Query Keys
+
 export const postKeys = {
   all: ['posts'] as const,
   feed: () => [...postKeys.all, 'feed'] as const,
@@ -12,9 +12,7 @@ export const postKeys = {
   comments: (postId: string) => [...postKeys.all, postId, 'comments'] as const,
 };
 
-/**
- * Infinite query for friends' posts feed
- */
+
 export function useFriendsFeed() {
   return useInfiniteQuery({
     queryKey: postKeys.feed(),
@@ -24,9 +22,7 @@ export function useFriendsFeed() {
   });
 }
 
-/**
- * Infinite query for discover/public posts feed
- */
+
 export function useDiscoverFeed() {
   return useInfiniteQuery({
     queryKey: postKeys.discover(),
@@ -36,9 +32,7 @@ export function useDiscoverFeed() {
   });
 }
 
-/**
- * Infinite query for a user's posts
- */
+
 export function useUserPosts(userId: string) {
   return useInfiniteQuery({
     queryKey: postKeys.userPosts(userId),
@@ -49,9 +43,7 @@ export function useUserPosts(userId: string) {
   });
 }
 
-/**
- * Query for a single post
- */
+
 export function usePost(postId: string) {
   return useQuery({
     queryKey: postKeys.post(postId),
@@ -60,9 +52,7 @@ export function usePost(postId: string) {
   });
 }
 
-/**
- * Infinite query for post comments
- */
+
 export function usePostComments(postId: string) {
   return useInfiniteQuery({
     queryKey: postKeys.comments(postId),
@@ -73,9 +63,7 @@ export function usePostComments(postId: string) {
   });
 }
 
-/**
- * Mutation for creating a post
- */
+
 export function useCreatePost() {
   const queryClient = useQueryClient();
 
@@ -86,16 +74,14 @@ export function useCreatePost() {
       visibility?: PostVisibility;
     }) => postService.createPost(imageUri, description, visibility),
     onSuccess: () => {
-      // Invalidate feed and user posts
+
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
       queryClient.invalidateQueries({ queryKey: postKeys.all });
     },
   });
 }
 
-/**
- * Mutation for deleting a post
- */
+
 export function useDeletePost() {
   const queryClient = useQueryClient();
 
@@ -107,23 +93,23 @@ export function useDeletePost() {
   });
 }
 
-/**
- * Mutation for liking a post with optimistic update
- */
+
 export function useLikePost() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (postId: string) => postService.likePost(postId),
     onMutate: async (postId) => {
-      // Cancel outgoing refetches
+
       await queryClient.cancelQueries({ queryKey: postKeys.feed() });
+      await queryClient.cancelQueries({ queryKey: postKeys.discover() });
 
-      // Snapshot current data
+
       const previousFeed = queryClient.getQueryData(postKeys.feed());
+      const previousDiscover = queryClient.getQueryData(postKeys.discover());
 
-      // Optimistically update feed
-      queryClient.setQueryData(postKeys.feed(), (old: any) => {
+
+      const updateFeedData = (old: any) => {
         if (!old?.pages) return old;
         return {
           ...old,
@@ -136,25 +122,31 @@ export function useLikePost() {
             ),
           })),
         };
-      });
+      };
 
-      return { previousFeed };
+
+      queryClient.setQueryData(postKeys.feed(), updateFeedData);
+      queryClient.setQueryData(postKeys.discover(), updateFeedData);
+
+      return { previousFeed, previousDiscover };
     },
     onError: (_err, _postId, context) => {
-      // Rollback on error
+
       if (context?.previousFeed) {
         queryClient.setQueryData(postKeys.feed(), context.previousFeed);
+      }
+      if (context?.previousDiscover) {
+        queryClient.setQueryData(postKeys.discover(), context.previousDiscover);
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      queryClient.invalidateQueries({ queryKey: postKeys.discover() });
     },
   });
 }
 
-/**
- * Mutation for unliking a post with optimistic update
- */
+
 export function useUnlikePost() {
   const queryClient = useQueryClient();
 
@@ -162,10 +154,12 @@ export function useUnlikePost() {
     mutationFn: (postId: string) => postService.unlikePost(postId),
     onMutate: async (postId) => {
       await queryClient.cancelQueries({ queryKey: postKeys.feed() });
+      await queryClient.cancelQueries({ queryKey: postKeys.discover() });
 
       const previousFeed = queryClient.getQueryData(postKeys.feed());
+      const previousDiscover = queryClient.getQueryData(postKeys.discover());
 
-      queryClient.setQueryData(postKeys.feed(), (old: any) => {
+      const updateFeedData = (old: any) => {
         if (!old?.pages) return old;
         return {
           ...old,
@@ -178,24 +172,29 @@ export function useUnlikePost() {
             ),
           })),
         };
-      });
+      };
 
-      return { previousFeed };
+      queryClient.setQueryData(postKeys.feed(), updateFeedData);
+      queryClient.setQueryData(postKeys.discover(), updateFeedData);
+
+      return { previousFeed, previousDiscover };
     },
     onError: (_err, _postId, context) => {
       if (context?.previousFeed) {
         queryClient.setQueryData(postKeys.feed(), context.previousFeed);
       }
+      if (context?.previousDiscover) {
+        queryClient.setQueryData(postKeys.discover(), context.previousDiscover);
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      queryClient.invalidateQueries({ queryKey: postKeys.discover() });
     },
   });
 }
 
-/**
- * Mutation for adding a comment
- */
+
 export function useAddComment() {
   const queryClient = useQueryClient();
 
@@ -203,17 +202,16 @@ export function useAddComment() {
     mutationFn: ({ postId, content }: { postId: string; content: string }) =>
       postService.addComment(postId, content),
     onSuccess: (_data, variables) => {
-      // Invalidate comments for this post
+
       queryClient.invalidateQueries({ queryKey: postKeys.comments(variables.postId) });
-      // Invalidate feed to update comment count
+
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      queryClient.invalidateQueries({ queryKey: postKeys.discover() });
     },
   });
 }
 
-/**
- * Mutation for deleting a comment
- */
+
 export function useDeleteComment() {
   const queryClient = useQueryClient();
 
@@ -223,6 +221,7 @@ export function useDeleteComment() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: postKeys.comments(variables.postId) });
       queryClient.invalidateQueries({ queryKey: postKeys.feed() });
+      queryClient.invalidateQueries({ queryKey: postKeys.discover() });
     },
   });
 }

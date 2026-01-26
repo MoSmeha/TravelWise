@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, FlatList, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { 
   useSearchUsers,
@@ -23,20 +22,52 @@ import type { Post } from '../../types/post';
 
 type FeedMode = 'friends' | 'discover';
 
+const ExploreHeader = ({ 
+    searchQuery, 
+    setSearchQuery, 
+    isSearching, 
+    feedMode, 
+    setFeedMode 
+}: { 
+    searchQuery: string;
+    setSearchQuery: (text: string) => void;
+    isSearching: boolean;
+    feedMode: FeedMode;
+    setFeedMode: (mode: FeedMode) => void;
+}) => (
+    <View className="px-5 pt-1 pb-2 bg-white">
+        <Text className="text-[#094772] text-3xl font-extrabold mb-4">Explore</Text>
+        
+        <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-1 mb-4">
+            <Search size={15} color="#9ca3af" />
+            <TextInput
+                placeholder="Search for friends..."
+                className="flex-1 ml-2 text-gray-900 text-sm"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCapitalize="none"
+                placeholderTextColor="#9ca3af"
+            />
+        </View>
+
+        {!isSearching && (
+            <FeedModeToggle feedMode={feedMode} onModeChange={setFeedMode} />
+        )}
+    </View>
+);
+
 export default function ExploreScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedQuery, setDebouncedQuery] = useState('');
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [feedMode, setFeedMode] = useState<FeedMode>('friends');
 
-    // Friend search hooks
     const { data: searchResults = [], isLoading: searchLoading } = useSearchUsers(debouncedQuery);
     const { data: friends = [] } = useFriends();
     const { data: sentRequests = [] } = useSentRequests();
     const { data: pendingRequests = [] } = usePendingRequests();
     const sendRequestMutation = useSendFriendRequest();
 
-    // Friends feed hooks
     const {
         data: friendsFeedData,
         isLoading: friendsFeedLoading,
@@ -46,7 +77,6 @@ export default function ExploreScreen() {
         refetch: refetchFriendsFeed,
     } = useFriendsFeed();
 
-    // Discover feed hooks
     const {
         data: discoverFeedData,
         isLoading: discoverFeedLoading,
@@ -59,7 +89,6 @@ export default function ExploreScreen() {
     const likePostMutation = useLikePost();
     const unlikePostMutation = useUnlikePost();
 
-    // Select active feed based on mode
     const posts = feedMode === 'friends' 
         ? (friendsFeedData?.pages.flatMap(page => page.data) || [])
         : (discoverFeedData?.pages.flatMap(page => page.data) || []);
@@ -121,43 +150,22 @@ export default function ExploreScreen() {
         />
     );
 
-    const renderSearchHeader = () => (
-        <View className="px-5 pt-1 pb-2 bg-white">
-            <Text className="text-3xl font-bold text-gray-900 mb-4">Explore</Text>
-            
-            <View className="flex-row items-center bg-gray-100 rounded-xl px-4 py-1 mb-4">
-                <Search size={20} color="#64748b" />
-                <TextInput
-                    placeholder="Search for friends..."
-                    className="flex-1 ml-3 text-base text-gray-900"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    autoCapitalize="none"
-                    placeholderTextColor="#94a3b8"
-                />
-                {searchQuery.length > 0 && (
-                    <TouchableOpacity onPress={() => setSearchQuery('')}>
-                        <Ionicons name="close-circle" size={20} color="#94a3b8" />
-                    </TouchableOpacity>
-                )}
-            </View>
-
-            {/* Feed Toggle */}
-            {!isSearching && (
-                <FeedModeToggle feedMode={feedMode} onModeChange={setFeedMode} />
-            )}
-        </View>
-    );
-
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
             {isSearching ? (
-                // Show search results
                 <FlatList
                     data={searchResults}
                     renderItem={renderSearchItem}
                     keyExtractor={item => item.id}
-                    ListHeaderComponent={renderSearchHeader}
+                    ListHeaderComponent={
+                        <ExploreHeader 
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            isSearching={isSearching}
+                            feedMode={feedMode}
+                            setFeedMode={setFeedMode}
+                        />
+                    }
                     stickyHeaderIndices={[0]}
                     contentContainerStyle={{ paddingBottom: 20 }}
                     ListEmptyComponent={
@@ -173,12 +181,19 @@ export default function ExploreScreen() {
                     }
                 />
             ) : (
-                // Show posts feed (friends or discover based on toggle)
                 <FlatList
                     data={posts}
                     renderItem={renderPostItem}
                     keyExtractor={item => item.id}
-                    ListHeaderComponent={renderSearchHeader}
+                    ListHeaderComponent={
+                        <ExploreHeader 
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            isSearching={isSearching}
+                            feedMode={feedMode}
+                            setFeedMode={setFeedMode}
+                        />
+                    }
                     stickyHeaderIndices={[0]}
                     contentContainerStyle={{ paddingBottom: 20 }}
                     onEndReached={() => hasNextPage && fetchNextPage()}
@@ -202,7 +217,6 @@ export default function ExploreScreen() {
                 />
             )}
 
-            {/* Comments Sheet */}
             {selectedPost && (
                 <CommentsSheet
                     visible={!!selectedPost}

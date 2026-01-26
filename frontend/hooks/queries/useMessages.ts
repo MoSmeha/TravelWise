@@ -12,10 +12,8 @@ import {
   type PaginatedMessages,
 } from '../../types/schemas';
 
-// Re-export types for convenience
 export type { Conversation, Message };
 
-// Fetch paginated conversations
 export const useConversations = (page: number = 1, limit: number = 20) => {
   const { isAuthenticated, isRestoring } = useAuth();
   
@@ -31,7 +29,7 @@ export const useConversations = (page: number = 1, limit: number = 20) => {
   });
 };
 
-// Infinite query for conversations (for endless scroll)
+
 export const useInfiniteConversations = (limit: number = 20) => {
   const { isAuthenticated, isRestoring } = useAuth();
   
@@ -54,7 +52,7 @@ export const useInfiniteConversations = (limit: number = 20) => {
   });
 };
 
-// Fetch single conversation
+
 export const useConversation = (conversationId: string) => {
   const { isAuthenticated, isRestoring } = useAuth();
   
@@ -68,7 +66,7 @@ export const useConversation = (conversationId: string) => {
   });
 };
 
-// Fetch paginated messages for a conversation
+
 export const useMessages = (conversationId: string, page: number = 1, limit: number = 50) => {
   const { isAuthenticated, isRestoring } = useAuth();
   
@@ -84,7 +82,7 @@ export const useMessages = (conversationId: string, page: number = 1, limit: num
   });
 };
 
-// Infinite query for messages (for endless scroll)
+
 export const useInfiniteMessages = (conversationId: string, limit: number = 50) => {
   const { isAuthenticated, isRestoring } = useAuth();
   
@@ -107,7 +105,7 @@ export const useInfiniteMessages = (conversationId: string, limit: number = 50) 
   });
 };
 
-// Create or get conversation with a friend
+
 export const useCreateConversation = () => {
   const queryClient = useQueryClient();
   
@@ -122,7 +120,7 @@ export const useCreateConversation = () => {
   });
 };
 
-// Send a message
+
 export const useSendMessage = () => {
   const queryClient = useQueryClient();
   
@@ -138,7 +136,7 @@ export const useSendMessage = () => {
   });
 };
 
-// Mark conversation as read
+
 export const useMarkConversationRead = () => {
   const queryClient = useQueryClient();
   
@@ -147,9 +145,27 @@ export const useMarkConversationRead = () => {
       await api.put(`/messages/conversations/${conversationId}/read`);
     },
     onSuccess: () => {
-      // Only invalidate the conversations list (for unread count update)
-      // Don't invalidate the individual conversation to avoid loops
+
       queryClient.invalidateQueries({ queryKey: ['conversations', 'infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations', 'unread-count'] });
     },
+  });
+};
+
+
+export const useUnreadMessageCount = () => {
+  const { isAuthenticated, isRestoring } = useAuth();
+  
+  return useQuery({
+    queryKey: ['conversations', 'unread-count'],
+    queryFn: async (): Promise<number> => {
+      const response = await api.get('/messages/conversations', {
+        params: { page: 1, limit: 100 },
+      });
+      const data = PaginatedConversationsSchema.parse(response.data);
+      return data.data.reduce((total, conv) => total + (conv.unreadCount || 0), 0);
+    },
+    enabled: isAuthenticated && !isRestoring,
+    staleTime: 30000,
   });
 };

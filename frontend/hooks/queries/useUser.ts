@@ -12,14 +12,11 @@ export const useUser = () => {
     queryKey: USER_QUERY_KEY,
     queryFn: async () => {
       const user = await authService.getMe();
-      updateUser(user); // Sync with store if needed, though relying on query cache is better. 
-                      // Keeping in store might be useful if other non-react parts utilize it, 
-                      // but ideally we migrate to reading from QueryCache or just passing props.
-                      // For now, syncing is a safe hybrid step.
+      updateUser(user);
       return user;
     },
-    enabled: !!accessToken, // Only fetch if we have a token
+    enabled: !!accessToken,
     retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };

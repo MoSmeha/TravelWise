@@ -56,7 +56,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
   return (
     <View className="bg-[#004e89] pb-10 pt-6 px-6 rounded-b-3xl shadow-md">
       <View className="flex-row items-center mb-6">
-        <Text className="text-white text-2xl font-bold">Profile</Text>
+        <Text className="text-white text-3xl font-extrabold">Profile</Text>
       </View>
 
       <View className="flex-row items-center">
@@ -76,7 +76,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
               </Text>
             )}
           </View>
-          {/* Camera Icon Overlay */}
+
           <View className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 border-2 border-[#004e89]">
             <Camera size={14} color="#004e89" />
           </View>

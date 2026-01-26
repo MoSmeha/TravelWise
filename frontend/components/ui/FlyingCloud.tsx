@@ -18,10 +18,10 @@ export const FlyingCloud: React.FC<FlyingCloudProps> = ({
   top,
   size = 50,
   opacity = 0.2,
-  variant = 'lucide', // Default to Lucide
+  variant = 'lucide',
 }) => {
   const screenWidth = Dimensions.get('window').width;
-  // Start fully off-screen to the left
+
   const translateX = useRef(new Animated.Value(-size * 2)).current;
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export const FlyingCloud: React.FC<FlyingCloudProps> = ({
           toValue: screenWidth + size,
           duration: duration,
           easing: Easing.linear,
-          useNativeDriver: true, // Optimizes performance by running on UI thread
+          useNativeDriver: true,
         }),
         Animated.timing(translateX, {
           toValue: -size * 2,

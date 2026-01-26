@@ -20,22 +20,17 @@ import { useAddChecklistItem, useToggleChecklistItem, useDeleteChecklistItem, us
 import { useItineraryStore } from '../store/itineraryStore';
 import type { ChecklistItem } from '../types/api';
 
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android') {
-  if (UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
-}
+
 
 export default function ChecklistScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   
-  // Get itineraryId from params OR from the store (fallback for tab navigation)
+
   const storeItineraryId = useItineraryStore((state) => state.activeItineraryId);
   const itineraryId = (params.itineraryId as string) || storeItineraryId;
   
-  // React Query Hooks
+
   const { data: items = [], isLoading, refetch, isRefetching } = useChecklist(itineraryId || '');
   const toggleMutation = useToggleChecklistItem();
   const addMutation = useAddChecklistItem();
@@ -64,7 +59,7 @@ export default function ChecklistScreen() {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
 
-    // Trigger mutation
+
     toggleMutation.mutate({ itemId, isChecked: !item.isChecked });
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
   };
@@ -137,12 +132,12 @@ export default function ChecklistScreen() {
       },
       onError: () => {
         Alert.alert('Error', 'Failed to add item');
-        setNewItemText(text); // Restore text
+        setNewItemText(text);
       }
     });
   };
 
-  // Group items by category
+
   const groupedItems = items.reduce((acc, item) => {
     const category = item.category || 'OTHER';
     if (!acc[category]) acc[category] = [];
@@ -150,7 +145,7 @@ export default function ChecklistScreen() {
     return acc;
   }, {} as Record<string, ChecklistItem[]>);
 
-  // Category order
+
   const CATEGORY_ORDER = ['ESSENTIALS', 'DOCUMENTATION', 'WEATHER', 'ACTIVITY', 'SAFETY', 'PERSONAL', 'OTHER'];
   const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
     const idxA = CATEGORY_ORDER.indexOf(a);
@@ -173,7 +168,7 @@ export default function ChecklistScreen() {
   return (
     <View className="flex-1 bg-gray-100">
       <Stack.Screen options={{ headerShown: false }} />
-      {/* Header */}
+
       <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff', zIndex: 10 }}>
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
           <TouchableOpacity 
@@ -197,7 +192,7 @@ export default function ChecklistScreen() {
         </View>
       </SafeAreaView>
 
-      {/* Progress Bar */}
+
       <View className="bg-white p-4 border-b border-gray-200">
         <View className="flex-row justify-between mb-2">
           <Text className="text-sm text-gray-500 font-semibold">
@@ -259,7 +254,7 @@ export default function ChecklistScreen() {
         </View>
       </ScrollView>
 
-      {/* Add Item Input */}
+
       <View className="absolute bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-200 flex-row items-center gap-3">
         <TextInput
           className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-base"

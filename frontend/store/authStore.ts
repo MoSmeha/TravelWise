@@ -7,11 +7,11 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
-  isRestoring: boolean; // separate loading state for initial hydration
+  isRestoring: boolean;
   
-  // Actions
+
   logout: () => Promise<void>;
-  hydrate: () => Promise<void>; // Restore session
+  hydrate: () => Promise<void>;
   setTokens: (accessToken: string, refreshToken: string) => void;
   updateUser: (user: User) => void;
 }
@@ -31,7 +31,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     await deleteItemAsync(STORAGE_KEY_ACCESS);
     await deleteItemAsync(STORAGE_KEY_REFRESH);
     
-    // Clear React Query cache to prevent stale data
+
     const { queryClient } = require('../lib/react-query');
     queryClient.clear();
     console.log('[AUTH] Cleared tokens and query cache');

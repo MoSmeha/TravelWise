@@ -8,7 +8,7 @@ export const useUserItineraries = () => {
   return useQuery({
     queryKey: ['user-itineraries'],
     queryFn: async () => {
-      // Using the api instance which has the 401 interceptor for token refresh
+
       const response = await api.get('/itinerary/user');
       return response.data;
     },
@@ -17,12 +17,12 @@ export const useUserItineraries = () => {
 };
 
 export const useItineraryDetails = (id: string) => {
-  const { accessToken } = useAuth(); // Used only for enabling the query
+  const { accessToken } = useAuth();
   
   return useQuery({
     queryKey: ['itinerary', id],
     queryFn: async () => {
-      // Using the api instance which has the 401 interceptor for token refresh
+
       const response = await api.get(`/itinerary/${id}`);
       return response.data;
     },

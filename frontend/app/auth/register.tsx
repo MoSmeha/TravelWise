@@ -163,7 +163,7 @@ export default function RegisterScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      {/* Massive Cloud Density (~16 clouds) */}
+
       <FlyingCloud top={30} duration={32000} delay={0} size={70} opacity={0.08} variant="ionic" />
       <FlyingCloud top={90} duration={26000} delay={8000} size={110} opacity={0.05} variant="lucide" />
       <FlyingCloud top={160} duration={38000} delay={2000} size={50} opacity={0.10} variant="ionic" />

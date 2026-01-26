@@ -127,7 +127,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1 bg-white"
       >
-        {/* Header */}
+
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
           <TouchableOpacity onPress={handleClose}>
             <X size={24} color="#374151" />
@@ -149,7 +149,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
         </View>
 
         <ScrollView className="flex-1 p-4">
-          {/* Image Selection */}
+
           {imageUri ? (
             <View className="mb-4">
               <Image
@@ -183,7 +183,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
             </View>
           )}
 
-          {/* Description */}
+
           <TextInput
             placeholder="Write a caption..."
             value={description}
@@ -195,7 +195,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClo
             textAlignVertical="top"
           />
 
-          {/* Visibility */}
+
           <Text className="text-gray-700 font-semibold mb-2">Who can see this?</Text>
           <View className="flex-row gap-2">
             {(['FRIENDS', 'PUBLIC', 'PRIVATE'] as PostVisibility[]).map((v) => (

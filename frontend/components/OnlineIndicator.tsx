@@ -6,10 +6,7 @@ interface OnlineIndicatorProps {
   size?: 'small' | 'medium' | 'large';
 }
 
-/**
- * Green dot indicator for online status
- * Positioned absolute - parent should have relative position
- */
+
 export const OnlineIndicator: React.FC<OnlineIndicatorProps> = ({ 
   isOnline, 
   size = 'medium' 
@@ -33,7 +30,7 @@ export const OnlineIndicator: React.FC<OnlineIndicatorProps> = ({
         width,
         height,
         borderRadius: width / 2,
-        backgroundColor: '#22c55e', // green-500
+        backgroundColor: '#22c55e',
         borderWidth,
         borderColor: 'white',
       }}

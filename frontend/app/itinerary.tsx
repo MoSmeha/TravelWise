@@ -33,19 +33,19 @@ export default function ItineraryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
-  // Get ID from params
+
   const itineraryId = typeof params.itineraryId === 'string' ? params.itineraryId : null;
   
-  // Use React Query to get data (should be cached from Map screen)
+
   const { data: fetchedData, isLoading } = useItineraryDetails(itineraryId || '');
   
   const [passedData, setPassedData] = useState<ItineraryResponse | null>(null);
   
-  // Itinerary store for persisting active itinerary
+
   const setActiveItinerary = useItineraryStore((state) => state.setActiveItinerary);
 
   useEffect(() => {
-    // Handle passed data (legacy/fallback)
+
     if (params.data) {
       try {
         const parsed = JSON.parse(params.data as string);
@@ -68,7 +68,7 @@ export default function ItineraryScreen() {
     });
   };
 
-  // Prioritize fetched data (cache), then passed data
+
   const data = (fetchedData as ItineraryResponse) || passedData;
 
   if (isLoading && !passedData && !data) {
@@ -96,7 +96,7 @@ export default function ItineraryScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Header - White with proper capitalization */}
+
       <View 
         className="bg-white border-b border-gray-200"
         style={{ paddingTop: insets.top }}
@@ -113,7 +113,7 @@ export default function ItineraryScreen() {
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Trip Summary Card */}
+
         <View className="bg-white mx-4 mt-4 p-5 rounded-2xl">
           <View className="flex-row items-start justify-between">
             <View className="flex-1">
@@ -146,7 +146,7 @@ export default function ItineraryScreen() {
           )}
         </View>
 
-        {/* Budget Breakdown */}
+
         {data.itinerary.budgetBreakdown && (
           <View className="bg-white mx-4 mt-3 p-4 rounded-2xl">
             <Text className="text-base font-bold mb-3 text-gray-800">Budget Breakdown</Text>
@@ -181,7 +181,7 @@ export default function ItineraryScreen() {
           </View>
         )}
 
-        {/* Hotels Section */}
+
         {data.hotels && data.hotels.length > 0 && (
           <View className="mx-4 mt-4">
             <View className="flex-row items-center mb-3">
@@ -220,7 +220,7 @@ export default function ItineraryScreen() {
           </View>
         )}
 
-        {/* Tourist Traps to Avoid */}
+
         {data.touristTraps && data.touristTraps.length > 0 && (
           <View className="bg-red-50 mx-4 mt-3 p-4 rounded-2xl">
             <View className="flex-row items-center mb-3">
@@ -236,7 +236,7 @@ export default function ItineraryScreen() {
           </View>
         )}
 
-        {/* Local Tips */}
+
         {data.localTips && data.localTips.length > 0 && (
           <View className="bg-blue-50 mx-4 mt-3 p-4 rounded-2xl">
             <View className="flex-row items-center mb-3">
@@ -249,7 +249,7 @@ export default function ItineraryScreen() {
           </View>
         )}
 
-        {/* Warnings */}
+
         {data.warnings && data.warnings.length > 0 && (
           <View className="bg-amber-50 mx-4 mt-3 p-4 rounded-2xl">
             <View className="flex-row items-center mb-3">
@@ -265,7 +265,7 @@ export default function ItineraryScreen() {
           </View>
         )}
 
-        {/* Daily Itinerary - Using DayAccordion */}
+
         <View className="mt-4">
           {data.days.map((day, index) => (
             <DayAccordion
@@ -277,7 +277,7 @@ export default function ItineraryScreen() {
           ))}
         </View>
 
-        {/* Bottom Padding */}
+
         <View style={{ height: insets.bottom + 20 }} />
 
       </ScrollView>

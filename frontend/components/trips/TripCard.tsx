@@ -75,7 +75,7 @@ export function TripCard({ trip, user, onPress, onDelete, onInvite, onManageColl
 
   return (
     <View className="mb-5 mx-1 rounded-2xl bg-[#f5f5f5] overflow-hidden shadow-sm elevation-2"> 
-      {/* Image Section */}
+
       <View className="h-[180px] w-full relative">
         <Image 
           source={{ uri: imageUri }} 
@@ -105,7 +105,7 @@ export function TripCard({ trip, user, onPress, onDelete, onInvite, onManageColl
           </View>
         </View>
 
-        {/* User Profile Badge (Absolute positioned) */}
+
         <View className="absolute top-4 right-4 z-20">
           <View className="bg-white/90 p-0.5 rounded-full">
             {user?.avatarUrl ? (
@@ -121,20 +121,20 @@ export function TripCard({ trip, user, onPress, onDelete, onInvite, onManageColl
         </View>
       </View>
 
-      {/* Content Section */}
+
       <View className="px-4 py-4">
-        {/* Tags */}
+
         <View className="flex-row flex-wrap gap-2 mb-4">
           {trip.travelStyles?.map((style: string, index: number) => (
             <TripTag key={index} tag={style} />
           ))}
         </View>
         
-        {/* Footer */}
+
         <View className="flex-row justify-between items-center">
           <Text className="text-gray-400 text-xs">Created {dateString}</Text>
           
-          {/* 3-dots menu button */}
+
           <TouchableOpacity 
             onPress={() => setMenuVisible(true)}
             className="bg-[#094772] p-2 rounded-xl"
@@ -144,7 +144,7 @@ export function TripCard({ trip, user, onPress, onDelete, onInvite, onManageColl
         </View>
       </View>
 
-      {/* Menu Modal */}
+
       <Modal
         visible={menuVisible}
         transparent={true}
@@ -157,7 +157,7 @@ export function TripCard({ trip, user, onPress, onDelete, onInvite, onManageColl
           onPress={() => setMenuVisible(false)}
         >
           <View className="bg-white rounded-2xl w-64 overflow-hidden shadow-lg">
-            {/* View Details Option */}
+
             <TouchableOpacity
               onPress={handleViewDetails}
               className="flex-row items-center px-5 py-4 border-b border-gray-100"
@@ -166,7 +166,7 @@ export function TripCard({ trip, user, onPress, onDelete, onInvite, onManageColl
               <Text className="ml-3 text-gray-800 font-semibold">View Details</Text>
             </TouchableOpacity>
 
-            {/* Invite Friends Option */}
+
             <TouchableOpacity
               onPress={handleInvite}
               className="flex-row items-center px-5 py-4 border-b border-gray-100"
@@ -175,7 +175,7 @@ export function TripCard({ trip, user, onPress, onDelete, onInvite, onManageColl
               <Text className="ml-3 text-gray-800 font-semibold">Invite Friends</Text>
             </TouchableOpacity>
 
-            {/* Manage Collaborators Option */}
+
             <TouchableOpacity
               onPress={handleManageCollaborators}
               className="flex-row items-center px-5 py-4 border-b border-gray-100"
@@ -184,7 +184,7 @@ export function TripCard({ trip, user, onPress, onDelete, onInvite, onManageColl
               <Text className="ml-3 text-gray-800 font-semibold">Manage Collaborators</Text>
             </TouchableOpacity>
 
-            {/* Delete Itinerary Option */}
+
             <TouchableOpacity
               onPress={handleDelete}
               className="flex-row items-center px-5 py-4"

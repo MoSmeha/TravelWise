@@ -1,7 +1,3 @@
-/**
- * Decodes an encoded polyline string from Google Directions API.
- * Returns an array of {latitude, longitude} objects.
- */
 export function decodePolyline(encoded: string): { latitude: number; longitude: number }[] {
   const points: { latitude: number; longitude: number }[] = [];
   let index = 0;

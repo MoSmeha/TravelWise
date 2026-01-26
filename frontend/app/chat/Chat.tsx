@@ -51,7 +51,7 @@ export default function ChatScreen() {
         }
     }, []);
 
-    // Fetch conversation and messages
+
     const { data: conversation, isLoading: conversationLoading } = useConversation(id || '');
     const { 
         data: messagesData, 
@@ -63,14 +63,14 @@ export default function ChatScreen() {
     const sendMessageMutation = useSendMessage();
     const markReadMutation = useMarkConversationRead();
 
-    // Flatten messages from infinite query and reverse for correct order (newest at bottom)
+
     const messages = useMemo(() => {
         const allMessages = messagesData?.pages.flatMap(page => page.data) || [];
-        // Messages come in newest-first from API, reverse for display (oldest at top)
+
         return [...allMessages].reverse();
     }, [messagesData]);
 
-    // Get the other participant for display
+
     const otherUser = useMemo(() => {
         if (conversation?.type === 'DIRECT') {
             return conversation.participants.find(p => p.userId !== currentUser?.id)?.user;
@@ -86,12 +86,12 @@ export default function ChatScreen() {
         ? conversation.imageUrl 
         : otherUser?.avatarUrl;
 
-    // Get online status for the other user
+
     const otherUserIds = useMemo(() => otherUser?.id ? [otherUser.id] : [], [otherUser?.id]);
     const { data: onlineStatus = {} } = useOnlineStatus(otherUserIds);
     const isOtherUserOnline = otherUser?.id ? (onlineStatus[otherUser.id] || false) : false;
 
-    // Mark conversation as read on mount (only once)
+
     useEffect(() => {
         if (id && !hasMarkedRead.current) {
             hasMarkedRead.current = true;
@@ -107,7 +107,7 @@ export default function ChatScreen() {
 
         try {
             await sendMessageMutation.mutateAsync({ conversationId: id, content });
-            // Scroll to bottom after sending
+
             setTimeout(() => {
                 flatListRef.current?.scrollToEnd({ animated: true });
             }, 100);
@@ -117,7 +117,7 @@ export default function ChatScreen() {
                 text1: 'Error',
                 text2: error.response?.data?.error || 'Failed to send message'
             });
-            setMessage(content); // Restore message on error
+
         }
     };
 
@@ -190,7 +190,7 @@ export default function ChatScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-white py-4" edges={['top']}>
-            {/* Header */}
+
             <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
                 <TouchableOpacity 
                     onPress={() => router.back()}
@@ -229,7 +229,7 @@ export default function ChatScreen() {
                 </View>
             </View>
 
-            {/* Messages */}
+
             <View 
                 style={{ flex: 1, paddingBottom: Platform.OS === 'android' ? keyboardHeight : 0 }}
             >
@@ -282,7 +282,7 @@ export default function ChatScreen() {
                     }
                 />
 
-                {/* Input */}
+
                 <View className="flex-row items-center px-4 py-3 pb-6 border-t border-gray-100 bg-white">
                     <TextInput
                         value={message}

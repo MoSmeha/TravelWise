@@ -18,7 +18,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   ...props
 }) => {
   const isPrimary = variant === 'primary';
-  // Updated to use 'primary' color and 'rounded-2xl'
+
   const baseStyles = "w-full h-14 rounded-2xl items-center justify-center flex-row";
   const primaryStyles = "bg-primary shadow-lg shadow-primary/40";
   const outlineStyles = "bg-transparent border-2 border-gray-200";

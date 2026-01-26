@@ -1,96 +1,150 @@
 import { Tabs, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Compass, Activity, Plus, Map, User } from 'lucide-react-native';
+import { Compass, Activity, Map, User } from 'lucide-react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FabOverlay, FabTrigger } from '../../components/navigation/TabBarFab';
+import { useUnreadNotificationCount } from '../../hooks/queries/useNotifications';
+import { useUnreadMessageCount } from '../../hooks/queries/useMessages';
 
 function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const [isExpanded, setIsExpanded] = useState(false);
   
+
+  const { data: unreadNotifications = 0 } = useUnreadNotificationCount();
+  const { data: unreadMessages = 0 } = useUnreadMessageCount();
+  const totalUnread = unreadNotifications + unreadMessages;
+  
+  const toggleMenu = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const closeMenu = () => {
+    if (isExpanded) {
+        setIsExpanded(false);
+    }
+  };
+
+  const handleCreateTrip = () => {
+    closeMenu();
+    router.push('/new-trip');
+  };
+
+  const handleCreatePost = () => {
+    closeMenu();
+    router.push('/create-post');
+  };
+
   return (
-    <View 
-        className="bg-[#f5f5f5] border-t border-gray-200 flex-row px-2 items-center justify-between"
-        style={{ paddingBottom: insets.bottom + 10, paddingTop: 12, height: 70 + insets.bottom }}
-    >
-      {state.routes.map((route, index) => {
-        const { options } = descriptors[route.key];
-        const isFocused = state.index === index;
+    <>
+      <FabOverlay 
+        isExpanded={isExpanded} 
+        onClose={closeMenu} 
+        onPressTrip={handleCreateTrip} 
+        onPressPost={handleCreatePost} 
+      />
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
+      <View 
+          className="bg-[#f5f5f5] border-t border-gray-200 flex-row px-2 items-center justify-between"
+          style={{ 
+              paddingBottom: insets.bottom + 10, 
+              paddingTop: 12, 
+              height: 70 + insets.bottom, 
+              zIndex: 50,
+              elevation: 50
+          }}
+      >
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
 
-          if (!isFocused && !event.defaultPrevented) {
-             if (route.name === 'create') {
-                 navigation.navigate(route.name);
-             } else {
-                navigation.navigate(route.name);
-             }
+          const onPress = () => {
+            if (isExpanded && route.name !== 'create') {
+              closeMenu();
+            }
+
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+               if (route.name === 'create') {
+                  
+               } else {
+                  navigation.navigate(route.name);
+               }
+            }
+          };
+
+          const onLongPress = () => {
+            navigation.emit({
+              type: 'tabLongPress',
+              target: route.key,
+            });
+          };
+
+          if (route.name === 'checklist') return null;
+
+          if (route.name === 'create') {
+              return (
+                  <View key={route.key}>
+                      <FabTrigger isExpanded={isExpanded} onToggle={toggleMenu} />
+                  </View>
+              );
           }
-        };
 
-        const onLongPress = () => {
-          navigation.emit({
-            type: 'tabLongPress',
-            target: route.key,
-          });
-        };
+          let IconComponent = Compass;
+          if (route.name === 'index') IconComponent = Compass;
+          else if (route.name === 'activity') IconComponent = Activity;
+          else if (route.name === 'trips') IconComponent = Map;
+          else if (route.name === 'profile') IconComponent = User;
 
-        if (route.name === 'checklist') return null;
 
-        if (route.name === 'create') {
-            return (
-                <TouchableOpacity
-                    key={route.key}
-                    onPress={onPress}
-                    className="items-center justify-center -mt-12"
-                    activeOpacity={0.8}
-                >
-                    <View className="bg-[#094772] w-16 h-16 rounded-full items-center justify-center shadow-lg border-[6px] border-[#f5f5f5]">
-                        <Plus size={32} color="white" strokeWidth={2.5} />
-                    </View>
-                </TouchableOpacity>
-            );
-        }
+          const showBadge = route.name === 'activity' && totalUnread > 0;
 
-        let IconComponent = Compass; // Default
-        if (route.name === 'index') IconComponent = Compass;
-        else if (route.name === 'activity') IconComponent = Activity;
-        else if (route.name === 'trips') IconComponent = Map;
-        else if (route.name === 'profile') IconComponent = User;
-
-        return (
-          <TouchableOpacity
-            key={route.key}
-            accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
-            onPress={onPress}
-            onLongPress={onLongPress}
-            className="flex-1 items-center justify-center"
-          >
-            <IconComponent 
-                size={26} 
-                color={isFocused ? '#094772' : '#9ca3af'} 
-                strokeWidth={isFocused ? 2.5 : 2}
-            />
-            <Text className={`text-[10px] mt-1 font-medium ${isFocused ? 'text-[#094772]' : 'text-gray-400'}`}>
-                {options.title}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              onPress={onPress}
+              onLongPress={onLongPress}
+              className="flex-1 items-center justify-center"
+            >
+              <View className="relative">
+                <IconComponent 
+                    size={26} 
+                    color={isFocused ? '#094772' : '#9ca3af'} 
+                    strokeWidth={isFocused ? 2.5 : 2}
+                />
+                {showBadge && (
+                  <View 
+                    className="absolute -top-1 -right-2 bg-red-500 rounded-full min-w-[16px] h-4 items-center justify-center px-1"
+                  >
+                    <Text className="text-white text-[10px] font-bold">
+                      {totalUnread > 99 ? '99+' : totalUnread}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text className={`text-[10px] mt-1 font-medium ${isFocused ? 'text-[#094772]' : 'text-gray-400'}`}>
+                  {options.title}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </>
   );
 }
 
 export default function TabLayout() {
-  const router = useRouter();
-
   return (
     <Tabs
         tabBar={props => <TabBar {...props} />}
@@ -116,7 +170,6 @@ export default function TabLayout() {
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
-            router.push('/new-trip');
           },
         }}
         options={{
@@ -137,7 +190,6 @@ export default function TabLayout() {
         }}
       />
       
-
     </Tabs>
   );
 }

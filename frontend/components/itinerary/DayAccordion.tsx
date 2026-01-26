@@ -34,7 +34,7 @@ export const DayAccordion: React.FC<DayAccordionProps> = ({
 
   return (
     <View className="mb-4">
-      {/* Day Header - Collapsible */}
+
       <TouchableOpacity
         className="flex-row items-center justify-between bg-white mx-4 p-4 rounded-xl"
         onPress={toggleExpand}
@@ -64,7 +64,7 @@ export const DayAccordion: React.FC<DayAccordionProps> = ({
         </View>
       </TouchableOpacity>
 
-      {/* Expanded Content with Animation */}
+
       <Animated.View
         style={{
           opacity: animatedHeight,

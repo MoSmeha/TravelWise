@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { authService } from '../../services/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../store/authStore';
 import Toast from 'react-native-toast-message';
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
 import { InputField } from '../../components/ui/InputField';
@@ -15,7 +14,6 @@ export default function VerifyScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { hydrate } = useAuth();
 
   const handleVerify = async () => {
     if (!otp || !email) {
@@ -34,12 +32,11 @@ export default function VerifyScreen() {
       Toast.show({
         type: 'success',
         text1: 'Email Verified!',
-        text2: 'Welcome to TravelWise',
+        text2: 'Please login to continue',
       });
       
-      // Refresh user data
-      await hydrate();
-      router.replace('/(tabs)');
+
+      router.replace('/auth/login' as any);
     } catch (error: any) {
       const errorData = error.response?.data;
       const msg = errorData?.message || errorData?.error || 'Verification failed. Please try again.';
@@ -149,7 +146,7 @@ export default function VerifyScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      {/* Massive Cloud Density (~16 clouds) */}
+
       <FlyingCloud top={40} duration={26000} delay={0} size={65} opacity={0.10} variant="ionic" />
       <FlyingCloud top={95} duration={32000} delay={6000} size={95} opacity={0.06} variant="lucide" />
       <FlyingCloud top={150} duration={20000} delay={2000} size={50} opacity={0.12} variant="ionic" />

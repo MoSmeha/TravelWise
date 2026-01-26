@@ -4,7 +4,7 @@ import { X, UserMinus, Shield, Eye } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { customToastConfig } from '../ui/ToastMessage';
 import { useItineraryCollaborators, useRemoveCollaborator } from '../../hooks/queries/useItineraryShares';
-import type { ItineraryShare } from '../../services/itinerary-share';
+import type { ItineraryShare } from '../../types/schemas';
 
 interface ManageCollaboratorsModalProps {
   visible: boolean;
@@ -76,7 +76,7 @@ export function ManageCollaboratorsModal({ visible, itineraryId, onClose }: Mana
           <Text className="text-sm text-gray-500">@{item.user?.username}</Text>
           
           <View className="flex-row items-center mt-1 gap-2">
-            {/* Permission Badge */}
+
             <View className={`flex-row items-center px-2 py-0.5 rounded-md ${isOwner ? 'bg-purple-100' : 'bg-blue-100'}`}>
               {isOwner ? (
                 <Shield size={12} color="#7C3AED" />
@@ -88,7 +88,7 @@ export function ManageCollaboratorsModal({ visible, itineraryId, onClose }: Mana
               </Text>
             </View>
 
-            {/* Status Badge */}
+
             <View className={`px-2 py-0.5 rounded-md ${statusBadge.bg}`}>
               <Text className={`text-xs font-medium ${statusBadge.color}`}>
                 {statusBadge.text}
@@ -97,7 +97,7 @@ export function ManageCollaboratorsModal({ visible, itineraryId, onClose }: Mana
           </View>
         </View>
         
-        {/* Remove Button (only for non-owners) */}
+
         {!isOwner && (
           <TouchableOpacity
             onPress={() => handleRemove(item.id, item.user?.name || 'this user')}
@@ -127,7 +127,7 @@ export function ManageCollaboratorsModal({ visible, itineraryId, onClose }: Mana
     >
       <View className="flex-1 bg-black/50 justify-end">
         <View className="bg-white rounded-t-3xl h-5/6">
-          {/* Header */}
+
           <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200">
             <View>
               <Text className="text-xl font-bold text-gray-800">Collaborators</Text>
@@ -140,7 +140,7 @@ export function ManageCollaboratorsModal({ visible, itineraryId, onClose }: Mana
             </TouchableOpacity>
           </View>
 
-          {/* Collaborators List */}
+
           {isLoading ? (
             <View className="flex-1 items-center justify-center">
               <ActivityIndicator size="large" color="#094772" />
