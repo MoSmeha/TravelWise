@@ -54,18 +54,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 | Login & Onboarding | User Profile | Notifications |
 | :---: | :---: | :---: |
-| ![Login](./readme/LoginOnboarding.gif) | ![Profile](./readme/Profile.jpeg) | ![Notifications](./readme/Notifications_Page.jpeg) |
+| <img src="./readme/LoginOnboarding.gif" width="100%"> | <img src="./readme/Profile.jpeg" width="100%"> | <img src="./readme/Notifications_Page.jpeg" width="100%"> |
 
 | Creating Itinerary | Itinerary Details | Itinerary Checklist |
 | :---: | :---: | :---: |
-| ![Creating Itinerary](./readme/Creating_Itinerary.gif) | ![Details](./readme/Itinerary_Details.jpeg) | ![Checklist](./readme/Itinerary_Checklist.jpeg) |
+| <img src="./readme/Creating_Itinerary.gif" width="100%"> | <img src="./readme/Itinerary_Details.jpeg" width="100%"> | <img src="./readme/Itinerary_Checklist.jpeg" width="100%"> |
 
 | Creating Post | Live Location & Hidden Gems | GPS Sharing |
 | :---: | :---: | :---: |
-| ![Creating Post](./readme/Creating_Post.gif) | ![Hidden Gems](./readme/HiddenGem_Card_&Live_Location.gif) | ![GPS Sharing](./readme/ItineraryGPS_Sharing.gif) |
+| <img src="./readme/Creating_Post.gif" width="100%"> | <img src="./readme/HiddenGem_Card_&Live_Location.gif" width="100%"> | <img src="./readme/ItineraryGPS_Sharing.gif" width="100%"> |
 
 | AI Chatbot | Chat Demo |
 | :---: | :---: |
-| ![Rag Chatbot](./readme/Rag_Chatbot.gif) | ![Chat Demo](./readme/ChatApp-Demo.gif) |
+| <img src="./readme/Rag_Chatbot.gif" width="100%"> | <img src="./readme/ChatApp-Demo.gif" width="100%"> |
 
 <br><br>
