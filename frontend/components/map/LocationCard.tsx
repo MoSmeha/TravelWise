@@ -56,7 +56,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({ location, locationPh
   };
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl elevation-10 z-50 h-[70%]">
+    <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl elevation-10 z-50 h-[70%] pt-6">
 
       <TouchableOpacity
         className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 items-center justify-center z-10"
@@ -65,7 +65,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({ location, locationPh
         <X size={20} color="#6b7280" />
       </TouchableOpacity>
 
-      <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
 
         <View className="mb-4">
 

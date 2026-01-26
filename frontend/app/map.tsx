@@ -392,7 +392,7 @@ export default function MapScreen() {
 
 
       {itineraryId && hasPermission && (
-        <View className="absolute top-32 right-4 z-10">
+        <View className="absolute bottom-28 right-4 z-10">
           <TouchableOpacity
             onPress={() => {
               if (isSharing) {
