@@ -76,7 +76,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
               </Text>
             )}
           </View>
-          {/* Camera Icon Overlay */}
+
           <View className="absolute bottom-0 right-0 bg-white rounded-full p-1.5 border-2 border-[#004e89]">
             <Camera size={14} color="#004e89" />
           </View>

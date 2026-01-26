@@ -43,9 +43,9 @@ export const LocationItem: React.FC<LocationItemProps> = ({
   return (
     <View className="mx-4 mb-0">
       <View className="flex-row">
-        {/* Left: Thread Line and Marker */}
+
         <View className="items-center mr-3 w-8">
-          {/* Circle Marker */}
+
           <View
             className="w-8 h-8 rounded-full items-center justify-center"
             style={{
@@ -55,15 +55,15 @@ export const LocationItem: React.FC<LocationItemProps> = ({
             <Text className="text-white text-xs font-bold">{index + 1}</Text>
           </View>
           
-          {/* Connector Line */}
+
           {showConnector && (
             <View className="flex-1 w-0.5 bg-gray-300 min-h-[60px]" />
           )}
         </View>
 
-        {/* Main Card Content */}
+
         <View className="flex-1 bg-white rounded-xl p-4 mb-3">
-          {/* Top Row: Name + Badge */}
+
           <View className="flex-row items-start mb-2">
             <View className="flex-1">
               <Text className="text-base font-bold text-gray-900" numberOfLines={2}>
@@ -84,7 +84,7 @@ export const LocationItem: React.FC<LocationItemProps> = ({
             )}
           </View>
 
-          {/* Stats Row */}
+
           <View className="flex-row items-center gap-4 mb-3">
             {location.rating && (
               <View className="flex-row items-center">
@@ -98,7 +98,7 @@ export const LocationItem: React.FC<LocationItemProps> = ({
             )}
           </View>
 
-          {/* Image - Full width below stats */}
+
           {imageUrl && (
             <RNImage
               source={{ uri: imageUrl }}
@@ -107,7 +107,7 @@ export const LocationItem: React.FC<LocationItemProps> = ({
             />
           )}
 
-          {/* Tips Section (from aiReasoning) */}
+
           {location.aiReasoning && (
             <View className="p-3 bg-purple-50 rounded-lg mb-3">
               <Text className="text-sm text-purple-800 leading-5">
@@ -116,7 +116,7 @@ export const LocationItem: React.FC<LocationItemProps> = ({
             </View>
           )}
 
-          {/* Scam Warning */}
+
           {location.scamWarning && (
             <View className="p-3 bg-red-50 rounded-lg mb-3">
               <Text className="text-sm text-red-800 leading-5">
@@ -125,7 +125,7 @@ export const LocationItem: React.FC<LocationItemProps> = ({
             </View>
           )}
 
-          {/* Get Directions Button */}
+
           <TouchableOpacity 
             className="flex-row items-center justify-center py-3 border border-gray-200 rounded-lg bg-gray-50"
             activeOpacity={0.7}

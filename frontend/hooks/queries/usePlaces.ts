@@ -30,7 +30,7 @@ export const useCities = () => {
   return useQuery({
     queryKey: ['cities'],
     queryFn: placesService.getCities,
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 60,
   });
 };
 
@@ -39,6 +39,6 @@ export const usePlacePhotos = (name: string, lat?: number, lng?: number, enabled
     queryKey: ['placePhotos', name, lat, lng],
     queryFn: () => placesService.getPlacePhotos(name, lat, lng),
     enabled,
-    staleTime: 1000 * 60 * 30, // 30 mins
+    staleTime: 1000 * 60 * 30,
   });
 };

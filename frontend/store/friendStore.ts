@@ -1,13 +1,12 @@
 import { create } from 'zustand';
 
-// Minimal Zustand store for UI state only
-// Data fetching is handled by React Query hooks in hooks/queries/useFriends.ts
+
 
 interface FriendUIState {
   activeTab: 'friends' | 'pending' | 'add';
   searchQuery: string;
   
-  // Actions
+
   setActiveTab: (tab: 'friends' | 'pending' | 'add') => void;
   setSearchQuery: (query: string) => void;
   clearSearch: () => void;

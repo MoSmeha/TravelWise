@@ -35,7 +35,7 @@ export default function VerifyScreen() {
         text2: 'Please login to continue',
       });
       
-      // Redirect to login - verification doesn't provide auth tokens
+
       router.replace('/auth/login' as any);
     } catch (error: any) {
       const errorData = error.response?.data;
@@ -146,7 +146,7 @@ export default function VerifyScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      {/* Massive Cloud Density (~16 clouds) */}
+
       <FlyingCloud top={40} duration={26000} delay={0} size={65} opacity={0.10} variant="ionic" />
       <FlyingCloud top={95} duration={32000} delay={6000} size={95} opacity={0.06} variant="lucide" />
       <FlyingCloud top={150} duration={20000} delay={2000} size={50} opacity={0.12} variant="ionic" />

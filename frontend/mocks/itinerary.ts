@@ -1,4 +1,4 @@
-// Mock response for testing without backend
+
 export const MOCK_ITINERARY_RESPONSE = {
   "itinerary": {
     "id": "mock-itinerary-1",

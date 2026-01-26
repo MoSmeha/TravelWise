@@ -36,12 +36,12 @@ export default function ActivityScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const hasMarkedReadRef = useRef(false);
     
-    // Notifications Data
+
     const { data: notifications = [], isLoading, refetch } = useNotifications();
     const markAllReadMutation = useMarkAllNotificationsRead();
     const markReadMutation = useMarkNotificationRead();
 
-    // Mark all notifications as read when first viewing the notifications tab
+
     useEffect(() => {
         if (activeTab === 'notifications' && !hasMarkedReadRef.current) {
             hasMarkedReadRef.current = true;
@@ -52,11 +52,11 @@ export default function ActivityScreen() {
         }
     }, [activeTab]);
 
-    // Friend Request Mutations
+
     const acceptMutation = useAcceptFriendRequest();
     const rejectMutation = useRejectFriendRequest();
     
-    // Friends and Conversations Data
+
     const { data: friends = [] } = useFriends();
     const { data: pendingRequests = [] } = usePendingRequests();
     const { 
@@ -66,16 +66,16 @@ export default function ActivityScreen() {
     } = useInfiniteConversations();
     const createConversationMutation = useCreateConversation();
 
-    // Flatten conversations from infinite query
+
     const conversations = useMemo(() => {
         return conversationsData?.pages.flatMap(page => page.data) || [];
     }, [conversationsData]);
 
-    // Get online status for all friends
+
     const friendIds = useMemo(() => friends.map(f => f.id), [friends]);
     const { data: onlineStatus = {} } = useOnlineStatus(friendIds);
 
-    // Merge friends with their conversation data
+
     interface FriendWithConversation extends User {
         conversation?: Conversation;
         lastMessageAt?: Date;
@@ -84,7 +84,7 @@ export default function ActivityScreen() {
 
     const friendsWithConversations = useMemo((): FriendWithConversation[] => {
         return friends.map(friend => {
-            // Find conversation with this friend
+
             const conversation = conversations.find(conv => {
                 if (conv.type !== 'DIRECT') return false;
                 return conv.participants.some(p => p.userId === friend.id);
@@ -97,7 +97,7 @@ export default function ActivityScreen() {
                 unreadCount: conversation?.unreadCount || 0,
             };
         }).sort((a, b) => {
-            // Sort: unread first, then by last message time, then alphabetically
+
             if ((a.unreadCount || 0) > 0 && (b.unreadCount || 0) === 0) return -1;
             if ((a.unreadCount || 0) === 0 && (b.unreadCount || 0) > 0) return 1;
             if (a.lastMessageAt && b.lastMessageAt) {
@@ -109,7 +109,7 @@ export default function ActivityScreen() {
         });
     }, [friends, conversations]);
 
-    // Filter friends based on search
+
     const filteredFriends = useMemo(() => {
         if (!searchQuery.trim()) return friendsWithConversations;
         const query = searchQuery.toLowerCase();
@@ -165,9 +165,9 @@ export default function ActivityScreen() {
 
     const handleFriendPress = async (friend: User) => {
         try {
-            // Create or get existing conversation
+
             const conversation = await createConversationMutation.mutateAsync(friend.id);
-            // Navigate to chat screen
+
             router.push(`/chat/Chat?id=${conversation.id}`);
         } catch (error: any) {
             Toast.show({
@@ -255,7 +255,7 @@ export default function ActivityScreen() {
     const renderMessagesTab = () => {
         return (
             <View className="flex-1">
-                {/* Search Bar */}
+
                 <View className="px-4 py-2">
                     <View className="flex-row items-center bg-gray-100 rounded-full px-4 py-1">
                         <Search size={15} color="#9ca3af" />
@@ -299,17 +299,17 @@ export default function ActivityScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-            {/* Header */}
+
             <View className="px-5 pt-1 pb-2 bg-white">
                 <Text className="text-[#094772] text-3xl font-extrabold">Activity</Text>
             </View>
 
-            {/* Tabs */}
+
             <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
             <View className="h-[1px] bg-gray-100 w-full mb-2" />
 
-            {/* Content */}
+
             {activeTab === 'notifications' ? (
                 <FlatList
                     data={notifications}

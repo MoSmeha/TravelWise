@@ -19,7 +19,7 @@ export interface FriendRequest {
   addressee?: User;
 }
 
-// Fetch friends list
+
 export const useFriends = () => {
   const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
@@ -32,7 +32,7 @@ export const useFriends = () => {
   });
 };
 
-// Fetch pending friend requests
+
 export const usePendingRequests = () => {
   const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
@@ -45,7 +45,7 @@ export const usePendingRequests = () => {
   });
 };
 
-// Fetch sent requests
+
 export const useSentRequests = () => {
   const { isAuthenticated, isRestoring } = useAuth();
   return useQuery({
@@ -58,7 +58,7 @@ export const useSentRequests = () => {
   });
 };
 
-// Search users
+
 export const useSearchUsers = (query: string) => {
   return useQuery({
     queryKey: ['users', 'search', query],
@@ -70,7 +70,7 @@ export const useSearchUsers = (query: string) => {
   });
 };
 
-// Send friend request mutation
+
 export const useSendFriendRequest = () => {
   const queryClient = useQueryClient();
   
@@ -85,7 +85,7 @@ export const useSendFriendRequest = () => {
   });
 };
 
-// Accept friend request mutation
+
 export const useAcceptFriendRequest = () => {
   const queryClient = useQueryClient();
   
@@ -101,7 +101,7 @@ export const useAcceptFriendRequest = () => {
   });
 };
 
-// Reject friend request mutation
+
 export const useRejectFriendRequest = () => {
   const queryClient = useQueryClient();
   

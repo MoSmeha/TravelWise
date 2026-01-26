@@ -99,7 +99,7 @@ export default function LoginScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      {/* Massive Cloud Density (~16 clouds) */}
+
       <FlyingCloud top={20} duration={35000} delay={0} size={100} opacity={0.06} variant="lucide" />
       <FlyingCloud top={60} duration={28000} delay={5000} size={50} opacity={0.10} variant="ionic" />
       <FlyingCloud top={100} duration={40000} delay={12000} size={70} opacity={0.05} variant="lucide" />

@@ -33,7 +33,7 @@ const api = axios.create({
   },
 });
 
-// Request interceptor: Attach token
+
 api.interceptors.request.use(
   async (config) => {
     const token = useAuth.getState().accessToken;
@@ -46,7 +46,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Token refresh state to prevent multiple simultaneous refresh attempts
+
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
@@ -64,7 +64,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Response interceptor: Handle 401
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -72,7 +72,7 @@ api.interceptors.response.use(
     
     if (error.response?.status === 401 && !originalRequest._retry) {
       
-      // If already refreshing, queue this request
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({

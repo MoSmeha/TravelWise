@@ -23,7 +23,7 @@ export function useLocationSharing(itineraryId: string | null, enabled: boolean 
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Request location permissions
+
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -31,7 +31,7 @@ export function useLocationSharing(itineraryId: string | null, enabled: boolean 
     })();
   }, []);
 
-  // Join/leave itinerary room
+
   useEffect(() => {
     if (!socket || !itineraryId || !enabled) return;
 
@@ -44,7 +44,7 @@ export function useLocationSharing(itineraryId: string | null, enabled: boolean 
     };
   }, [socket, itineraryId, enabled]);
 
-  // Listen for collaborator location updates
+
   useEffect(() => {
     if (!socket) return;
 
@@ -78,7 +78,7 @@ export function useLocationSharing(itineraryId: string | null, enabled: boolean 
     };
   }, [socket]);
 
-  // Start sharing location
+
   const startSharing = useCallback(async () => {
     if (!hasPermission || !socket || !itineraryId) {
       console.warn('[LocationSharing] Cannot start sharing - missing requirements');
@@ -89,12 +89,12 @@ export function useLocationSharing(itineraryId: string | null, enabled: boolean 
       console.log('[LocationSharing] Starting location sharing');
       setIsSharing(true);
 
-      // Subscribe to location updates (every 10 seconds)
+
       locationSubscription.current = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.Balanced,
-          timeInterval: 10000, // Update every 10 seconds
-          distanceInterval: 20, // Or when moved 20 meters
+          timeInterval: 10000,
+          distanceInterval: 20,
         },
         (location) => {
           const locationData = {
@@ -116,7 +116,7 @@ export function useLocationSharing(itineraryId: string | null, enabled: boolean 
     }
   }, [hasPermission, socket, itineraryId]);
 
-  // Stop sharing location
+
   const stopSharing = useCallback(async () => {
     console.log('[LocationSharing] Stopping location sharing');
     
@@ -133,14 +133,14 @@ export function useLocationSharing(itineraryId: string | null, enabled: boolean 
     setIsSharing(false);
   }, []);
 
-  // Auto-stop when component unmounts or disabled
+
   useEffect(() => {
     if (!enabled && isSharing) {
       stopSharing();
     }
   }, [enabled, isSharing, stopSharing]);
 
-  // Cleanup on unmount
+
   useEffect(() => {
     return () => {
       if (locationSubscription.current) {

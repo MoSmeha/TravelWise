@@ -6,8 +6,7 @@ import { CreatePostModal } from '../components/post/CreatePostModal';
 export default function CreatePostScreen() {
   const router = useRouter();
 
-  // We need a way to go back when the modal closes
-  // The modal component calls onClose when the user clicks X or finishes
+
   const handleClose = () => {
     if (router.canGoBack()) {
       router.back();

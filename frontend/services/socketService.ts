@@ -13,18 +13,16 @@ class SocketService {
       return;
     }
 
-    // Store token for reconnection
+
     this.currentToken = token;
 
-    // Disconnect existing socket if any
+
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
     }
 
-    // Use absolute URL for socket connection if API_URL is relative or just host
-    // Assuming API_URL is something like "http://localhost:3000/api" or "http://192.168.1.5:3000/api"
-    // We need the base URL without /api
+
     const baseUrl = API_BASE_URL.replace('/api', '');
 
     console.log('[Socket] Connecting to:', baseUrl);
@@ -41,14 +39,14 @@ class SocketService {
 
     this.socket.on('connect', () => {
       console.log('[Socket] Connected, id:', this.socket?.id);
-      // Start ping interval to keep connection alive
+
       this.startPing();
     });
 
     this.socket.on('disconnect', (reason) => {
       console.log('[Socket] Disconnected, reason:', reason);
       this.stopPing();
-      // Reconnect for server disconnect OR transport close (app backgrounding)
+
       if (reason === 'io server disconnect' || reason === 'transport close') {
         console.log('[Socket] Attempting reconnect for reason:', reason);
         setTimeout(() => {
@@ -71,7 +69,7 @@ class SocketService {
       console.log('[Socket] Reconnection attempt:', attemptNumber);
     });
 
-    // Re-attach listeners
+
     this.listeners.forEach((callbacks, event) => {
       callbacks.forEach(cb => {
         this.socket?.on(event, cb as any);
@@ -79,19 +77,17 @@ class SocketService {
     });
   }
 
-  /**
-   * Force reconnection - used when app returns from background
-   */
+
   forceReconnect(token: string) {
     console.log('[Socket] Force reconnecting...');
     this.currentToken = token;
     
-    // If socket exists but not connected, try to reconnect
+
     if (this.socket && !this.socket.connected) {
       console.log('[Socket] Socket exists but disconnected, reconnecting...');
       this.socket.connect();
     } else if (!this.socket) {
-      // No socket exists, create new connection
+
       console.log('[Socket] No socket exists, creating new connection...');
       this.connect(token);
     } else {
@@ -101,7 +97,7 @@ class SocketService {
   
   private startPing() {
     this.stopPing();
-    // Send ping every 25 seconds to keep connection alive
+
     this.pingInterval = setInterval(() => {
       if (this.socket?.connected) {
         this.socket.emit('ping');

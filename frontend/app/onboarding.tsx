@@ -80,14 +80,14 @@ export default function OnboardingScreen() {
   return (
     <View className="flex-1 bg-white">
       <SafeAreaView className="flex-1">
-        {/* Skip Button */}
+
         <View className="absolute top-16 right-6 z-10">
           <TouchableOpacity onPress={handleSkip} className="py-2 px-4">
             <Text className="text-gray-500 font-semibold text-base">Skip</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Scrollable Pages */}
+
         <ScrollView
           ref={scrollViewRef}
           horizontal
@@ -102,16 +102,16 @@ export default function OnboardingScreen() {
           ))}
         </ScrollView>
 
-        {/* Bottom Section */}
+
         <View className="px-6 pb-8">
-          {/* Pagination Dots */}
+
           <View className="flex-row justify-center mb-8">
             {onboardingPages.map((_, index) => (
               <PaginationDot key={index} index={index} currentPage={currentPage} />
             ))}
           </View>
 
-          {/* Action Button */}
+
           <TouchableOpacity
             onPress={goToNextPage}
             className="bg-primary py-4 rounded-2xl items-center shadow-lg"
@@ -135,7 +135,7 @@ export default function OnboardingScreen() {
 
 
 
-// ... existing imports
+
 
 interface OnboardingPageViewProps {
   page: OnboardingPage;
@@ -165,7 +165,7 @@ function OnboardingPageView({ page }: OnboardingPageViewProps) {
   return (
     <View style={{ width }} className="flex-1 px-6 pt-20">
       <View className="flex-1 items-center">
-        {/* Image Container with Blob Background */}
+
         <View className="w-full aspect-square justify-center items-center mb-8 relative">
           <BlobBackground />
           <Image
@@ -175,7 +175,7 @@ function OnboardingPageView({ page }: OnboardingPageViewProps) {
           />
         </View>
 
-        {/* Text Content */}
+
         <View className="items-center px-4">
           <Text className="text-2xl font-bold text-gray-900 text-center mb-4">
             {page.title}

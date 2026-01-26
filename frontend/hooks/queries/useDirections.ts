@@ -13,9 +13,6 @@ interface UseDirectionsParams {
   waypoints?: RouteCoord[];
 }
 
-/**
- * Fetch directions for a single route
- */
 export const useDirections = (params: UseDirectionsParams | null) => {
   const { origin, destination, waypoints = [] } = params || {};
   
@@ -42,8 +39,8 @@ export const useDirections = (params: UseDirectionsParams | null) => {
       return null;
     },
     enabled: !!params && !!origin && !!destination,
-    staleTime: 1000 * 60 * 60 * 24, // 24 hours - routes don't change
-    gcTime: 1000 * 60 * 60 * 24 * 7, // Keep in cache for 7 days
+    staleTime: 1000 * 60 * 60 * 24,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
   };
 };
 

@@ -20,7 +20,7 @@ export function SharedItinerariesList() {
   const acceptInvitation = useAcceptInvitation();
   const rejectInvitation = useRejectInvitation();
 
-  // Filter by status based on active tab
+
   const shares = allShares?.filter(share => 
     activeTab === 'pending' ? share.status === 'PENDING' : share.status === 'ACCEPTED'
   ) || [];
@@ -59,7 +59,7 @@ export function SharedItinerariesList() {
         disabled={isPending}
         className="mb-4 mx-1 rounded-2xl bg-white overflow-hidden shadow-sm elevation-2"
       >
-        {/* Image Section */}
+
         <View className="h-[140px] w-full relative">
           <Image 
             source={{ uri: imageUri }} 
@@ -88,7 +88,7 @@ export function SharedItinerariesList() {
             </View>
           </View>
 
-          {/* Permission Badge */}
+
           <View className="absolute top-3 right-3">
             <View className={`px-2 py-1 rounded-lg ${item.permission === 'OWNER' ? 'bg-purple-600' : 'bg-blue-600'}`}>
               <Text className="text-white text-xs font-bold">
@@ -98,9 +98,9 @@ export function SharedItinerariesList() {
           </View>
         </View>
 
-        {/* Content Section */}
+
         <View className="px-4 py-3">
-          {/* Inviter Info */}
+
           <View className="flex-row items-center mb-3">
             <Image
               source={{ uri: item.inviter?.avatarUrl || 'https://via.placeholder.com/32' }}
@@ -111,7 +111,7 @@ export function SharedItinerariesList() {
             </Text>
           </View>
 
-          {/* Action Buttons for Pending */}
+
           {isPending && (
             <View className="flex-row gap-2">
               <TouchableOpacity
@@ -146,7 +146,7 @@ export function SharedItinerariesList() {
             </View>
           )}
 
-          {/* View Button for Accepted */}
+
           {!isPending && (
             <TouchableOpacity
               onPress={() => handleViewItinerary(item.itineraryId)}
@@ -162,7 +162,7 @@ export function SharedItinerariesList() {
 
   return (
     <View className="flex-1 bg-gray-50">
-      {/* Tabs */}
+
       <View className="flex-row bg-white border-b border-gray-200 px-5">
         <TouchableOpacity
           onPress={() => setActiveTab('pending')}
@@ -183,7 +183,7 @@ export function SharedItinerariesList() {
         </TouchableOpacity>
       </View>
 
-      {/* List */}
+
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#094772" />

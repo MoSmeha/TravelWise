@@ -148,7 +148,7 @@ export const CommentsSheet: React.FC<CommentsSheetProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1 bg-white"
       >
-        {/* Header */}
+
         <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
           <TouchableOpacity onPress={onClose}>
             <X size={24} color="#374151" />
@@ -157,7 +157,7 @@ export const CommentsSheet: React.FC<CommentsSheetProps> = ({
           <View style={{ width: 24 }} />
         </View>
 
-        {/* Comments List */}
+
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#4F46E5" />
@@ -184,7 +184,7 @@ export const CommentsSheet: React.FC<CommentsSheetProps> = ({
           />
         )}
 
-        {/* Input */}
+
         <View className="flex-row items-center px-4 py-3 border-t border-gray-100 bg-white">
           <TextInput
             ref={inputRef}

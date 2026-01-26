@@ -16,7 +16,7 @@ export const LocationMarker = memo(({ location, index, onPress }: LocationMarker
   const isHiddenGem = location.classification === 'HIDDEN_GEM';
 
   useEffect(() => {
-    // Allow marker to render fully, then disable tracking to prevent flickering
+
     if (isHiddenGem && tracksViewChanges) {
       const timer = setTimeout(() => {
         setTracksViewChanges(false);
@@ -43,7 +43,7 @@ export const LocationMarker = memo(({ location, index, onPress }: LocationMarker
           <View className="bg-green-500 p-2 rounded-full border-2 border-white">
             <Gem size={18} color="white" strokeWidth={2.5} />
           </View>
-          {/* Triangle pointer - requires inline styles for border-based triangle */}
+
           <View
             style={{
               width: 0,

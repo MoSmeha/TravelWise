@@ -38,13 +38,13 @@ export default function MapScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   
-  // Itinerary store for persisting active itinerary
+
   const setActiveItinerary = useItineraryStore((state) => state.setActiveItinerary);
   
-  // State for data passed directly (e.g. from generation)
+
   const [passedData, setPassedData] = useState<ItineraryResponse | null>(null);
   
-  // If ID provided, fetch from backend
+
   const itineraryId = typeof params.itineraryId === 'string' ? params.itineraryId : null;
   const { data: fetchedData, isLoading: loadingItinerary } = useItineraryDetails(itineraryId || '');
 
@@ -52,7 +52,7 @@ export default function MapScreen() {
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [locationPhotos, setLocationPhotos] = useState<Record<string, LocationPhotosData>>({});
 
-  // Location sharing
+
   const { 
     isSharing, 
     hasPermission, 
@@ -62,10 +62,10 @@ export default function MapScreen() {
   } = useLocationSharing(itineraryId, true);
 
 
-  // Combine data sources: prefer passed, then fetched
+
   const data = passedData || (fetchedData as ItineraryResponse | undefined) || null;
 
-  // Fetch photos for a location
+
   const fetchPhotosForLocation = async (locationId: string, locationName: string, lat?: number, lng?: number) => {
     if (locationPhotos[locationId]?.photos.length > 0 || locationPhotos[locationId]?.loading) return;
     
@@ -107,7 +107,7 @@ export default function MapScreen() {
         const parsed = JSON.parse(params.data as string);
         setPassedData(parsed);
         
-        // Set active itinerary in store for checklist tab access
+
         if (parsed.itinerary?.id) {
           setActiveItinerary(parsed.itinerary.id);
         }
@@ -123,7 +123,7 @@ export default function MapScreen() {
   const allLocations: Location[] = data?.days?.flatMap((day) => day.locations) || [];
   const hotels: Hotel[] = data?.hotels || [];
 
-  // Build routes for each day - memoized to prevent infinite useEffect loops
+
   const dayRoutes = useMemo(() => {
     return (data?.days || []).map((day, index) => {
       const coords = day.locations.map(loc => ({
@@ -131,7 +131,7 @@ export default function MapScreen() {
         longitude: loc.longitude,
       }));
 
-      // Add airport as starting point for the first day
+
       if (index === 0 && data?.airport) {
         coords.unshift({
           latitude: data.airport.latitude,
@@ -149,7 +149,7 @@ export default function MapScreen() {
     longitudeDelta: 0.5,
   };
 
-  // Build direction query params for each day route
+
   const dayRouteQueries = useMemo(() => {
     return dayRoutes.map((route) => {
       if (route.length < 2) return null;
@@ -161,7 +161,7 @@ export default function MapScreen() {
     });
   }, [dayRoutes]);
 
-  // Build connector query params (day N end -> day N+1 start)
+
   const connectorQueries = useMemo(() => {
     const queries: ({ origin: { latitude: number; longitude: number }; destination: { latitude: number; longitude: number }; waypoints?: undefined } | null)[] = [];
     for (let i = 0; i < dayRoutes.length - 1; i++) {
@@ -179,11 +179,11 @@ export default function MapScreen() {
     return queries;
   }, [dayRoutes]);
 
-  // Fetch all directions with React Query (cached + deduplicated)
+
   const dayDirectionsResults = useMultipleDirections(dayRouteQueries);
   const connectorDirectionsResults = useMultipleDirections(connectorQueries);
 
-  // Extract route data from query results
+
   const realRoutes = useMemo(() => {
     const routes: Record<number, { latitude: number; longitude: number }[]> = {};
     dayDirectionsResults.forEach((result, index) => {
@@ -204,7 +204,7 @@ export default function MapScreen() {
     return routes;
   }, [connectorDirectionsResults]);
 
-  // Loading state
+
   if (loadingItinerary && !passedData && itineraryId) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -214,7 +214,7 @@ export default function MapScreen() {
     );
   }
 
-  // No data state
+
   if (!data) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -230,13 +230,12 @@ export default function MapScreen() {
   };
 
   const handleNavigateToItinerary = () => {
-    // Pass ID only to prevent serialization lag
+
     router.push({
       pathname: '/itinerary',
       params: { 
         itineraryId: data.itinerary.id,
-        // Keep data param as fallback/initial state if needed, but try to avoid it if possible
-        // For now, we rely on React Query cache in the next screen
+
       },
     });
   };
@@ -245,7 +244,7 @@ export default function MapScreen() {
     <View className="flex-1 bg-white">
       <Stack.Screen options={{ headerShown: false }} />
       
-      {/* Header */}
+
       <MapHeader
         countryName={data.country?.name || 'Trip'}
         numberOfDays={data.itinerary.numberOfDays}
@@ -255,7 +254,7 @@ export default function MapScreen() {
 
       <MapLegend days={data.itinerary.numberOfDays} />
 
-      {/* Map */}
+
       <MapView
         provider={PROVIDER_GOOGLE}
         style={{ flex: 1 }}
@@ -263,18 +262,18 @@ export default function MapScreen() {
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
-        {/* Route polylines per day */}
+
         {dayRoutes.map((fallbackRoute, index) => {
           const routeToRender = realRoutes[index] || fallbackRoute;
           
-          // Calculate connector to next day
+
           let connector = null;
           if (index < dayRoutes.length - 1) {
              const nextFallback = dayRoutes[index + 1];
              const nextRoute = realRoutes[index + 1] || nextFallback;
              
              if (routeToRender.length > 0 && nextRoute.length > 0) {
-               // Prefer real fetched connector, fallback to straight line if loading/failed
+
                const fetchedConnector = connectorRoutes[index];
                const start = routeToRender[routeToRender.length - 1];
                const end = nextRoute[0];
@@ -295,7 +294,7 @@ export default function MapScreen() {
 
           return (
             <React.Fragment key={`route-group-${index}`}>
-              {/* Daily Route */}
+
               {routeToRender.length > 1 && (
                 <Polyline
                   key={`route-${index}`}
@@ -304,13 +303,13 @@ export default function MapScreen() {
                   strokeWidth={5}
                 />
               )}
-              {/* Connector to next day */}
+
               {connector}
             </React.Fragment>
           );
         })}
 
-        {/* Airport marker */}
+
         {data.airport && (
           <Marker
             coordinate={{
@@ -323,7 +322,7 @@ export default function MapScreen() {
           />
         )}
 
-        {/* Location markers */}
+
         {allLocations.map((location, index) => (
           <LocationMarker
             key={`${location.id}-${index}`}
@@ -336,7 +335,7 @@ export default function MapScreen() {
           />
         ))}
 
-        {/* Hotel markers */}
+
         {hotels.map((hotel) => (
           <Marker
             key={hotel.id}
@@ -354,7 +353,7 @@ export default function MapScreen() {
           />
         ))}
 
-        {/* Collaborator location markers */}
+
         {collaboratorLocations.map((userData) => (
           <Marker
             key={userData.userId}
@@ -373,7 +372,7 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {/* Location Card */}
+
       {selectedLocation && (
         <LocationCard
           location={selectedLocation}
@@ -382,7 +381,7 @@ export default function MapScreen() {
         />
       )}
 
-      {/* Hotel Card */}
+
       {selectedHotel && (
         <HotelCard
           hotel={selectedHotel}
@@ -391,7 +390,7 @@ export default function MapScreen() {
         />
       )}
 
-      {/* Location Sharing Toggle */}
+
       {itineraryId && hasPermission && (
         <View className="absolute top-32 right-4 z-10">
           <TouchableOpacity
@@ -429,7 +428,7 @@ export default function MapScreen() {
         </View>
       )}
 
-      {/* Bottom Navigation */}
+
       <BottomNavigation
         itineraryId={data.itinerary.id}
         data={data}

@@ -17,7 +17,7 @@ export const useLoginMutation = () => {
         text1: 'Welcome back!',
         text2: 'Login successful',
       });
-      // Navigation is handled by _layout.tsx after user data loads and onboarding is checked
+
     },
     onError: (error: any) => {
       console.error('[AUTH] Login Mutation Error:', error);
@@ -46,15 +46,13 @@ export const useRegisterMutation = () => {
         text2: 'Please check your email to verify your account.',
       });
       
-      // Navigate to verify screen with email param
+
       router.push({ pathname: '/auth/verify', params: { email: variables.email } } as any);
     },
     onError: (error: any) => {
       const errorData = error.response?.data;
-      // Backend returns { error: "Validation failed", details: [{path, message}] }
       let msg = 'Registration failed.';
       if (errorData?.details && Array.isArray(errorData.details) && errorData.details.length > 0) {
-        // Show the first validation error detail
         msg = errorData.details[0].message;
       } else if (errorData?.message) {
         msg = errorData.message;
@@ -78,9 +76,8 @@ export const useLogoutMutation = () => {
   return useMutation({
     mutationFn: () => authService.logout(),
     onSettled: () => {
-      // Whether backend call succeeds or fails, we clear client state
       logoutStore();
-      queryClient.clear(); // Clear all react query cache
+      queryClient.clear();
       router.replace('/auth/login' as any);
     },
   });

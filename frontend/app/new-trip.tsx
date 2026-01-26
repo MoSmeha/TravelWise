@@ -27,7 +27,7 @@ import {
   Users 
 } from 'lucide-react-native';
 
-// Available travel styles with Lucide icons
+
 const TRAVEL_STYLES: { key: TravelStyle; label: string; icon: any }[] = [
   { key: 'ADVENTURE', label: 'Adventure', icon: Compass },
   { key: 'CULTURAL', label: 'Culture & History', icon: Landmark },
@@ -40,22 +40,22 @@ const TRAVEL_STYLES: { key: TravelStyle; label: string; icon: any }[] = [
 export default function NewTripScreen() {
   const router = useRouter();
   
-  // React Query Hooks
+
   const { data: countries = [], isLoading: loadingCountries } = useCountries();
   const generateItineraryMutation = useGenerateItinerary();
   
-  // Itinerary store for persisting active itinerary
+
   const setActiveItinerary = useItineraryStore((state) => state.setActiveItinerary);
   
-  // Form state
+
   const [selectedCountryKey, setSelectedCountryKey] = useState<string>('');
   const [selectedAirportCode, setSelectedAirportCode] = useState<string>('');
   const [numberOfDays, setNumberOfDays] = useState('5');
   const [budgetUSD, setBudgetUSD] = useState('');
   const [selectedStyles, setSelectedStyles] = useState<TravelStyle[]>(['CULTURAL', 'ADVENTURE']);
-  const [travelDate, setTravelDate] = useState(''); // Format: YYYY-MM-DD
+  const [travelDate, setTravelDate] = useState('');
 
-  // Set defaults when countries load
+
   useEffect(() => {
     if (countries.length > 0 && !selectedCountryKey) {
       const firstCountry = countries[0];
@@ -63,31 +63,31 @@ export default function NewTripScreen() {
       if (firstCountry.airports.length > 0) {
         setSelectedAirportCode(firstCountry.airports[0].code);
       }
-      // Set default budget to minimum * days
+
       const defaultDays = 5;
       setBudgetUSD(String(firstCountry.minBudgetPerDay * defaultDays));
     }
   }, [countries, selectedCountryKey]);
 
-  // Get currently selected country
+
   const selectedCountry = countries.find(c => c.key === selectedCountryKey);
   
-  // Get airports for selected country
+
   const availableAirports: Airport[] = selectedCountry?.airports || [];
   
-  // Calculate minimum budget
+
   const days = parseInt(numberOfDays) || 1;
   const minBudget = (selectedCountry?.minBudgetPerDay || 50) * days;
 
-  // Toggle travel style (max 3 selections)
+
   const toggleStyle = (style: TravelStyle) => {
     setSelectedStyles(prev => {
       if (prev.includes(style)) {
-        // Don't remove if it's the last one
+
         if (prev.length === 1) return prev;
         return prev.filter(s => s !== style);
       } else {
-        // Don't add if already at max 3
+
         if (prev.length >= 3) {
           Alert.alert('Maximum 3 Styles', 'You can select up to 3 travel styles. Deselect one to add another.');
           return prev;
@@ -97,13 +97,13 @@ export default function NewTripScreen() {
     });
   };
 
-  // Handle country change
+
   const handleCountryChange = (countryKey: string) => {
     setSelectedCountryKey(countryKey);
     const country = countries.find(c => c.key === countryKey);
     if (country && country.airports.length > 0) {
       setSelectedAirportCode(country.airports[0].code);
-      // Update budget to meet minimum
+
       const currentBudget = parseInt(budgetUSD) || 0;
       const newMin = country.minBudgetPerDay * days;
       if (currentBudget < newMin) {
@@ -112,7 +112,7 @@ export default function NewTripScreen() {
     }
   };
 
-  // Handle days change
+
   const handleDaysChange = (value: string) => {
     setNumberOfDays(value);
     const newDays = parseInt(value) || 1;
@@ -143,14 +143,14 @@ export default function NewTripScreen() {
       return;
     }
 
-    // Derive budget level
+
     const dailyBudget = budgetNum / daysNum;
     let budgetLevel = 'LOW';
     if (dailyBudget >= 150) budgetLevel = 'HIGH';
     else if (dailyBudget >= 80) budgetLevel = 'MEDIUM';
 
     try {
-      // Backend expects: cityId, budgetLevel, travelStyles (array)
+
       const payload: any = {
         cityId: selectedCountryKey,
         airportCode: selectedAirportCode,
@@ -201,7 +201,7 @@ export default function NewTripScreen() {
   return (
     <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
       <Stack.Screen options={{ headerShown: false }} />
-      {/* Header Section */}
+
       <View className="pt-14 px-5 pb-4 bg-white border-b border-gray-100">
         <View className="flex-row justify-between items-start">
           <TouchableOpacity onPress={() => router.back()} className="mr-3 mt-1">
@@ -222,7 +222,7 @@ export default function NewTripScreen() {
       </View>
 
       <View className="p-5 gap-6 pb-12">
-        {/* Country Selector */}
+
         <View>
           <Text className="text-base font-bold text-gray-800 mb-2">Where do you want to go?</Text>
           <View className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -242,7 +242,7 @@ export default function NewTripScreen() {
           </View>
         </View>
 
-        {/* Airport Selector */}
+
         <View>
           <Text className="text-base font-bold text-gray-800 mb-2">Landing airport</Text>
           <View className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -262,7 +262,7 @@ export default function NewTripScreen() {
           </View>
         </View>
 
-        {/* Trip Duration */}
+
         <View>
           <Text className="text-base font-bold text-gray-800 mb-2">Trip duration</Text>
           <View className="flex-row items-center bg-gray-50 rounded-xl p-1 border border-gray-200">
@@ -298,7 +298,7 @@ export default function NewTripScreen() {
           </View>
         </View>
 
-        {/* Budget */}
+
         <View>
           <Text className="text-base font-bold text-gray-800 mb-2">Budget level</Text>
           <View className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center shadow-sm">
@@ -316,7 +316,7 @@ export default function NewTripScreen() {
           </Text>
         </View>
 
-        {/* Travel Style */}
+
         <View>
           <Text className="text-base font-bold text-gray-800 mb-2">What interests you? (select at least one)</Text>
           <View className="flex-row flex-wrap gap-2">
@@ -339,7 +339,7 @@ export default function NewTripScreen() {
           </View>
         </View>
         
-        {/* Travel Date */}
+
         <View>
           <Text className="text-base font-bold text-gray-800 mb-2">Travel Date (Optional)</Text>
           <View className="bg-white border border-gray-200 rounded-xl p-4 flex-row items-center shadow-sm">

@@ -16,7 +16,7 @@ import { useOnboarding } from '../store/onboardingStore';
 import { useSocket } from '../hooks/useSocket';
 import { useUser } from '../hooks/queries/useUser';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+
 preventAutoHideAsync();
 
 function RootLayoutNav() {
@@ -25,19 +25,19 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
   
-  // Initialize socket connection
+
   useSocket();
   
-  // Fetch and cache user data at app root level
+
   const { data: user, isLoading: isLoadingUser } = useUser();
 
-  // Check onboarding status when user data is available
+
   useEffect(() => {
     if (isAuthenticated && user?.id) {
       console.log('[NAV] User authenticated, checking onboarding for:', user.id);
       checkOnboardingForUser(user.id);
     } else if (!isAuthenticated) {
-      // Reset onboarding state when logged out
+
       resetOnboarding();
     }
   }, [isAuthenticated, user?.id]);
@@ -46,7 +46,7 @@ function RootLayoutNav() {
     const isLoading = isRestoring || (isAuthenticated && (isLoadingUser || isCheckingOnboarding));
     console.log('[NAV] Auth state changed:', { isAuthenticated, isRestoring, isCheckingOnboarding, isLoadingUser, hasSeenOnboarding, segments: segments[0] });
     
-    // Wait for all states to be ready
+
     if (isLoading) return;
 
     const inAuthGroup = (segments[0] as string) === 'auth';
@@ -55,7 +55,7 @@ function RootLayoutNav() {
     console.log('[NAV] Navigation decision:', { inAuthGroup, inOnboarding, hasSeenOnboarding });
 
     if (isAuthenticated && inAuthGroup) {
-      // User just authenticated from auth screen
+
       if (hasSeenOnboarding) {
         console.log('[NAV] Redirecting to tabs (authenticated user who has seen onboarding)');
         router.replace('/(tabs)' as any);
@@ -64,11 +64,11 @@ function RootLayoutNav() {
         router.replace('/onboarding' as any);
       }
     } else if (!isAuthenticated && !inAuthGroup) {
-      // Redirect to login if accessing protected route
+
       console.log('[NAV] Redirecting to login (unauthenticated user on protected page)');
       router.replace('/auth/login' as any);
     }
-    // Don't redirect if already on onboarding screen
+
   }, [isAuthenticated, segments, isRestoring, router, hasSeenOnboarding, isCheckingOnboarding, isLoadingUser]);
 
   return (

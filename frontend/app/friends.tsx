@@ -33,11 +33,11 @@ export default function FriendsScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('friends');
   
-  // React Query hooks
+
   const { data: friends = [], isLoading: friendsLoading, refetch: refetchFriends } = useFriends();
   const { data: pendingRequests = [], isLoading: pendingLoading, refetch: refetchPending } = usePendingRequests();
   
-  // Mutations
+
   const acceptMutation = useAcceptFriendRequest();
   const rejectMutation = useRejectFriendRequest();
 
@@ -91,7 +91,7 @@ export default function FriendsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
+
       <View className="px-4 py-3 border-b border-gray-100 flex-row items-center justify-between">
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -100,14 +100,14 @@ export default function FriendsScreen() {
         <View className="w-6" />
       </View>
 
-      {/* Tabs */}
+
       <FriendsTabs 
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
         pendingCount={pendingRequests.length}
       />
 
-      {/* Content */}
+
       <View className="flex-1 bg-gray-50">
         {activeTab === 'friends' && (
           <FlatList

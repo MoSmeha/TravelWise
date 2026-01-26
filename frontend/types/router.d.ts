@@ -1,4 +1,4 @@
-// This file is strictly for type definitions
+
 import "expo-router";
 
 declare module "expo-router" {

@@ -92,7 +92,7 @@ export default function TripsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-      {/* Header */}
+
       <View className="px-5 pt-1 pb-4 bg-white border-b border-gray-200">
         <View className="flex-row justify-between items-start mb-4">
           <View>
@@ -114,7 +114,7 @@ export default function TripsScreen() {
           )}
         </View>
 
-        {/* Tabs */}
+
         <SegmentedTabs 
           tabs={tabs}
           activeTab={activeTab}
@@ -123,7 +123,7 @@ export default function TripsScreen() {
         />
       </View>
 
-      {/* Content */}
+
       {activeTab === 'my-trips' ? (
         <FlatList
           data={itineraries}
@@ -158,7 +158,7 @@ export default function TripsScreen() {
         <SharedItinerariesList />
       )}
       
-      {/* Invite Friends Modal */}
+
       {selectedItineraryId && (
         <InviteFriendsModal
           visible={inviteModalVisible}
@@ -170,7 +170,7 @@ export default function TripsScreen() {
         />
       )}
 
-      {/* Manage Collaborators Modal */}
+
       {selectedItineraryId && (
         <ManageCollaboratorsModal
           visible={collaboratorsModalVisible}

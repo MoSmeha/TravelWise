@@ -53,11 +53,11 @@ export default function ChatScreen() {
     const currentQuestion = chatQuestion;
     setChatQuestion('');
     
-    // Optimistic update
+
     setConversation(prev => [...prev, { role: 'user', content: currentQuestion }]);
 
     try {
-      // Clear previous single answer if any
+
       const response = await askQuestionMutation.mutateAsync({
         itineraryId,
         question: currentQuestion,
@@ -82,7 +82,7 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      {/* Header */}
+
       <View className="flex-row items-center px-4 py-3 border-b border-gray-100 bg-white z-10">
         <TouchableOpacity
           className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100 mr-3"
@@ -161,7 +161,7 @@ export default function ChatScreen() {
             )}
           </ScrollView>
 
-          {/* Input Area */}
+
           <View className="p-4 bg-white border-t border-gray-100 mb-6">
              <View className="flex-row items-end gap-2 ">
                  <TextInput

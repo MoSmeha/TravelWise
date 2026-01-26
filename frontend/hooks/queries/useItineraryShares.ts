@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { itineraryShareService } from '../../services/itinerary-share';
 import type { ItineraryShare } from '../../types/schemas';
 
-// Query: Get collaborators for an itinerary
+
 export const useItineraryCollaborators = (itineraryId: string | null) => {
   return useQuery({
     queryKey: ['itinerary-collaborators', itineraryId],
@@ -11,7 +11,7 @@ export const useItineraryCollaborators = (itineraryId: string | null) => {
   });
 };
 
-// Query: Get shared itineraries (itineraries shared with me)
+
 export const useSharedItineraries = (status?: 'PENDING' | 'ACCEPTED' | 'REJECTED') => {
   return useQuery({
     queryKey: ['shared-itineraries', status],
@@ -19,7 +19,7 @@ export const useSharedItineraries = (status?: 'PENDING' | 'ACCEPTED' | 'REJECTED
   });
 };
 
-// Mutation: Invite a user to an itinerary
+
 export const useInviteUser = () => {
   const queryClient = useQueryClient();
   
@@ -34,28 +34,28 @@ export const useInviteUser = () => {
       permission?: 'OWNER' | 'VIEWER';
     }) => itineraryShareService.inviteUser(itineraryId, userId, permission),
     onSuccess: (_, { itineraryId }) => {
-      // Invalidate collaborators list for this itinerary
+
       queryClient.invalidateQueries({ queryKey: ['itinerary-collaborators', itineraryId] });
     },
   });
 };
 
-// Mutation: Accept an invitation
+
 export const useAcceptInvitation = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: (shareId: string) => itineraryShareService.acceptInvitation(shareId),
     onSuccess: () => {
-      // Invalidate shared itineraries list
+
       queryClient.invalidateQueries({ queryKey: ['shared-itineraries'] });
-      // Also invalidate user itineraries since a new one is now accessible
+
       queryClient.invalidateQueries({ queryKey: ['user-itineraries'] });
     },
   });
 };
 
-// Mutation: Reject an invitation
+
 export const useRejectInvitation = () => {
   const queryClient = useQueryClient();
   
@@ -67,7 +67,7 @@ export const useRejectInvitation = () => {
   });
 };
 
-// Mutation: Remove a collaborator
+
 export const useRemoveCollaborator = () => {
   const queryClient = useQueryClient();
   
@@ -80,7 +80,7 @@ export const useRemoveCollaborator = () => {
   });
 };
 
-// Mutation: Update collaborator permission
+
 export const useUpdatePermission = () => {
   const queryClient = useQueryClient();
   
@@ -100,14 +100,14 @@ export const useUpdatePermission = () => {
   });
 };
 
-// Mutation: Delete an itinerary
+
 export const useDeleteItinerary = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: (itineraryId: string) => itineraryShareService.deleteItinerary(itineraryId),
     onSuccess: () => {
-      // Invalidate user itineraries list
+
       queryClient.invalidateQueries({ queryKey: ['user-itineraries'] });
     },
   });

@@ -13,7 +13,7 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Get unread counts for badge
+
   const { data: unreadNotifications = 0 } = useUnreadNotificationCount();
   const { data: unreadMessages = 0 } = useUnreadMessageCount();
   const totalUnread = unreadNotifications + unreadMessages;
@@ -104,7 +104,7 @@ function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           else if (route.name === 'trips') IconComponent = Map;
           else if (route.name === 'profile') IconComponent = User;
 
-          // Check if this is the activity tab and has unread items
+
           const showBadge = route.name === 'activity' && totalUnread > 0;
 
           return (

@@ -42,7 +42,7 @@ export function InviteFriendsModal({ visible, itineraryId, onClose }: InviteFrie
     let alreadyInvitedCount = 0;
     let errorCount = 0;
 
-    // Invite friends one by one to handle individual failures gracefully
+
     for (const friendId of Array.from(selectedFriends)) {
       try {
         await inviteUser.mutateAsync({
@@ -52,7 +52,7 @@ export function InviteFriendsModal({ visible, itineraryId, onClose }: InviteFrie
         });
         successCount++;
       } catch (error: any) {
-        // Check if it's a 409 (already invited)
+
         if (error?.response?.status === 409) {
           alreadyInvitedCount++;
         } else {
@@ -62,7 +62,7 @@ export function InviteFriendsModal({ visible, itineraryId, onClose }: InviteFrie
       }
     }
 
-    // Show appropriate toast based on results
+
     if (successCount > 0 && alreadyInvitedCount === 0 && errorCount === 0) {
       Toast.show({
         type: 'success',
@@ -76,7 +76,7 @@ export function InviteFriendsModal({ visible, itineraryId, onClose }: InviteFrie
         text2: `${alreadyInvitedCount === 1 ? 'This friend has' : 'These friends have'} already been invited`,
       });
     } else if (successCount > 0 || alreadyInvitedCount > 0) {
-      // Mixed results
+
       const messages = [];
       if (successCount > 0) messages.push(`${successCount} invited`);
       if (alreadyInvitedCount > 0) messages.push(`${alreadyInvitedCount} already invited`);
@@ -136,7 +136,7 @@ export function InviteFriendsModal({ visible, itineraryId, onClose }: InviteFrie
     >
       <View className="flex-1 bg-black/50 justify-end">
         <View className="bg-white rounded-t-3xl h-5/6">
-          {/* Header */}
+
           <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200">
             <Text className="text-xl font-bold text-gray-800">Invite Friends</Text>
             <TouchableOpacity onPress={onClose} className="p-2">
@@ -144,7 +144,7 @@ export function InviteFriendsModal({ visible, itineraryId, onClose }: InviteFrie
             </TouchableOpacity>
           </View>
 
-          {/* Friends List */}
+
           {isLoading ? (
             <View className="flex-1 items-center justify-center">
               <ActivityIndicator size="large" color="#094772" />
@@ -170,7 +170,7 @@ export function InviteFriendsModal({ visible, itineraryId, onClose }: InviteFrie
                 contentContainerStyle={{ paddingBottom: 100 }}
               />
 
-              {/* Selected count and Invite button */}
+
               {selectedFriends.size > 0 && (
                 <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4 shadow-lg">
                   <TouchableOpacity
