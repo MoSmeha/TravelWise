@@ -13,7 +13,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <!-- project overview -->
 <img src="./readme/title2.svg"/>
 
-> TravelWise is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps. It also lets travelers share experiences, making every journey easier and more enjoyable. 
+> TravelWise is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps. It also lets travelers share experiences, making every journey easier and more enjoyable.
 
 <br><br>
 
@@ -28,57 +28,44 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <img src="./readme/Database_Architecture.png"/>
 
 ### n8n
-
 <img src="./readme/n8n.png"/>
+
 
 <br><br>
 
 <!-- Project Highlights -->
 <img src="./readme/title4.svg"/>
 
-### Add Title Here
+### Interesting Features
 
-- List the sexy features.
+- **Smart Itinerary Planning**: Create detailed, personalized travel itineraries with just a few clicks.
+- **Hidden Gem Discovery**: Find unique, off-the-beaten-path locations with our specialized cards.
+- **Real-time GPS & Sharing**: Share live locations and itinerary routes with friends and family.
+- **Community Posts**: Share your travel experiences and photos with the TravelWise community.
+- **AI Travel Assistant**: Get instant answers and recommendations from our RAG-powered chatbot.
+- **Interactive Checklists**: Keep track of your travel plans and to-dos in an organized way.
 
 <br><br>
 
 <!-- Demo -->
 <img src="./readme/title5.svg"/>
 
-### User Screens (Mobile)
+### User Screens
 
-| Login screen                            | Register screen                       | Register screen                       |
-| --------------------------------------- | ------------------------------------- | ------------------------------------- |
-| ![Landing](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) |
+| Login & Onboarding | User Profile | Notifications |
+| :---: | :---: | :---: |
+| ![Login](./readme/LoginOnboarding.gif) | ![Profile](./readme/Profile.jpeg) | ![Notifications](./readme/Notifications_Page.jpeg) |
 
-### Admin Screens (Web)
+| Creating Itinerary | Itinerary Details | Itinerary Checklist |
+| :---: | :---: | :---: |
+| ![Creating Itinerary](./readme/Creating_Itinerary.gif) | ![Details](./readme/Itinerary_Details.jpeg) | ![Checklist](./readme/Itinerary_Checklist.jpeg) |
 
-| Login screen                            | Register screen                       |
-| --------------------------------------- | ------------------------------------- |
-| ![Landing](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) |
+| Creating Post | Live Location & Hidden Gems | GPS Sharing |
+| :---: | :---: | :---: |
+| ![Creating Post](./readme/Creating_Post.gif) | ![Hidden Gems](./readme/HiddenGem_Card_&Live_Location.gif) | ![GPS Sharing](./readme/ItineraryGPS_Sharing.gif) |
 
-<br><br>
-
-<!-- Development & Testing -->
-<img src="./readme/title6.svg"/>
-
-### Add Title Here
-
-| Services                                | Validation                            | Testing                               |
-| --------------------------------------- | ------------------------------------- | ------------------------------------- |
-| ![Landing](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) |
-
-<br><br>
-
-<!-- Deployment -->
-<img src="./readme/title7.svg"/>
-
-### Add Title Here
-
-- Description here.
-
-| Postman API 1                           | Postman API 2                         | Postman API 3                         |
-| --------------------------------------- | ------------------------------------- | ------------------------------------- |
-| ![Landing](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) | ![fsdaf](./readme/demo/1440x1024.png) |
+| AI Chatbot | Chat Demo |
+| :---: | :---: |
+| ![Rag Chatbot](./readme/Rag_Chatbot.gif) | ![Chat Demo](./readme/ChatApp-Demo.gif) |
 
 <br><br>
