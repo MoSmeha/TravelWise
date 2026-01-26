@@ -91,7 +91,7 @@ export class PostgresFriendshipProvider implements IFriendshipProvider {
     });
 
     return friendships.map(f => {
-      // Return the other person
+      // Return the other person (if I'm requester, return addressee, and vice versa)
       return f.requesterId === userId ? f.addressee : f.requester;
     });
   }

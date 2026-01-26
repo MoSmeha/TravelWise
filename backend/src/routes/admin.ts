@@ -1,7 +1,4 @@
-/**
- * Admin Routes
- * Protected routes for admin dashboard functionality
- */
+
 
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.middleware.js';
@@ -14,27 +11,29 @@ import {
   getCategoryStats,
   getEngagement,
 } from '../controllers/admin.controller.js';
+import { validate } from '../middleware/validate.js';
+import { listUsersSchema, userStatsSchema } from '../schemas/admin.schema.js';
 
 const router = Router();
 
-// All admin routes require authentication + admin privileges
+
 router.use(authenticate);
 router.use(requireAdmin);
 
-// Overview & KPIs
+
 router.get('/stats/overview', getOverview);
 
-// Itinerary statistics
+
 router.get('/stats/itineraries', getItineraryStats);
 
-// User statistics & management
-router.get('/stats/users', getUserStats);
-router.get('/users', listUsers);
 
-// Category breakdown
+router.get('/stats/users', validate(userStatsSchema, 'query'), getUserStats);
+router.get('/users', validate(listUsersSchema, 'query'), listUsers);
+
+
 router.get('/stats/categories', getCategoryStats);
 
-// Engagement metrics
+
 router.get('/stats/engagement', getEngagement);
 
 export default router;

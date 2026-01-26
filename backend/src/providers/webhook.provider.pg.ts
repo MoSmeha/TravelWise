@@ -1,7 +1,4 @@
-/**
- * Webhook PostgreSQL Provider
- * Data access layer - ONLY database queries, no business logic
- */
+
 
 import prisma from '../lib/prisma.js';
 import {
@@ -15,9 +12,7 @@ import {
 } from '../provider-contract/webhook.provider-contract.js';
 
 class WebhookPgProvider implements IWebhookProvider {
-  /**
-   * Find trips with flight in date range
-   */
+
   async findUpcomingTrips(startDate: Date, endDate: Date): Promise<RawUpcomingTripRecord[]> {
     return prisma.userItinerary.findMany({
       where: {
@@ -45,9 +40,7 @@ class WebhookPgProvider implements IWebhookProvider {
     });
   }
 
-  /**
-   * Find trips with unchecked items in date range
-   */
+
   async findTripsWithUncheckedItems(startDate: Date, endDate: Date): Promise<RawUncheckedItemsRecord[]> {
     return prisma.userItinerary.findMany({
       where: {
@@ -69,9 +62,7 @@ class WebhookPgProvider implements IWebhookProvider {
     });
   }
 
-  /**
-   * Find trips with flight in date range (for weather check)
-   */
+
   async findTripsForWeatherCheck(startDate: Date, endDate: Date): Promise<RawTripForWeatherCheckRecord[]> {
     return prisma.userItinerary.findMany({
       where: {
@@ -108,9 +99,7 @@ class WebhookPgProvider implements IWebhookProvider {
     });
   }
 
-  /**
-   * Bulk create checklist items
-   */
+
   async createWeatherChecklist(data: CreateWeatherChecklistData): Promise<{ count: number }> {
     const result = await prisma.checklistItem.createMany({
       data: data.items.map(item => ({
@@ -127,9 +116,7 @@ class WebhookPgProvider implements IWebhookProvider {
     return { count: result.count };
   }
 
-  /**
-   * Create a notification
-   */
+
   async createWeatherNotification(data: CreateWeatherNotificationData): Promise<NotificationRecord> {
     return prisma.notification.create({
       data: {

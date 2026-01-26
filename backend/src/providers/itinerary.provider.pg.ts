@@ -19,12 +19,13 @@ import {
 
 
 class ItineraryPgProvider implements IItineraryProvider {
-  // Place Operations
+
 
   async fetchPlaces(params: FetchPlacesParams): Promise<PlaceRecord[]> {
     const { categories, country, city, limit, excludeIds = [], priceLevel } = params;
 
     const where: any = {
+      // Prioritize hidden gems unless specified
       classification: { not: LocationClassification.TOURIST_TRAP },
       category: { in: categories },
       country: { equals: country, mode: 'insensitive' },
@@ -35,12 +36,13 @@ class ItineraryPgProvider implements IItineraryProvider {
       where.city = { equals: city, mode: 'insensitive' };
     }
 
-    // Filter by price level if specified
+
     if (priceLevel) {
       where.priceLevel = priceLevel;
     }
 
-    // Exclude already used places
+
+    // Exclude already used places to avoid duplicates
     if (excludeIds.length > 0) {
       where.id = { notIn: excludeIds };
     }
@@ -48,19 +50,21 @@ class ItineraryPgProvider implements IItineraryProvider {
     let places = await prisma.place.findMany({
       where,
       orderBy: [
-        { classification: 'asc' }, // Hidden gems and must-see first
+        { classification: 'asc' },
         { rating: 'desc' },
         { popularity: 'desc' },
       ],
       take: limit,
     });
 
-    // Fallback to country-wide if not enough city-specific places
+
+    // Fallback strategy: If not enough city-specific places found, fill the rest with country-wide places
     if (places.length < limit && city) {
       const fallbackWhere: any = {
         classification: { not: LocationClassification.TOURIST_TRAP },
         category: { in: categories },
         country: { equals: country, mode: 'insensitive' },
+        // IMPORTANT: Exclude both the original excluded IDs AND the places we just found in the city search
         id: { notIn: [...excludeIds, ...places.map((p) => p.id)] },
       };
       
@@ -103,7 +107,7 @@ class ItineraryPgProvider implements IItineraryProvider {
     });
   }
 
-  // Itinerary Operations
+
 
   async createItinerary(data: CreateItineraryData): Promise<CreatedItinerary> {
     return prisma.userItinerary.create({
@@ -165,7 +169,7 @@ class ItineraryPgProvider implements IItineraryProvider {
   }
 
   
-  // Day & Item Operations
+
  
   async createItineraryDay(data: CreateItineraryDayData): Promise<ItineraryDayRecord> {
     return prisma.itineraryDay.create({
@@ -206,11 +210,11 @@ class ItineraryPgProvider implements IItineraryProvider {
   }
 
   async createExternalHotel(data: CreateExternalHotelData): Promise<{ id: string }> {
-    // Upsert hotel by googlePlaceId to avoid duplicates
+
     const hotel = await prisma.place.upsert({
       where: { googlePlaceId: data.googlePlaceId },
       update: {
-        // Update fields if hotel already exists
+
         rating: data.rating ?? undefined,
         totalRatings: data.totalRatings ?? undefined,
         imageUrl: data.imageUrl ?? undefined,

@@ -11,9 +11,7 @@ import {
 } from '../provider-contract/places.provider-contract.js';
 
 class PlacesPgProvider implements IPlacesProvider {
-  // -------------------------------------------------------------------------
-  // Read Operations
-  // -------------------------------------------------------------------------
+
 
   async findByName(name: string): Promise<PlaceRecord | null> {
     return prisma.place.findFirst({
@@ -96,9 +94,7 @@ class PlacesPgProvider implements IPlacesProvider {
     }));
   }
 
-  // -------------------------------------------------------------------------
-  // Write Operations
-  // -------------------------------------------------------------------------
+
 
   async create(data: CreatePlaceData): Promise<PlaceRecord> {
     return prisma.place.create({

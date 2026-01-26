@@ -1,7 +1,4 @@
-/**
- * Admin PostgreSQL Provider
- * Implements admin data access using Prisma
- */
+
 
 import prisma from '../lib/prisma.js';
 import {
@@ -14,9 +11,7 @@ import {
 } from '../provider-contract/admin.provider-contract.js';
 
 class AdminPgProvider implements IAdminProvider {
-  // ==========================================================================
-  // User Counts
-  // ==========================================================================
+
 
   async getTotalUserCount(): Promise<number> {
     return prisma.user.count();
@@ -38,9 +33,7 @@ class AdminPgProvider implements IAdminProvider {
     });
   }
 
-  // ==========================================================================
-  // Itinerary Counts
-  // ==========================================================================
+
 
   async getTotalItineraryCount(): Promise<number> {
     return prisma.userItinerary.count();
@@ -72,9 +65,7 @@ class AdminPgProvider implements IAdminProvider {
     });
   }
 
-  // ==========================================================================
-  // Social Counts
-  // ==========================================================================
+
 
   async getTotalPostCount(): Promise<number> {
     return prisma.post.count({ where: { deletedAt: null } });
@@ -104,9 +95,7 @@ class AdminPgProvider implements IAdminProvider {
     }));
   }
 
-  // ==========================================================================
-  // Category Counts
-  // ==========================================================================
+
 
   async getPlacesGroupedByCategory(): Promise<CountResult[]> {
     const results = await prisma.place.groupBy({
@@ -121,9 +110,7 @@ class AdminPgProvider implements IAdminProvider {
     }));
   }
 
-  // ==========================================================================
-  // User Listing
-  // ==========================================================================
+
 
 
   async getUsersPaginated(

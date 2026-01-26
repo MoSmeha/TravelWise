@@ -25,7 +25,7 @@ import {
 
 const router = Router();
 
-// Post CRUD
+
 router.post('/', singleImageUpload, validate(createPostSchema), createPost);
 router.get('/feed', getFeed);
 router.get('/discover', getPublicFeed);
@@ -33,12 +33,12 @@ router.get('/user/:userId', validate(userIdParamSchema, 'params'), getUserPosts)
 router.get('/:id', validate(postIdParamSchema, 'params'), getPost);
 router.delete('/:id', validate(postIdParamSchema, 'params'), deletePost);
 
-// Likes
+
 router.post('/:id/like', validate(postIdParamSchema, 'params'), likePost);
 router.delete('/:id/like', validate(postIdParamSchema, 'params'), unlikePost);
 router.get('/:id/likes', validate(postIdParamSchema, 'params'), getPostLikes);
 
-// Comments
+
 router.post(
   '/:id/comments',
   validate(postIdParamSchema, 'params'),

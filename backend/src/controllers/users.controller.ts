@@ -7,13 +7,9 @@ import { socketService } from '../services/socket.service.js';
 export async function searchUsers(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
-    const query = req.query.q as string;
+    const { q } = req.query as unknown as { q: string };
 
-    if (!query) {
-      return res.json([]);
-    }
-
-    const users = await findUsers(query, userId);
+    const users = await findUsers(q, userId);
     
     // Sanitize user data before returning
     const sanitizedUsers = users.map(user => ({
@@ -33,13 +29,7 @@ export async function searchUsers(req: AuthRequest, res: Response) {
 
 export async function getOnlineStatus(req: AuthRequest, res: Response) {
   try {
-    const userIdsParam = req.query.userIds as string;
-    
-    if (!userIdsParam) {
-      return res.json({});
-    }
-
-    const userIds = userIdsParam.split(',').filter(id => id.trim());
+    const { userIds } = req.query as unknown as { userIds: string[] };
     
     const onlineStatus: Record<string, boolean> = {};
     for (const userId of userIds) {

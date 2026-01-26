@@ -1,7 +1,4 @@
-/**
- * PostgreSQL Message Provider
- * Implements IMessageProvider using Prisma
- */
+
 import { ConversationType } from '../generated/prisma/client.js';
 import prisma from '../lib/prisma.js';
 import {
@@ -12,11 +9,9 @@ import {
 } from '../provider-contract/message.provider-contract.js';
 
 export class PostgresMessageProvider implements IMessageProvider {
-  /**
-   * Get or create a direct conversation between two users
-   */
+
   async getOrCreateDirectConversation(userId: string, friendId: string): Promise<ConversationWithDetails> {
-    // Check if a direct conversation already exists between these two users
+
     const existingConversation = await prisma.conversation.findFirst({
       where: {
         type: 'DIRECT',
@@ -44,7 +39,7 @@ export class PostgresMessageProvider implements IMessageProvider {
       return this.enrichConversation(existingConversation, userId);
     }
 
-    // Create new conversation
+
     const newConversation = await prisma.conversation.create({
       data: {
         type: 'DIRECT',
@@ -73,9 +68,7 @@ export class PostgresMessageProvider implements IMessageProvider {
     return this.enrichConversation(newConversation, userId);
   }
 
-  /**
-   * Get paginated conversations for a user
-   */
+
   async getConversations(
     userId: string,
     page: number = 1,
@@ -127,9 +120,7 @@ export class PostgresMessageProvider implements IMessageProvider {
     };
   }
 
-  /**
-   * Get a single conversation by ID with participant details
-   */
+
   async getConversation(conversationId: string, userId: string): Promise<ConversationWithDetails | null> {
     const conversation = await prisma.conversation.findFirst({
       where: {
@@ -156,16 +147,14 @@ export class PostgresMessageProvider implements IMessageProvider {
     return this.enrichConversation(conversation, userId);
   }
 
-  /**
-   * Get paginated messages for a conversation
-   */
+
   async getMessages(
     conversationId: string,
     userId: string,
     page: number = 1,
     limit: number = 50
   ): Promise<PaginatedResult<MessageWithSender>> {
-    // Verify user is a participant
+
     const isParticipant = await this.isUserParticipant(conversationId, userId);
     if (!isParticipant) {
       throw new Error('Not a participant in this conversation');
@@ -185,7 +174,7 @@ export class PostgresMessageProvider implements IMessageProvider {
       }),
     ]);
 
-    // Fetch sender details
+
     const senderIds = [...new Set(messages.map((m) => m.senderId))];
     const senders = await prisma.user.findMany({
       where: { id: { in: senderIds } },
@@ -209,21 +198,19 @@ export class PostgresMessageProvider implements IMessageProvider {
     };
   }
 
-  /**
-   * Send a message in a conversation
-   */
+
   async sendMessage(
     conversationId: string,
     senderId: string,
     content: string
   ): Promise<MessageWithSender> {
-    // Verify sender is a participant
+
     const isParticipant = await this.isUserParticipant(conversationId, senderId);
     if (!isParticipant) {
       throw new Error('Not a participant in this conversation');
     }
 
-    // Create message and update conversation timestamp
+
     const [message] = await prisma.$transaction([
       prisma.message.create({
         data: {
@@ -238,7 +225,7 @@ export class PostgresMessageProvider implements IMessageProvider {
       }),
     ]);
 
-    // Fetch sender details
+
     const sender = await prisma.user.findUnique({
       where: { id: senderId },
       select: { id: true, name: true, username: true, avatarUrl: true },
@@ -250,9 +237,7 @@ export class PostgresMessageProvider implements IMessageProvider {
     };
   }
 
-  /**
-   * Mark conversation as read for a user
-   */
+
   async markConversationRead(conversationId: string, userId: string): Promise<void> {
     await prisma.conversationParticipant.update({
       where: {
@@ -262,9 +247,7 @@ export class PostgresMessageProvider implements IMessageProvider {
     });
   }
 
-  /**
-   * Get all participant user IDs for a conversation
-   */
+
   async getConversationParticipantIds(conversationId: string): Promise<string[]> {
     const participants = await prisma.conversationParticipant.findMany({
       where: { conversationId },
@@ -273,9 +256,7 @@ export class PostgresMessageProvider implements IMessageProvider {
     return participants.map((p) => p.userId);
   }
 
-  /**
-   * Check if a user is a participant in a conversation
-   */
+
   async isUserParticipant(conversationId: string, userId: string): Promise<boolean> {
     const participant = await prisma.conversationParticipant.findUnique({
       where: {
@@ -285,9 +266,7 @@ export class PostgresMessageProvider implements IMessageProvider {
     return !!participant;
   }
 
-  /**
-   * Enrich a conversation with user details and unread count
-   */
+
   private async enrichConversation(
     conversation: {
       id: string;
@@ -305,13 +284,13 @@ export class PostgresMessageProvider implements IMessageProvider {
     },
     currentUserId: string
   ): Promise<ConversationWithDetails> {
-    // Get current user's participant record for lastReadAt
+
     const currentParticipant = conversation.participants.find(
       (p) => p.userId === currentUserId
     );
     const lastReadAt = currentParticipant?.lastReadAt || new Date(0);
 
-    // Count unread messages
+
     const unreadCount = await prisma.message.count({
       where: {
         conversationId: conversation.id,

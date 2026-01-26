@@ -62,7 +62,7 @@ export async function getUserStats(
   res: Response
 ): Promise<void> {
   try {
-    const days = parseInt(req.query.days as string) || 30;
+    const { days } = req.query as unknown as { days: number };
     const growth = await getUserGrowth(days);
 
     res.json({ growth });
@@ -78,9 +78,7 @@ export async function listUsers(
   res: Response
 ): Promise<void> {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const pageSize = parseInt(req.query.pageSize as string) || 20;
-    const search = req.query.search as string | undefined;
+    const { page, pageSize, search } = req.query as unknown as { page: number; pageSize: number; search?: string };
 
     const result = await getUsers(page, pageSize, search);
     res.json(result);
