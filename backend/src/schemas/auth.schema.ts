@@ -1,26 +1,14 @@
-/**
- * Auth Zod Schemas
- * Validation schemas for authentication endpoints
- */
+
 
 import { z } from 'zod';
 
-/**
- * Username validation - Instagram-style
- * 3-30 characters, alphanumeric, underscores, periods allowed
- * Cannot start/end with period, no consecutive periods
- */
+
 const usernameRegex = /^(?!.*\.\.)[a-zA-Z0-9][a-zA-Z0-9_.]{1,28}[a-zA-Z0-9]$/;
 
-/**
- * Password validation
- * Minimum 8 characters, at least 1 uppercase, 1 lowercase, 1 number
- */
+
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
-/**
- * Schema for user registration
- */
+
 export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string()
@@ -38,9 +26,7 @@ export const registerSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
-/**
- * Schema for user login
- */
+
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
@@ -48,18 +34,14 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
-/**
- * Schema for token refresh
- */
+
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required'),
 });
 
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 
-/**
- * Schema for email verification with OTP
- */
+
 export const verifyEmailSchema = z.object({
   email: z.string().email('Invalid email address'),
   otp: z.string().length(6, 'OTP must be 6 digits').regex(/^\d{6}$/, 'OTP must be 6 digits'),
@@ -67,9 +49,7 @@ export const verifyEmailSchema = z.object({
 
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 
-/**
- * Schema for resend verification email
- */
+
 export const resendVerificationSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
