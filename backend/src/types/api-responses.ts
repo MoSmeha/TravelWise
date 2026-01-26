@@ -1,24 +1,11 @@
-/**
- * API Response Types
- * Typed interfaces for all API responses
- * Ensures consistency across controllers and enables autocomplete
- */
 
 import { LocationCategory, LocationClassification } from '../generated/prisma/client.js';
-
-// ============================================================================
-// Common Response Types
-// ============================================================================
 
 export interface ApiResponse<T> {
   data?: T;
   error?: string;
   message?: string;
 }
-
-// ============================================================================
-// Itinerary Response Types
-// ============================================================================
 
 export interface ItinerarySummaryResponse {
   id: string;
@@ -133,10 +120,6 @@ export interface GenerateItineraryResponse extends ItineraryDetailsResponse {
   };
 }
 
-// ============================================================================
-// Checklist Response Types
-// ============================================================================
-
 export interface ChecklistItemResponse {
   id: string;
   itineraryId: string;
@@ -147,10 +130,6 @@ export interface ChecklistItemResponse {
   source: string | null;
   createdAt: Date;
 }
-
-// ============================================================================
-// Places Response Types
-// ============================================================================
 
 export interface PlaceResponse {
   id: string;

@@ -1,53 +1,17 @@
-/**
- * Async Handler Utility
- * Wraps async route handlers to eliminate repetitive try-catch blocks
- * Errors are automatically passed to Express error handling middleware
- */
-
 import { NextFunction, Request, Response } from 'express';
 
-/**
- * Type for async request handlers
- */
 type AsyncRequestHandler = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => Promise<any>;
 
-/**
- * Wraps an async route handler to catch errors and forward them to error middleware
- * 
- * Before:
- * ```typescript
- * export async function getUsers(req, res) {
- *   try {
- *     const users = await userService.getAll();
- *     res.json(users);
- *   } catch (error) {
- *     console.error('Error:', error);
- *     res.status(500).json({ error: 'Failed' });
- *   }
- * }
- * ```
- * 
- * After:
- * ```typescript
- * export const getUsers = asyncHandler(async (req, res) => {
- *   const users = await userService.getAll();
- *   res.json(users);
- * });
- * ```
- */
 export function asyncHandler(fn: AsyncRequestHandler) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
 
-/**
- * Standard API error class for consistent error responses
- */
 export class ApiError extends Error {
   constructor(
     public statusCode: number,
@@ -83,11 +47,6 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Express error handling middleware
- * Add this at the end of your middleware chain:
- * app.use(errorHandler);
- */
 export function errorHandler(
   err: Error,
   _req: Request,
@@ -103,7 +62,6 @@ export function errorHandler(
     });
   }
 
-  // Default to 500 for unknown errors
   return res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined,

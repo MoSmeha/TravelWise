@@ -1,25 +1,9 @@
-/**
- * Geographic utility functions
- * Shared calculations for distance and coordinate operations
- */
-
 const EARTH_RADIUS_KM = 6371;
 
-/**
- * Convert degrees to radians
- */
 export function degreesToRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
 
-/**
- * Calculate the distance between two coordinates using the Haversine formula
- * @param lat1 Latitude of first point
- * @param lon1 Longitude of first point
- * @param lat2 Latitude of second point
- * @param lon2 Longitude of second point
- * @returns Distance in kilometers
- */
 export function haversineDistance(
   lat1: number,
   lon1: number,
@@ -41,9 +25,6 @@ export function haversineDistance(
   return EARTH_RADIUS_KM * c;
 }
 
-/**
- * Calculate the centroid (average point) of multiple coordinates
- */
 export function calculateCentroid(
   points: Array<{ latitude: number; longitude: number }>
 ): { lat: number; lng: number } {
