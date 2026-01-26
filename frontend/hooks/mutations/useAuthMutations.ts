@@ -7,7 +7,6 @@ import Toast from 'react-native-toast-message';
 
 export const useLoginMutation = () => {
   const setTokens = useAuth((state) => state.setTokens);
-  const router = useRouter();
 
   return useMutation({
     mutationFn: (data: LoginInput) => authService.login(data),
@@ -18,7 +17,7 @@ export const useLoginMutation = () => {
         text1: 'Welcome back!',
         text2: 'Login successful',
       });
-      router.replace('/(tabs)');
+      // Navigation is handled by _layout.tsx after user data loads and onboarding is checked
     },
     onError: (error: any) => {
       console.error('[AUTH] Login Mutation Error:', error);

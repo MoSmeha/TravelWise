@@ -12,6 +12,7 @@ import { customToastConfig } from '../components/ui/ToastMessage';
 
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { useAuth } from '../store/authStore';
+import { useOnboarding } from '../store/onboardingStore';
 import { useSocket } from '../hooks/useSocket';
 import { useUser } from '../hooks/queries/useUser';
 
@@ -20,6 +21,7 @@ preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { isAuthenticated, isRestoring } = useAuth();
+  const { hasSeenOnboarding, isCheckingOnboarding, checkOnboardingForUser, resetOnboarding } = useOnboarding();
   const segments = useSegments();
   const router = useRouter();
   
@@ -27,26 +29,47 @@ function RootLayoutNav() {
   useSocket();
   
   // Fetch and cache user data at app root level
-  // This ensures user is available immediately in all child components
-  useUser();
+  const { data: user, isLoading: isLoadingUser } = useUser();
+
+  // Check onboarding status when user data is available
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      console.log('[NAV] User authenticated, checking onboarding for:', user.id);
+      checkOnboardingForUser(user.id);
+    } else if (!isAuthenticated) {
+      // Reset onboarding state when logged out
+      resetOnboarding();
+    }
+  }, [isAuthenticated, user?.id]);
 
   useEffect(() => {
-    console.log('[NAV] Auth state changed:', { isAuthenticated, isRestoring, segments: segments[0] });
-    if (isRestoring) return;
+    const isLoading = isRestoring || (isAuthenticated && (isLoadingUser || isCheckingOnboarding));
+    console.log('[NAV] Auth state changed:', { isAuthenticated, isRestoring, isCheckingOnboarding, isLoadingUser, hasSeenOnboarding, segments: segments[0] });
+    
+    // Wait for all states to be ready
+    if (isLoading) return;
 
     const inAuthGroup = (segments[0] as string) === 'auth';
-    console.log('[NAV] Navigation decision:', { inAuthGroup, shouldRedirect: !isAuthenticated && !inAuthGroup });
+    const inOnboarding = (segments[0] as string) === 'onboarding';
+    
+    console.log('[NAV] Navigation decision:', { inAuthGroup, inOnboarding, hasSeenOnboarding });
 
     if (isAuthenticated && inAuthGroup) {
-      console.log('[NAV] Redirecting to tabs (authenticated user on auth page)');
-      router.replace('/(tabs)' as any);
+      // User just authenticated from auth screen
+      if (hasSeenOnboarding) {
+        console.log('[NAV] Redirecting to tabs (authenticated user who has seen onboarding)');
+        router.replace('/(tabs)' as any);
+      } else {
+        console.log('[NAV] Redirecting to onboarding (authenticated user who has NOT seen onboarding)');
+        router.replace('/onboarding' as any);
+      }
     } else if (!isAuthenticated && !inAuthGroup) {
-        // Redirect to login if accessing protected route
-        // Allow access to auth screens
-        console.log('[NAV] Redirecting to login (unauthenticated user on protected page)');
-        router.replace('/auth/login' as any);
+      // Redirect to login if accessing protected route
+      console.log('[NAV] Redirecting to login (unauthenticated user on protected page)');
+      router.replace('/auth/login' as any);
     }
-  }, [isAuthenticated, segments, isRestoring, router]);
+    // Don't redirect if already on onboarding screen
+  }, [isAuthenticated, segments, isRestoring, router, hasSeenOnboarding, isCheckingOnboarding, isLoadingUser]);
 
   return (
     <Stack>
@@ -54,6 +77,7 @@ function RootLayoutNav() {
       <Stack.Screen name="chat" options={{ headerShown: false }} />
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen name="itinerary" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="friends" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
       <Stack.Screen name="modal" options={{ presentation: 'modal' }} />

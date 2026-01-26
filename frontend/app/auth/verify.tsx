@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { authService } from '../../services/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../store/authStore';
 import Toast from 'react-native-toast-message';
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
 import { InputField } from '../../components/ui/InputField';
@@ -15,7 +14,6 @@ export default function VerifyScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { hydrate } = useAuth();
 
   const handleVerify = async () => {
     if (!otp || !email) {
@@ -34,12 +32,11 @@ export default function VerifyScreen() {
       Toast.show({
         type: 'success',
         text1: 'Email Verified!',
-        text2: 'Welcome to TravelWise',
+        text2: 'Please login to continue',
       });
       
-      // Refresh user data
-      await hydrate();
-      router.replace('/(tabs)');
+      // Redirect to login - verification doesn't provide auth tokens
+      router.replace('/auth/login' as any);
     } catch (error: any) {
       const errorData = error.response?.data;
       const msg = errorData?.message || errorData?.error || 'Verification failed. Please try again.';
