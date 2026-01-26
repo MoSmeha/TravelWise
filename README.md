@@ -13,7 +13,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <!-- project overview -->
 <img src="./readme/title2.svg"/>
 
-> TravelWise is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps. It also lets travelers share experiences, making every journey easier and more enjoyable.
+> **TravelWise** is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps.  
+> It also lets travelers share experiences, making every journey easier and more enjoyable.
 
 <br><br>
 
@@ -21,15 +22,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <img src="./readme/title3.svg"/>
 
 ### System Design
-<img src="./readme/System_Design.png"/>
+<img src="./readme/System_Design.png" width="100%"/>
 
 ### Entity Relationship Diagram
-
-<img src="./readme/Database_Architecture.png"/>
+<img src="./readme/Database_Architecture.png" width="100%"/>
 
 ### n8n
-<img src="./readme/n8n.png"/>
-
+<img src="./readme/n8n.png" width="100%"/>
 
 <br><br>
 
@@ -54,7 +53,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 | Login & Onboarding | User Profile | Notifications |
 | :---: | :---: | :---: |
-| <img src="./readme/LoginOnboarding.gif" width="100%"> | <img src="./readme/Profile.jpeg" width="100%"> | <img src="./readme/Notifications_Page.jpeg" width="100%"> |
+| <img src="./readme/LoginOnboarding.gif" style="width:100%; max-width:100%;"> | <img src="./readme/Profile.jpeg" width="100%"> | <img src="./readme/Notifications_Page.jpeg" width="100%"> |
 
 | Creating Itinerary | Itinerary Details | Itinerary Checklist |
 | :---: | :---: | :---: |
@@ -67,5 +66,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 | AI Chatbot | Chat Demo |
 | :---: | :---: |
 | <img src="./readme/Rag_Chatbot.gif" width="100%"> | <img src="./readme/ChatApp-Demo.gif" width="100%"> |
-
-<br><br>
