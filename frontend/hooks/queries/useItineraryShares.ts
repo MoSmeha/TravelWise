@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { itineraryShareService, type ItineraryShare } from '../../services/itinerary-share';
+import { itineraryShareService } from '../../services/itinerary-share';
+import type { ItineraryShare } from '../../types/schemas';
 
 // Query: Get collaborators for an itinerary
 export const useItineraryCollaborators = (itineraryId: string | null) => {

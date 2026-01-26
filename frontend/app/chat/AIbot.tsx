@@ -162,10 +162,10 @@ export default function ChatScreen() {
           </ScrollView>
 
           {/* Input Area */}
-          <View className="p-4 bg-white border-t border-gray-100">
-             <View className="flex-row items-end gap-2">
+          <View className="p-4 bg-white border-t border-gray-100 mb-6">
+             <View className="flex-row items-end gap-2 ">
                  <TextInput
-                    className="flex-1 bg-gray-100 rounded-2xl px-4 py-3 text-base text-gray-900 border border-transparent"
+                    className="flex-1 bg-gray-100 rounded-2xl px-4 py-2 text-base text-gray-900 border border-transparent"
                     style={{ borderColor: 'transparent' }}
                     placeholder="Ask about locations, costs, or tips..."
                     multiline

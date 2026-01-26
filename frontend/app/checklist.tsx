@@ -20,12 +20,7 @@ import { useAddChecklistItem, useToggleChecklistItem, useDeleteChecklistItem, us
 import { useItineraryStore } from '../store/itineraryStore';
 import type { ChecklistItem } from '../types/api';
 
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android') {
-  if (UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
-}
+
 
 export default function ChecklistScreen() {
   const params = useLocalSearchParams();

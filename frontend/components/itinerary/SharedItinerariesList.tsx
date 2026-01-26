@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, Refre
 import { useRouter } from 'expo-router';
 import { Calendar, Wallet, Check, X, UserPlus } from 'lucide-react-native';
 import { useSharedItineraries, useAcceptInvitation, useRejectInvitation } from '../../hooks/queries/useItineraryShares';
-import type { ItineraryShare } from '../../services/itinerary-share';
+import type { ItineraryShare } from '../../types/schemas';
 
 const COUNTRY_IMAGES: Record<string, string> = {
   'Lebanon': 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=1000&auto=format&fit=crop',

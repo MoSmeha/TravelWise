@@ -44,8 +44,8 @@ export const InputField: React.FC<InputFieldProps> = ({
               ? 'border-red-500 bg-red-50' 
               : isFocused 
                 ? 'border-primary bg-white shadow-sm shadow-primary/10' 
-                : 'border-gray-100'
-          } ${className}`}
+                : 'border-gray-100 shadow-primary/0'
+          } ${className || ''}`}
           placeholderTextColor="#9CA3AF"
           secureTextEntry={isPassword && !showPassword}
           onFocus={() => setIsFocused(true)}

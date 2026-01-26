@@ -22,7 +22,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       <TouchableOpacity
         className="flex-1 bg-[#004e89] rounded-2xl flex-row items-center justify-center gap-2 shadow-lg border-gray-200 h-14"
         onPress={() => router.push({
-          pathname: '/chat/new',
+          pathname: '/chat/AIbot',
           params: { itineraryId }
         })}
       >

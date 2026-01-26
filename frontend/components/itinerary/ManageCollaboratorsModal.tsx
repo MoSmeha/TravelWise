@@ -4,7 +4,7 @@ import { X, UserMinus, Shield, Eye } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { customToastConfig } from '../ui/ToastMessage';
 import { useItineraryCollaborators, useRemoveCollaborator } from '../../hooks/queries/useItineraryShares';
-import type { ItineraryShare } from '../../services/itinerary-share';
+import type { ItineraryShare } from '../../types/schemas';
 
 interface ManageCollaboratorsModalProps {
   visible: boolean;
