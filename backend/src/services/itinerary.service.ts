@@ -9,8 +9,7 @@ import { IItineraryProvider } from '../provider-contract/itinerary.provider-cont
 import { mapPlaceForGenerateResponse, mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } from '../utils/response-mappers.js';
 import { calculateCentroid, haversineDistance } from '../utils/geo.utils.js';
 
-// Local type extension if needed, but primarily use Prisma Place
-// We use intersection to add arbitrary keys if needed (for enrichments)
+
 type PlaceExtended = Place & { [key: string]: any };
 
 interface GenerateItineraryParams {
@@ -23,7 +22,7 @@ interface GenerateItineraryParams {
   countryId?: string;
 }
 
-// Hotel categories
+
 const HOTEL_CATEGORIES: LocationCategory[] = [LocationCategory.HOTEL, LocationCategory.ACCOMMODATION];
 
 interface ItineraryDayResult {
@@ -32,8 +31,8 @@ interface ItineraryDayResult {
   description: string;
   routeDescription: string;
   locations: PlaceExtended[];
-  hotel: PlaceExtended | null;           // End-of-day hotel
-  startingHotel?: PlaceExtended | null;  // For Day 1 only
+  hotel: PlaceExtended | null;
+  startingHotel?: PlaceExtended | null;
   meals: {
     breakfast: PlaceExtended | null;
     lunch: PlaceExtended | null;
@@ -60,7 +59,7 @@ export interface ItineraryResult {
   checklist: Array<{ category: string; item: string; reason: string }>;
 }
 
-// Activity categories mapping based on travel style
+
 const ACTIVITY_CATEGORIES: Record<TravelStyle, LocationCategory[]> = {
   ADVENTURE: [LocationCategory.HIKING, LocationCategory.ACTIVITY, LocationCategory.BEACH, LocationCategory.PARK, LocationCategory.VIEWPOINT],
   CULTURAL: [LocationCategory.HISTORICAL_SITE, LocationCategory.MUSEUM, LocationCategory.RELIGIOUS_SITE, LocationCategory.MARKET],
@@ -70,7 +69,7 @@ const ACTIVITY_CATEGORIES: Record<TravelStyle, LocationCategory[]> = {
   FAMILY_GROUP: [LocationCategory.MUSEUM, LocationCategory.PARK, LocationCategory.ACTIVITY, LocationCategory.SHOPPING],
 };
 
-// Generate AI Polish: warnings, tourist traps, and local tips
+
 async function generateAIPolish(
   days: ItineraryDayResult[],
   cityName: string
@@ -86,7 +85,7 @@ async function generateAIPolish(
   
   const openai = getOpenAIClient();
   
-  // Build rich context from itinerary
+
   let context = `Itinerary for ${cityName}:\n\n`;
   
   days.forEach(day => {
@@ -137,14 +136,14 @@ Format as JSON:
     if (content) {
       const parsed = JSON.parse(content);
       
-      // Map and validate checklist categories to ensure they match the Prisma enum
+
       const validatedChecklist = (parsed.checklist || []).map((item: any) => {
         const validCategory = mapToValidChecklistCategory(item.category);
         return {
           ...item,
           category: validCategory,
         };
-      }).filter((item: any) => item.category !== null); // Remove items with unmappable categories
+      }).filter((item: any) => item.category !== null);
       
       return {
         warnings: parsed.warnings || [],
@@ -160,14 +159,11 @@ Format as JSON:
   return { warnings: [], touristTraps: [], localTips: [], checklist: [] };
 }
 
-/**
- * Maps potentially invalid category strings to valid ChecklistCategory enum values
- * Returns null if no valid mapping exists
- */
+
 function mapToValidChecklistCategory(category: string): ChecklistCategory | null {
   const normalized = category.toUpperCase().trim();
   
-  // Direct matches
+
   const validCategories: ChecklistCategory[] = [
     ChecklistCategory.ESSENTIALS,
     ChecklistCategory.WEATHER,
@@ -180,7 +176,7 @@ function mapToValidChecklistCategory(category: string): ChecklistCategory | null
   const exactMatch = validCategories.find(c => c === normalized);
   if (exactMatch) return exactMatch;
   
-  // Fuzzy mapping for common AI mistakes
+
   const categoryMap: Record<string, ChecklistCategory> = {
     'TEC': ChecklistCategory.ESSENTIALS,
     'TECH': ChecklistCategory.ESSENTIALS,
@@ -209,10 +205,7 @@ function mapToValidChecklistCategory(category: string): ChecklistCategory | null
   return null;
 }
 
-/**
- * Fetch places from database with proper filtering
- * Delegates to itinerary provider for database access
- */
+
 async function fetchPlaces(
   categories: LocationCategory[],
   country: string,
@@ -234,9 +227,7 @@ async function fetchPlaces(
   return places as PlaceExtended[];
 }
 
-/**
- * Get activity categories based on travel styles
- */
+
 function getActivityCategories(travelStyles: TravelStyle[]): LocationCategory[] {
   const categories = new Set<LocationCategory>();
   for (const style of travelStyles) {
@@ -246,10 +237,7 @@ function getActivityCategories(travelStyles: TravelStyle[]): LocationCategory[] 
   return Array.from(categories);
 }
 
-/**
- * Find a hotel near a specific location
- * First checks DB hotels, then falls back to Google Places API
- */
+
 async function findHotelNearLocation(
   lat: number,
   lng: number,
@@ -257,16 +245,16 @@ async function findHotelNearLocation(
   country: string,
   radiusKm: number = 10
 ): Promise<PlaceExtended | null> {
-  // Calculate distance to each DB hotel
+
   const hotelsWithDistance = dbHotels.map(hotel => ({
     hotel,
     distance: Math.sqrt(
       Math.pow(hotel.latitude - lat, 2) + 
       Math.pow(hotel.longitude - lng, 2)
-    ) * 111 // Rough conversion to km
+    ) * 111
   }));
   
-  // Filter hotels within radius and sort by distance
+
   const nearbyDbHotels = hotelsWithDistance
     .filter(h => h.distance <= radiusKm)
     .sort((a, b) => a.distance - b.distance);
@@ -276,7 +264,7 @@ async function findHotelNearLocation(
     return nearbyDbHotels[0].hotel;
   }
   
-  // Fallback to Google Places API
+
   console.log(`[HOTEL] No DB hotels within ${radiusKm}km of (${lat.toFixed(4)}, ${lng.toFixed(4)}), searching Google Places...`);
   
   const googleResult = await searchNearbyHotels(lat, lng, radiusKm * 1000, 4.0);
@@ -285,7 +273,7 @@ async function findHotelNearLocation(
     const bestHotel = googleResult.hotels[0];
     console.log(`[HOTEL] Found Google hotel "${bestHotel.name}" (${bestHotel.rating}★)`);
     
-    // Convert to PlaceExtended format
+
     const externalHotel: PlaceExtended = {
       id: `external-${bestHotel.googlePlaceId}`,
       name: bestHotel.name,
@@ -319,7 +307,7 @@ async function findHotelNearLocation(
       lastValidatedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
-      // External hotel properties
+
       websiteUrl: bestHotel.websiteUrl,
       bookingUrl: bestHotel.bookingUrl,
       isExternalHotel: true,
@@ -334,7 +322,7 @@ async function findHotelNearLocation(
 
 
 
-// Helper to check if data is limited
+
 function checkLimitedData(fetched: number, requested: number, context: string) {
   if (fetched < requested) {
     console.warn(`[LIMITED DATA] ${context}: Requested ${requested}, but only found ${fetched}. Itinerary quality may degrade.`);
@@ -345,31 +333,27 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   const { cityId, numberOfDays, budgetLevel, travelStyles, budgetUSD } = params;
   
   // Parse cityId - could be city name or country.
-  // IMPROVEMENT: Flexible country support, defaulting to input but robust fallback
   let country = 'Lebanon'; 
   let cityName = cityId;
 
-  // Basic heuristic: if cityId looks like a country, use it as country
+
   const commonCountries = ['Lebanon', 'France', 'Italy', 'Spain', 'Germany', 'Japan', 'UAE', 'United Arab Emirates'];
   if (commonCountries.some(c => c.toLowerCase() === cityId.toLowerCase())) {
     country = cityId;
-    cityName = ''; // Wide search
+    cityName = '';
   }
   
   console.log(`[ITINERARY] Generating clustered itinerary: ${cityName || country}, ${numberOfDays} days, styles: ${travelStyles.join(', ')}...`);
   
-  // 1. Determine "Personality" of the trip
+
   const activityCategories = getActivityCategories(travelStyles);
   if (activityCategories.length === 0) {
      console.warn(`[WARN] No categories match travel styles: ${travelStyles.join(', ')}. Defaulting to general interest.`);
      activityCategories.push(LocationCategory.HISTORICAL_SITE, LocationCategory.VIEWPOINT, LocationCategory.ACTIVITY);
   }
 
-  // 2. Fetch Activity Pool (Geometry-First: Get a BIG pool first, then cluster)
-  // We need enough activities to form clusters. 
-  // Target: 4 per day, plus 50% buffer.
   const activitiesPerDay = 4;
-  const targetPoolSize = Math.ceil(numberOfDays * activitiesPerDay * 2.0); // Double buffer for better clustering
+  const targetPoolSize = Math.ceil(numberOfDays * activitiesPerDay * 2.0);
   const priceLevel = mapBudgetToPriceLevel(budgetLevel);
   
   console.log(`[FETCH] Fetching up to ${targetPoolSize} candidate activities (Strict Categories: ${activityCategories.join(', ')})...`);
@@ -380,41 +364,37 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     cityName || null, 
     targetPoolSize,
     [],
-    undefined // Ignore price for activities (often free or fixed)
+    undefined
   );
 
   checkLimitedData(activityPool.length, targetPoolSize, 'Activity Pool');
 
-  // AUGMENTATION: If pool is too small, use Google Places to find and save new places
-  // This fulfills the "self-healing" requirement.
+
   if (activityPool.length < targetPoolSize) {
      const missingCount = targetPoolSize - activityPool.length;
      console.log(`[AUGMENT] Pool too small (${activityPool.length} < ${targetPoolSize}). Attempting to fetch ${missingCount} new places from Google...`);
      
-     // Determine which categories are under-represented
-     // For simplicity, cycle through all requested categories
+
      
      for (const cat of activityCategories) {
-         // Create a natural language query
-         // e.g. "Best Hiking spots in Lebanon" or "Top Museums in Beirut"
+
          const query = `Best ${cat.replace('_', ' ').toLowerCase()} in ${cityName || country}`;
          console.log(`[AUGMENT] Searching: "${query}"`);
          
          const { places } = await searchPlacesByText(query, 4.0);
          
          for (const gp of places) {
-             // Avoid adding if already in pool
+
              if (activityPool.some(p => p.googlePlaceId === gp.googlePlaceId)) continue;
              
-             // Check if already in DB (to avoid creating duplicates if excluded)
+
              const existing = await itineraryProvider.findPlaceByGoogleId(gp.googlePlaceId);
              if (existing) {
-                 // It exists but wasn't picked (maybe low rating or excluded). Skip for now.
+
                  continue;
              }
 
-             // Save to DB!
-             // Map Google result to PlaceExtended
+
              const newPlace = await itineraryProvider.createPlace({
                  googlePlaceId: gp.googlePlaceId,
                  name: gp.name,
@@ -431,10 +411,10 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
                  imageUrl: gp.photos[0] || null,
                  imageUrls: gp.photos,
                  websiteUrl: gp.websiteUrl,
-                 classification: LocationClassification.MUST_SEE // Assume top Google results are must-see
+                 classification: LocationClassification.MUST_SEE
              });
              
-             // Add to current pool as a partial PlaceExtended (enough for usage)
+
              activityPool.push({
                  id: newPlace.id,
                  name: gp.name,
@@ -444,10 +424,10 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
                  googlePlaceId: gp.googlePlaceId,
                  rating: gp.rating,
                  priceLevel: gp.priceLevel !== null ? (gp.priceLevel >= 3 ? PriceLevel.EXPENSIVE : gp.priceLevel >= 2 ? PriceLevel.MODERATE : PriceLevel.INEXPENSIVE) : null,
-                 costMinUSD: 20, // Default assumption
+                 costMinUSD: 20,
                  createdAt: new Date(),
                  usageCount: 0,
-                 // Double cast to bypass overlap check (we are mocking a DB object)
+
              } as unknown as PlaceExtended);
          }
          
@@ -455,27 +435,26 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
      }
   }
 
-  // 3. Cluster Activities into Days (K-Means)
-  // We convert to the simpler Coordinate interface for the clustering algo
+
   const placesForClustering = activityPool.map(p => ({
     id: p.id,
     name: p.name,
     latitude: p.latitude,
     longitude: p.longitude,
     category: p.category,
-    suggestedDuration: 90 // Default
+    suggestedDuration: 90
   }));
 
-  // If we have extremely limited data (less than days), we just have 1 cluster
+
   let clusters = activityPool.length > 0 
     ? kMeansClustering(placesForClustering, Math.min(numberOfDays, activityPool.length))
     : [];
 
-  // FIX: Order clusters geographically starting from Airport/Beirut
+  // Order clusters geographically starting from Airport/Beirut
   const startCoords = { lat: 33.8209, lng: 35.4913 }; 
   clusters = orderClustersByProximity(clusters, startCoords);
 
-  // FIX: Balance Clusters (Steal from rich, give to poor)
+  // Balance Clusters (Steal from rich, give to poor)
   const MIN_PER_DAY = 2;
   const MAX_ATTEMPTS = 10;
   let attempts = 0;
@@ -515,37 +494,35 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       }
   }
 
-  // 4. Assign Clusters to Days (and fill gaps if needed)
+
+
   const days: ItineraryDayResult[] = [];
   const globalUsedIds = new Set<string>();
 
-  // Helper to get actual PlaceExtended objects from simplified cluster points
   const getFullPlaces = (simplePlaces: any[]) => {
     return simplePlaces.map(sp => activityPool.find(ap => ap.id === sp.id)).filter(p => p !== undefined) as PlaceExtended[];
   };
 
-  // 5. Select Base Hotel (Geometry-First: Center of all activities)
-  // Instead of hotel hopping, we find ONE good base location.
-  // Ideally, this is near the centroid of the largest cluster or the overall centroid.
+
   console.log('[HOTEL] Finding optimal base hotel...');
   
   let baseHotel: PlaceExtended | null = null;
   const overallCentroid = activityPool.length > 0 
     ? calculateCentroid(activityPool) 
-    : { lat: 33.8938, lng: 35.5018 }; // Default to Beirut if empty
+    : { lat: 33.8938, lng: 35.5018 };
 
-  // Fetch hotels near the centroid
+
   const candidateHotels = await findHotelNearLocation(
     overallCentroid.lat,
     overallCentroid.lng,
-    await fetchPlaces(HOTEL_CATEGORIES, country, cityName || null, 20, []), // Fetch broad hotel list first
+    await fetchPlaces(HOTEL_CATEGORIES, country, cityName || null, 20, []),
     country,
-    15 // 15km Radius
+    15
   );
 
-  baseHotel = candidateHotels; // This function returns one hotel or null
+  baseHotel = candidateHotels;
   
-  // If no hotel found near centroid (e.g. centroid is in the mountains), try nearest city center
+
   if (!baseHotel && activityPool.length > 0) {
       console.log('[HOTEL] optimizing: taking first activity location as fallback hotel anchor');
       baseHotel = await findHotelNearLocation(
@@ -557,30 +534,30 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       );
   }
 
-  // Track previous end point for continuity
+
   let previousEndLocation = baseHotel 
     ? { lat: baseHotel.latitude, lng: baseHotel.longitude }
-    : { lat: 33.8209, lng: 35.4913 }; // Default airport
+    : { lat: 33.8209, lng: 35.4913 };
 
-  // 6. Build Daily Itineraries
+
   for (let i = 0; i < numberOfDays; i++) {
     const dayNum = i + 1;
     const isLastDay = dayNum === numberOfDays;
     
-    // Get cluster for this day, or empty if we ran out
+
     const dayClusterSimple = clusters[i] || [];
     let dayActivities = getFullPlaces(dayClusterSimple);
 
-    // CRITICAL FIX: Limit to max 4 activities per day to prevent exhaustion and "overkill"
+    // Limit to max 4 activities per day to prevent exhaustion and "overkill"
     // Also ensures we don't dump 21 places in Day 1.
     const MAX_PER_DAY = 4;
     if (dayActivities.length > MAX_PER_DAY) {
-      // If we have too many, sort by rating and take top 4
+
       dayActivities.sort((a, b) => (b.rating || 0) - (a.rating || 0));
       dayActivities = dayActivities.slice(0, MAX_PER_DAY);
     }
 
-    // If completely empty day (limited data), try to grab ANY unused activity from pool
+
     if (dayActivities.length === 0) {
         const unused = activityPool.filter(p => !globalUsedIds.has(p.id));
         if (unused.length > 0) {
@@ -588,11 +565,11 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
         }
     }
 
-    // Mark IDs as used
+
     dayActivities.forEach(p => globalUsedIds.add(p.id));
 
     // Optimize Route for the Day (Nearest Neighbor)
-    // FIX: Start from PREVIOUS DAY'S END location (or hotel/airport) to ensure flow
+    // Start from PREVIOUS DAY'S END location (or hotel/airport) to ensure flow
     // If we have a base hotel, we usually start from there. BUT if we want continuity across the country,
     // we should bias the start to be near where we left off (if staying in different places)
     // or just assume we drive from base hotel.
@@ -609,24 +586,21 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
         dayStartPoint
     );
     
-    // Re-map to full objects
+
     dayActivities = dayRouteSimple.map(dr => dayActivities.find(da => da.id === dr.id)!).filter(Boolean);
 
-    // Update previousEndLocation for next day logic (if we were doing multi-hotel)
+
     if (dayActivities.length > 0) {
         const last = dayActivities[dayActivities.length - 1];
         previousEndLocation = { lat: last.latitude, lng: last.longitude };
     }
 
-    // Fetch Meals near the Activities
-    // Breakfast: Near Start
-    // Lunch: Near Middle
-    // Dinner: Near End/Hotel
+
     const morningLoc = dayActivities[0] || dayStartPoint;
     const midLoc = dayActivities[Math.floor(dayActivities.length / 2)] || morningLoc;
     const endLoc = dayActivities[dayActivities.length - 1] || midLoc;
 
-    // Parallel fetch for speed
+
     const [breakfasts, lunches, dinners] = await Promise.all([
         fetchPlaces([LocationCategory.CAFE, LocationCategory.RESTAURANT], country, null, 5, Array.from(globalUsedIds), priceLevel).then(res => 
             res.filter(r => haversineDistance(r.latitude, r.longitude, morningLoc.latitude, morningLoc.longitude) < 5)
@@ -655,8 +629,8 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
       description: `Day ${dayNum}: ${theme} in ${dayActivities[0]?.city || country}`,
       routeDescription: dayActivities.map(d => d.name).join(' -> '),
       locations: dayActivities,
-      hotel: baseHotel, // Same hotel every night!
-      startingHotel: isLastDay ? undefined : baseHotel, // Consistent
+      hotel: baseHotel,
+      startingHotel: isLastDay ? undefined : baseHotel,
       meals: {
         breakfast,
         lunch,
@@ -667,7 +641,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     });
   }
 
-  // AI Polish (Warnings, Tips) - kept as is
+
   let warnings: Array<{ title: string; description: string }> = [];
   let touristTraps: Array<{ name: string; reason: string }> = [];
   let localTips: string[] = [];
@@ -684,31 +658,31 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     console.error('AI Polish failed (non-critical):', error);
   }
 
-  // Cost Calculation & Budget Guard
+
   let totalEstimatedCostUSD = days.reduce((sum, day) => {
     return sum + day.locations.reduce((dSum, loc) => dSum + (loc.costMinUSD || 20), 0) + (budgetLevel === BudgetLevel.HIGH ? 150 : 50);
   }, 0);
 
-  // If over budget, try to trim expensive activities
+
   if (budgetUSD > 0 && totalEstimatedCostUSD > budgetUSD) {
     console.log(`[BUDGET] Over budget ($${totalEstimatedCostUSD} > $${budgetUSD}). Trimming...`);
     
-    // Flatten all locations with their day index
+
     let allLocs: {loc: PlaceExtended, dayIdx: number}[] = [];
     days.forEach((d, idx) => {
       d.locations.forEach(l => allLocs.push({loc: l, dayIdx: idx}));
     });
 
-    // Sort by cost descending (assuming costMinUSD or default 20)
+
     allLocs.sort((a, b) => (b.loc.costMinUSD || 20) - (a.loc.costMinUSD || 20));
 
     while (totalEstimatedCostUSD > budgetUSD && allLocs.length > 0) {
        const candidate = allLocs.shift();
        if (!candidate) break;
 
-       // Remove from specific day
+
        const day = days[candidate.dayIdx];
-       // Only remove if day has enough activities or we're desperate
+
        if (day.locations.length > 2) {
          day.locations = day.locations.filter(l => l.id !== candidate.loc.id);
          totalEstimatedCostUSD -= (candidate.loc.costMinUSD || 20);
@@ -735,8 +709,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
   };
 }
 
-// Function to save the generated itinerary to the database
-// Uses itinerary provider for database operations
+
 export async function saveItineraryToDb(
   userId: string,
   input: any,
@@ -745,7 +718,7 @@ export async function saveItineraryToDb(
   airportCode: string,
   provider: IItineraryProvider = itineraryProvider
 ) {
-  // Create UserItinerary
+
   const itinerary = await provider.createItinerary({
     userId,
     country: countryName,
@@ -758,14 +731,14 @@ export async function saveItineraryToDb(
     routeSummary: generated.routeSummary,
   });
   
-  // Create ItineraryDays and ItineraryItems
+
   for (const day of generated.days) {
-    // Resolve hotel ID - save external hotels to DB first
+
     let hotelId: string | null = null;
     
     if (day.hotel) {
       if (day.hotel.isExternalHotel && day.hotel.googlePlaceId) {
-        // External hotel from Google Places - save to database first
+
         const savedHotel = await provider.createExternalHotel({
           googlePlaceId: day.hotel.googlePlaceId,
           name: day.hotel.name,
@@ -784,12 +757,12 @@ export async function saveItineraryToDb(
         });
         hotelId = savedHotel.id;
       } else {
-        // DB hotel - use existing ID
+
         hotelId = day.hotel.id;
       }
     }
     
-    // Create ItineraryDay with theme and hotel
+
     const itineraryDay = await provider.createItineraryDay({
       itineraryId: itinerary.id,
       dayNumber: day.dayNumber,
@@ -800,7 +773,7 @@ export async function saveItineraryToDb(
     
     let order = 1;
     
-    // Add activity locations
+
     for (const location of day.locations) {
       await provider.createItineraryItem({
         dayId: itineraryDay.id,
@@ -812,7 +785,7 @@ export async function saveItineraryToDb(
       });
     }
     
-    // Add meal items
+
     if (day.meals) {
       if (day.meals.breakfast) {
         await provider.createItineraryItem({
@@ -844,7 +817,7 @@ export async function saveItineraryToDb(
     }
   }
   
-  // Create checklist from AI generated items (or empty if none)
+
   const checklistItems = generated.checklist || [];
 
   
@@ -861,9 +834,7 @@ export async function saveItineraryToDb(
 }
 
 
-/**
- * Enrich locations with Google Places data
- */
+
 export interface DayLocation {
   id: string;
   name: string;
@@ -883,7 +854,7 @@ export async function enrichLocations(days: DayWithLocations[]) {
   for (const day of days) {
     for (const location of day.locations) {
       try {
-        // Check if we already have detailed data OR if we checked recently (to avoid retrying empty fields)
+
         const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
         const lastChecked = location.lastEnrichedAt ? new Date(location.lastEnrichedAt).getTime() : 0;
         const isRecentlyChecked = (Date.now() - lastChecked) < THIRTY_DAYS;
@@ -900,10 +871,10 @@ export async function enrichLocations(days: DayWithLocations[]) {
         );
         
         if (googleData.data) {
-          // Check if another place already has this googlePlaceId to avoid unique constraint violations
+
           const existingPlace = await itineraryProvider.findPlaceByGoogleId(googleData.data.googlePlaceId);
 
-          // Only update googlePlaceId if it doesn't exist or belongs to this place
+
           const shouldUpdateId = !existingPlace || existingPlace.id === location.id;
 
           await itineraryProvider.updatePlaceEnrichment(location.id, {
@@ -917,7 +888,7 @@ export async function enrichLocations(days: DayWithLocations[]) {
             lastEnrichedAt: new Date(),
           });
           
-          // Attach to location object for embedding generation and response
+
           location.rating = googleData.data.rating;
           location.totalRatings = googleData.data.totalRatings;
           location.topReviews = googleData.data.topReviews;
@@ -936,9 +907,7 @@ export async function enrichLocations(days: DayWithLocations[]) {
   }
 }
 
-/**
- * Build the itinerary response object
- */
+
 export function buildItineraryResponse(
   itineraryId: string, 
   input: any, 
@@ -963,7 +932,7 @@ export function buildItineraryResponse(
     routeDescription: d.routeDescription,
   }));
   
-  // Map primary hotel
+
   const hotel = result.hotel ? {
     id: result.hotel.id,
     name: result.hotel.name,
@@ -1010,17 +979,14 @@ export function buildItineraryResponse(
   };
 }
 
-/**
- * Build response for getItineraryDetails endpoint
- * Uses response mappers for consistent formatting
- */
+
 export function buildItineraryDetailsResponse(
   itinerary: any,
   _countryConfig: any,  // kept for API consistency with buildItineraryResponse
   airportConfig: any
 ) {
   
-  // Build response from ItineraryDay structure
+
   const days = itinerary.days.map((day: any) => {
     const activities = day.items.filter((i: any) => i.itemType === 'ACTIVITY');
     const meals = {

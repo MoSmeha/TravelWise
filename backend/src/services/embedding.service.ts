@@ -2,7 +2,7 @@ import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/c
 import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils.js';
 
 
-// Configuration
+
 interface EmbeddingConfig {
   provider: 'openai' | 'local';
   model: string;
@@ -16,7 +16,7 @@ const PRIMARY_CONFIG: EmbeddingConfig = {
 };
 
 
-// Generate a single embedding
+
 export async function generateEmbedding(text: string): Promise<number[]> {
   if (!isOpenAIConfigured()) {
     console.warn('OpenAI not configured, returning zero vector');
@@ -42,12 +42,12 @@ export async function generateEmbedding(text: string): Promise<number[]> {
       console.warn('OpenAI circuit breaker is open for embeddings');
     }
     console.error('Embedding generation failed:', error);
-    // Return zero vector as fallback
+
     return new Array(PRIMARY_CONFIG.dimensions).fill(0);
   }
 }
 
-// Generate embeddings in batch
+
 export async function batchGenerateEmbeddings(texts: string[]): Promise<number[][]> {
   if (!isOpenAIConfigured()) {
     console.warn('OpenAI not configured, returning zero vectors');
@@ -72,21 +72,21 @@ export async function batchGenerateEmbeddings(texts: string[]): Promise<number[]
     return result;
   } catch (error) {
     console.error('Batch embedding generation failed:', error);
-    // Return zero vectors as fallback
+
     return texts.map(() => new Array(PRIMARY_CONFIG.dimensions).fill(0));
   }
 }
 
 
-// Get embedding dimensions for current config
+
 export function getEmbeddingDimensions(): number {
   return PRIMARY_CONFIG.dimensions;
 }
 
-// Vector dimension constant for pgvector
+
 export const VECTOR_DIMENSIONS = PRIMARY_CONFIG.dimensions;
 
-// Format embedding array as pgvector-compatible string
+
 export function formatVectorForPg(embedding: number[]): string {
   return `[${embedding.join(',')}]`;
 }

@@ -31,9 +31,9 @@ interface OptimizedRoute {
   startPoint: Coordinate;
 }
 
-// haversineDistance is now imported from geo.utils.ts
 
-// Estimate travel time based on distance (rough estimate for Lebanon)
+
+
 function estimateTravelTime(distanceKm: number): number {
   // Average speed assumption: 30 km/h in cities, 50 km/h between cities
   // Use conservative estimate of 25 km/h average considering traffic
@@ -41,7 +41,7 @@ function estimateTravelTime(distanceKm: number): number {
   return Math.ceil((distanceKm / averageSpeedKmH) * 60); // minutes
 }
 
-// Calculate centroid of a cluster
+
 function calculateCentroid(places: PlaceWithCoords[]): Coordinate {
   if (places.length === 0) return { lat: 0, lng: 0 };
   
@@ -54,18 +54,18 @@ function calculateCentroid(places: PlaceWithCoords[]): Coordinate {
   };
 }
 
-// K-means clustering to group places into day-sized clusters
+
 export function kMeansClustering(
   places: PlaceWithCoords[],
   k: number,
   maxIterations: number = 50
 ): PlaceWithCoords[][] {
   if (places.length <= k) {
-    // Not enough places for clustering, one place per cluster
+
     return places.map(p => [p]);
   }
   
-  // Initialize centroids with random places
+
   const centroids: Coordinate[] = [];
   const usedIndices = new Set<number>();
   
@@ -80,7 +80,7 @@ export function kMeansClustering(
   let clusters: PlaceWithCoords[][] = [];
   
   for (let iteration = 0; iteration < maxIterations; iteration++) {
-    // Assign each place to nearest centroid
+
     clusters = Array.from({ length: k }, () => []);
     
     for (const place of places) {
@@ -101,7 +101,7 @@ export function kMeansClustering(
       clusters[closestCluster].push(place);
     }
     
-    // Update centroids
+
     let converged = true;
     for (let i = 0; i < k; i++) {
       if (clusters[i].length > 0) {
@@ -122,11 +122,11 @@ export function kMeansClustering(
     if (converged) break;
   }
   
-  // Filter out empty clusters
+
   return clusters.filter(c => c.length > 0);
 }
 
-// Nearest neighbor algorithm for intra-day route optimization
+
 function nearestNeighborRoute(
   places: PlaceWithCoords[],
   startPoint: Coordinate
@@ -136,7 +136,7 @@ function nearestNeighborRoute(
   const route: PlaceWithCoords[] = [];
   const remaining = [...places];
   
-  // Start from the place closest to the start point
+
   let currentPoint = startPoint;
   
   while (remaining.length > 0) {
@@ -162,7 +162,7 @@ function nearestNeighborRoute(
   return route;
 }
 
-// Calculate total route distance
+
 function calculateRouteDistance(places: PlaceWithCoords[]): number {
   if (places.length < 2) return 0;
   
@@ -177,21 +177,21 @@ function calculateRouteDistance(places: PlaceWithCoords[]): number {
   return totalDistance;
 }
 
-// Generate time blocks for a day
+
 function generateTimeBlocks(
   places: PlaceWithCoords[],
   startTime: string = '09:00'
 ): { place: PlaceWithCoords; startTime: string; endTime: string; travelFromPrev: number }[] {
   const blocks = [];
   
-  // Parse start time
+
   const [startHour, startMin] = startTime.split(':').map(Number);
   let currentMinutes = startHour * 60 + startMin;
   
   for (let i = 0; i < places.length; i++) {
     const place = places[i];
     
-    // Calculate travel time from previous location
+
     let travelFromPrev = 0;
     if (i > 0) {
       const dist = haversineDistance(
@@ -204,7 +204,7 @@ function generateTimeBlocks(
     
     const blockStartTime = `${Math.floor(currentMinutes / 60).toString().padStart(2, '0')}:${(currentMinutes % 60).toString().padStart(2, '0')}`;
     
-    // Default duration based on category or 90 minutes
+
     const duration = place.suggestedDuration || 90;
     currentMinutes += duration;
     
@@ -221,7 +221,7 @@ function generateTimeBlocks(
   return blocks;
 }
 
-// Order clusters by proximity (greedy, starting from airport)
+
 function orderClustersByProximity(
   clusters: PlaceWithCoords[][],
   startPoint: Coordinate
@@ -256,7 +256,7 @@ function orderClustersByProximity(
   return ordered;
 }
 
-// Main route optimization function
+
 export function optimizeRoute(
   places: PlaceWithCoords[],
   numberOfDays: number,
@@ -272,16 +272,16 @@ export function optimizeRoute(
     };
   }
   
-  // Determine number of clusters (one per day, or less if not enough places)
+
   const k = Math.min(numberOfDays, Math.ceil(places.length / placesPerDay));
   
-  // Cluster places geographically
+
   let clusters = kMeansClustering(places, k);
   
-  // Order clusters by proximity to start point (airport)
+
   clusters = orderClustersByProximity(clusters, startPoint);
   
-  // Build day routes
+
   const days: DayRoute[] = [];
   let totalDistance = 0;
   let totalTravelMinutes = 0;
@@ -291,13 +291,13 @@ export function optimizeRoute(
   for (let dayIndex = 0; dayIndex < clusters.length; dayIndex++) {
     const cluster = clusters[dayIndex];
     
-    // Optimize route within the cluster
+
     const optimizedPlaces = nearestNeighborRoute(cluster, previousEndPoint);
     
-    // Calculate distance for this day
+
     const dayDistance = calculateRouteDistance(optimizedPlaces);
     
-    // Add distance from previous day's end point to first place
+
     if (optimizedPlaces.length > 0) {
       const distToFirst = haversineDistance(
         previousEndPoint.lat, previousEndPoint.lng,
@@ -310,7 +310,7 @@ export function optimizeRoute(
     const dayTravelMinutes = estimateTravelTime(dayDistance);
     totalTravelMinutes += dayTravelMinutes;
     
-    // Generate route polyline (simplified - just the place coordinates)
+
     const routePolyline: Coordinate[] = optimizedPlaces.map(p => ({
       lat: p.latitude,
       lng: p.longitude,
@@ -324,7 +324,7 @@ export function optimizeRoute(
       routePolyline,
     });
     
-    // Update previous end point
+
     if (optimizedPlaces.length > 0) {
       const lastPlace = optimizedPlaces[optimizedPlaces.length - 1];
       previousEndPoint = { lat: lastPlace.latitude, lng: lastPlace.longitude };
@@ -339,8 +339,8 @@ export function optimizeRoute(
   };
 }
 
-// Export helper functions for use in other services
-// Export helper functions for use in other services
+
+
 export {
     calculateCentroid, calculateRouteDistance, estimateTravelTime, generateTimeBlocks, haversineDistance, nearestNeighborRoute, orderClustersByProximity
 };

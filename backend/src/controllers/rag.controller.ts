@@ -34,7 +34,6 @@ export async function askQuestion(req: Request, res: Response) {
 
     return res.json({
       answer: result.answer,
-      actions: result.actions,
       sources: result.sources,
       confidence: result.confidence,
       staleWarning: result.staleWarning,

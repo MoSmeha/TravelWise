@@ -46,7 +46,7 @@ export async function generate(req: Request, res: Response) {
     const budgetLevel = parseBudgetLevel(input.budgetLevel);
     const travelStyles = parseTravelStyles(
       input.travelStyles ||
-        (input.travelStyle ? [input.travelStyle] : undefined)
+        ((input as any).travelStyle ? [(input as any).travelStyle] : undefined)
     );
 
     console.log(

@@ -1,9 +1,7 @@
 import prisma from '../lib/prisma.js';
 import { UpdateLocationInput } from '../schemas/location-sharing.schema.js';
 
-/**
- * Update or create user location for an itinerary
- */
+
 export async function updateUserLocation(
   userId: string,
   location: UpdateLocationInput
@@ -36,9 +34,7 @@ export async function updateUserLocation(
   });
 }
 
-/**
- * Get all active user locations for an itinerary (updated within last 5 minutes)
- */
+
 export async function getItineraryLocations(itineraryId: string) {
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
@@ -65,9 +61,7 @@ export async function getItineraryLocations(itineraryId: string) {
   });
 }
 
-/**
- * Remove user's location from a specific itinerary
- */
+
 export async function removeUserLocation(userId: string, itineraryId: string) {
   try {
     await prisma.userLocation.delete({
@@ -79,24 +73,19 @@ export async function removeUserLocation(userId: string, itineraryId: string) {
       },
     });
   } catch (error) {
-    // Ignore if location doesn't exist
+
     console.log(`Location not found for user ${userId} in itinerary ${itineraryId}`);
   }
 }
 
-/**
- * Clean up all locations for a user (called when they disconnect)
- */
+
 export async function cleanupUserLocations(userId: string) {
   await prisma.userLocation.deleteMany({
     where: { userId },
   });
 }
 
-/**
- * Clean up stale locations (older than 5 minutes)
- * Should be called periodically
- */
+
 export async function cleanupStaleLocations() {
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 

@@ -1,8 +1,4 @@
-/**
- * Places Service
- * Handles business logic for places: search, caching, enrichment
- * Uses the places provider for data access (provider-contract pattern)
- */
+
 
 import { placesProvider } from '../providers/places.provider.pg.js';
 import {
@@ -24,15 +20,11 @@ import {
 import { extractCityFromAddress } from '../utils/enum-mappers.js';
 import { mapGooglePriceLevel } from '../utils/prisma-helpers.js';
 
-// ============================================================================
-// Configuration
-// ============================================================================
+
 
 const CACHE_FRESHNESS_DAYS = 7;
 
-// ============================================================================
-// Types
-// ============================================================================
+
 
 export interface PhotosAndReviews {
   photos: string[];
@@ -45,27 +37,19 @@ export interface SearchPlaceResult {
   message?: string;
 }
 
-// ============================================================================
-// Places Service Class
-// ============================================================================
+
 
 export class PlacesService {
   constructor(private provider: IPlacesProvider = placesProvider) {}
 
-  // -------------------------------------------------------------------------
-  // Read Operations
-  // -------------------------------------------------------------------------
 
-  /**
-   * Get a place by ID
-   */
+
+
   async getPlaceById(id: string): Promise<PlaceRecord | null> {
     return this.provider.findById(id);
   }
 
-  /**
-   * List places with filters and pagination
-   */
+
   async listPlaces(filters: PlaceFilters): Promise<PaginatedPlaces> {
     return this.provider.findMany({
       ...filters,
@@ -74,29 +58,21 @@ export class PlacesService {
     });
   }
 
-  /**
-   * Get cities with place counts
-   */
+
   async getCities(): Promise<CityCount[]> {
     return this.provider.groupByCity();
   }
 
-  /**
-   * Get categories with place counts
-   */
+
   async getCategories(): Promise<CategoryCount[]> {
     return this.provider.groupByCategory();
   }
 
-  // -------------------------------------------------------------------------
-  // Search & Ingest
-  // -------------------------------------------------------------------------
 
-  /**
-   * Search for a place - checks DB first, then falls back to Google with ingestion
-   */
+
+
   async searchPlace(name: string, lat?: number, lng?: number): Promise<SearchPlaceResult> {
-    // 1. Check DB first (exact match or close enough)
+
     const existingPlace = await this.provider.findByName(name);
 
     if (existingPlace) {
@@ -104,7 +80,7 @@ export class PlacesService {
       return { place: existingPlace, source: 'db' };
     }
 
-    // 2. If not in DB, search Google Places
+
     if (!isGooglePlacesConfigured()) {
       console.log('No GOOGLE_PLACES_API_KEY configured');
       return { place: null, source: 'db', message: 'Google Places API not configured' };
@@ -120,7 +96,7 @@ export class PlacesService {
 
     const details = googleResult.data;
 
-    // Check if we already have this googlePlaceId
+
     const existingByGoogleId = await this.provider.findByGooglePlaceId(details.googlePlaceId);
 
     if (existingByGoogleId) {
@@ -128,7 +104,7 @@ export class PlacesService {
       return { place: existingByGoogleId, source: 'db' };
     }
 
-    // Extract city from formatted address
+
     const city = extractCityFromAddress(details.formattedAddress || '');
 
     const topReviews = details.topReviews.map(r => ({
@@ -138,7 +114,7 @@ export class PlacesService {
       time: r.relativeTimeDescription,
     }));
 
-    // 4. Ingest into DB
+
     const newPlace = await this.provider.create({
       name: details.name,
       description: details.editorialSummary || details.formattedAddress || 'No description available',
@@ -164,13 +140,9 @@ export class PlacesService {
     return { place: newPlace, source: 'google_ingest' };
   }
 
-  // -------------------------------------------------------------------------
-  // Photos & Enrichment
-  // -------------------------------------------------------------------------
 
-  /**
-   * Get photos and reviews for a place - uses cache if fresh, otherwise fetches from Google
-   */
+
+
   async getPhotosAndReviews(
     name: string,
     id?: string,
@@ -180,7 +152,7 @@ export class PlacesService {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - CACHE_FRESHNESS_DAYS);
 
-    // 1. Check DB first for valid cache
+
     let existingPlace: PlaceRecord | null = null;
 
     if (id) {
@@ -191,7 +163,7 @@ export class PlacesService {
       existingPlace = await this.provider.findByName(name);
     }
 
-    // Return cached data if fresh
+
     if (existingPlace?.lastEnrichedAt && existingPlace.lastEnrichedAt > sevenDaysAgo) {
       if (existingPlace.imageUrls && existingPlace.imageUrls.length > 0) {
         console.log(`Returning cached data for: ${name} (ID: ${existingPlace.id})`);
@@ -207,7 +179,7 @@ export class PlacesService {
       }
     }
 
-    // 2. Not in DB or stale -> Fetch from Google
+
     if (!isGooglePlacesConfigured()) {
       return { photos: [], reviews: [] };
     }
@@ -215,11 +187,11 @@ export class PlacesService {
     let googleData: PlaceEnrichment | null = null;
 
     if (existingPlace && existingPlace.googlePlaceId) {
-      // Refresh using ID
+
       const result = await googleGetDetails(existingPlace.googlePlaceId);
       googleData = result.data;
     } else {
-      // Search by name
+
       const result = await googleSearchPlace(name, lat, lng);
       googleData = result.data;
     }
@@ -233,7 +205,7 @@ export class PlacesService {
         time: r.relativeTimeDescription,
       }));
 
-      // 3. Update DB with new data if we have a matching record
+
       if (existingPlace) {
         await this.provider.updateEnrichment(existingPlace.id, {
           googlePlaceId: googleData.googlePlaceId,
@@ -254,16 +226,12 @@ export class PlacesService {
     return { photos: [], reviews: [] };
   }
 
-  /**
-   * Update a place with enrichment data
-   */
+
   async updatePlaceEnrichment(id: string, data: PlaceEnrichmentData): Promise<void> {
     return this.provider.updateEnrichment(id, data);
   }
 
-  /**
-   * Get directions between two points
-   */
+
   async getDirections(
     origin: { lat: number; lng: number },
     destination: { lat: number; lng: number },

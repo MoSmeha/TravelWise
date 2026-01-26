@@ -1,8 +1,4 @@
-/**
- * Auth Service
- * Handles authentication business logic: password hashing, JWT generation, token management
- * Uses the auth provider for data access (provider-contract pattern)
- */
+
 
 import argon2 from 'argon2';
 import { createHash } from 'crypto';
@@ -19,11 +15,11 @@ import {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-duper-secret-se-factory';
 
-// Token expiry times
-const JWT_ACCESS_EXPIRY_SEC = 30 * 60; // 30 minutes
-const JWT_REFRESH_EXPIRY_SEC = 7 * 24 * 60 * 60; // 7 days
+
+const JWT_ACCESS_EXPIRY_SEC = 30 * 60;
+const JWT_REFRESH_EXPIRY_SEC = 7 * 24 * 60 * 60;
 const REFRESH_TOKEN_EXPIRY_MS = JWT_REFRESH_EXPIRY_SEC * 1000;
-const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
 export interface JwtPayload {
   userId: string;
@@ -47,31 +43,27 @@ export interface TokenPair {
   refreshToken: string;
 }
 
-/**
- * Register a new user
- * @returns The created user and verification token
- * @throws Error if email or username already exists
- */
+
 export async function register(input: RegisterInput): Promise<RegisterResult> {
-  // Check for existing email
+
   const existingEmail = await authProvider.findUserByEmail(input.email);
   if (existingEmail) {
     throw new UserAlreadyExistsError('Email already registered');
   }
 
-  // Check for existing username
+
   const existingUsername = await authProvider.findUserByUsername(input.username);
   if (existingUsername) {
     throw new UserAlreadyExistsError('Username already taken');
   }
 
-  // Hash password
+
   const passwordHash = await hashPassword(input.password);
 
-  // Generate avatar URL
+
   const avatarUrl = generateAvatarUrl(input.name);
 
-  // Create user
+
   const user = await authProvider.createUser({
     email: input.email,
     passwordHash,
@@ -80,7 +72,7 @@ export async function register(input: RegisterInput): Promise<RegisterResult> {
     avatarUrl,
   });
 
-  // Generate verification OTP
+
   const verificationOTP = await generateVerificationOTP(user.id);
 
   console.log(`[AUTH] User registered: ${user.username} (${user.email})`);
@@ -88,30 +80,26 @@ export async function register(input: RegisterInput): Promise<RegisterResult> {
   return { user, verificationOTP };
 }
 
-/**
- * Authenticate a user with email and password
- * @returns User info and tokens
- * @throws Error for invalid credentials or unverified email
- */
+
 export async function login(input: LoginInput): Promise<LoginResult> {
-  // Find user by email
+
   const user = await authProvider.findUserByEmail(input.email);
   if (!user) {
     throw new Error('INVALID_CREDENTIALS');
   }
 
-  // Verify password
+
   const isValid = await verifyPassword(input.password, user.passwordHash);
   if (!isValid) {
     throw new InvalidCredentialsError();
   }
 
-  // Check email verification
+
   if (!user.emailVerified) {
     throw new EmailNotVerifiedError();
   }
 
-  // Generate tokens
+
   const accessToken = generateAccessToken(user.id, user.email || undefined);
   const refreshToken = await generateRefreshToken(user.id);
 
@@ -125,19 +113,17 @@ export async function login(input: LoginInput): Promise<LoginResult> {
       username: user.username,
       avatarUrl: user.avatarUrl,
       emailVerified: user.emailVerified,
-      createdAt: new Date(), // Not available from UserWithPassword, could be added
+      createdAt: new Date(),
     },
     accessToken,
     refreshToken,
   };
 }
 
-/**
- * Rotate refresh token - invalidate old one and generate new one
- */
+
 export async function rotateRefreshToken(oldToken: string): Promise<TokenPair | null> {
   try {
-    // Verify the old token
+
     let payload;
     try {
       payload = jwt.verify(oldToken, JWT_SECRET) as { tokenId: string; userId: string; type: string };
@@ -151,10 +137,10 @@ export async function rotateRefreshToken(oldToken: string): Promise<TokenPair | 
       return null;
     }
 
-    // Hash the old token to look it up
+
     const oldTokenHash = createHash('sha256').update(oldToken).digest('hex');
 
-    // Find the token
+
     const existingToken = await authProvider.findRefreshToken(oldTokenHash);
 
     if (!existingToken) {
@@ -164,17 +150,17 @@ export async function rotateRefreshToken(oldToken: string): Promise<TokenPair | 
 
     if (existingToken.expiresAt < new Date()) {
       console.error('[AUTH] Refresh token expired at:', existingToken.expiresAt);
-      // Token not found or expired - delete if exists
+
       if (existingToken) {
         await authProvider.deleteRefreshToken(existingToken.id);
       }
       return null;
     }
 
-    // Delete the old token
+
     await authProvider.deleteRefreshToken(existingToken.id);
 
-    // Generate new tokens
+
     const accessToken = generateAccessToken(
       existingToken.userId,
       existingToken.user.email || undefined
@@ -188,9 +174,7 @@ export async function rotateRefreshToken(oldToken: string): Promise<TokenPair | 
   }
 }
 
-/**
- * Generate access token
- */
+
 export function generateAccessToken(userId: string, email?: string): string {
   const payload: JwtPayload = {
     userId,
@@ -200,9 +184,7 @@ export function generateAccessToken(userId: string, email?: string): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_ACCESS_EXPIRY_SEC });
 }
 
-/**
- * Generate refresh token and store in database
- */
+
 export async function generateRefreshToken(userId: string): Promise<string> {
   const tokenId = uuidv4();
   const token = jwt.sign(
@@ -222,9 +204,7 @@ export async function generateRefreshToken(userId: string): Promise<string> {
   return token;
 }
 
-/**
- * Verify access token
- */
+
 export function verifyAccessToken(token: string): JwtPayload | null {
   try {
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
@@ -238,16 +218,12 @@ export function verifyAccessToken(token: string): JwtPayload | null {
 }
 
 
-/**
- * Generate 6-digit OTP for email verification
- */
+
 export function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-/**
- * Generate email verification OTP
- */
+
 export async function generateVerificationOTP(userId: string): Promise<string> {
   const otp = generateOTP();
   const otpHash = createHash('sha256').update(otp).digest('hex');
@@ -261,11 +237,9 @@ export async function generateVerificationOTP(userId: string): Promise<string> {
   return otp;
 }
 
-/**
- * Verify email using OTP
- */
+
 export async function verifyEmailWithOTP(email: string, otp: string): Promise<{ userId: string } | null> {
-  // Find user by email first
+
   const user = await authProvider.findUserByEmail(email);
   if (!user) {
     return null;
