@@ -16,8 +16,7 @@ import {
 } from '../services/itinerary-share.service.js';
 import { ShareStatus } from '../generated/prisma/client.js';
 
-// POST /api/itinerary/:id/share
-// Invite a user to collaborate on an itinerary
+
 export async function inviteUserToItinerary(req: Request, res: Response) {
   try {
     const { id: itineraryId } = req.params;
@@ -53,8 +52,7 @@ export async function inviteUserToItinerary(req: Request, res: Response) {
   }
 }
 
-// GET /api/itinerary/:id/shares
-// Get all collaborators for an itinerary
+
 export async function listCollaborators(req: Request, res: Response) {
   try {
     const { id: itineraryId } = req.params;
@@ -77,8 +75,7 @@ export async function listCollaborators(req: Request, res: Response) {
   }
 }
 
-// PUT /api/itinerary/share/:shareId/accept
-// Accept an itinerary invitation
+
 export async function acceptItineraryInvitation(req: Request, res: Response) {
   try {
     const { shareId } = req.params;
@@ -105,8 +102,7 @@ export async function acceptItineraryInvitation(req: Request, res: Response) {
   }
 }
 
-// PUT /api/itinerary/share/:shareId/reject
-// Reject an itinerary invitation
+
 export async function rejectItineraryInvitation(req: Request, res: Response) {
   try {
     const { shareId } = req.params;
@@ -133,8 +129,7 @@ export async function rejectItineraryInvitation(req: Request, res: Response) {
   }
 }
 
-// DELETE /api/itinerary/share/:shareId
-// Remove a collaborator from an itinerary
+
 export async function removeItineraryCollaborator(req: Request, res: Response) {
   try {
     const { shareId } = req.params;
@@ -161,8 +156,7 @@ export async function removeItineraryCollaborator(req: Request, res: Response) {
   }
 }
 
-// PUT /api/itinerary/share/:shareId/permission
-// Update collaborator permission
+
 export async function updateCollaboratorPermission(req: Request, res: Response) {
   try {
     const { shareId } = req.params;
@@ -191,8 +185,7 @@ export async function updateCollaboratorPermission(req: Request, res: Response) 
   }
 }
 
-// GET /api/itinerary/shared
-// Get all itineraries shared with the user
+
 export async function listSharedItineraries(req: Request, res: Response) {
   try {
     const userId = (req as AuthenticatedRequest).user!.userId;

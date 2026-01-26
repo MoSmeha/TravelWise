@@ -30,10 +30,7 @@ export async function searchUsers(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Get online status for multiple users
- * Query param: userIds (comma-separated)
- */
+
 export async function getOnlineStatus(req: AuthRequest, res: Response) {
   try {
     const userIdsParam = req.query.userIds as string;
@@ -56,10 +53,7 @@ export async function getOnlineStatus(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Update user's avatar/profile picture
- * Expects multipart/form-data with 'avatar' field
- */
+
 export async function updateAvatar(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
@@ -80,9 +74,7 @@ export async function updateAvatar(req: AuthRequest, res: Response) {
   }
 }
 
-/**
- * Get current user's profile
- */
+
 export async function getMe(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;

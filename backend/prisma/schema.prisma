@@ -9,7 +9,7 @@ datasource db {
   extensions = [vector]
 }
 
-// AUTHENTICATION MODELS
+
 
 
 model User {
@@ -28,18 +28,17 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   itineraries             UserItinerary[]
   
-  // Social features
   sentFriendRequests     Friendship[]   @relation("FriendshipRequester")
   receivedFriendRequests Friendship[]   @relation("FriendshipAddressee")
   notifications          Notification[]
   conversationParticipants ConversationParticipant[]
   
-  // Posts features
+
   posts    Post[]
   likes    Like[]
   comments Comment[]
   
-  // Itinerary sharing
+
   sharedItineraries     ItineraryShare[] @relation("SharedItineraries")
   sentItineraryShares   ItineraryShare[] @relation("SentItineraryShares")
   userLocations         UserLocation[]   @relation("UserLocations")
@@ -112,13 +111,12 @@ model Notification {
   title       String
   message     String
   
-  // Proper relations for post notifications
   postId      String?
   post        Post?            @relation("PostNotifications", fields: [postId], references: [id], onDelete: Cascade)
   commentId   String?
   comment     Comment?         @relation("CommentNotifications", fields: [commentId], references: [id], onDelete: Cascade)
   
-  data        Json?            // Flexible payload (friendshipId, senderId, etc.)
+  data        Json?
   read        Boolean          @default(false)
   createdAt   DateTime         @default(now())
 
@@ -129,18 +127,18 @@ model Notification {
   @@index([commentId])
 }
 
-// MESSAGING MODELS
+
 
 enum ConversationType {
-  DIRECT    // 1:1 chat
-  GROUP     // Group chat (future)
+  DIRECT
+  GROUP
 }
 
 model Conversation {
   id            String           @id @default(cuid())
   type          ConversationType @default(DIRECT)
-  name          String?          // For group chats (null for direct)
-  imageUrl      String?          // Group avatar (future)
+  name          String?         
+  imageUrl      String?
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   
@@ -156,7 +154,7 @@ model ConversationParticipant {
   conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   userId          String
   user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role            String       @default("MEMBER")  // ADMIN, MEMBER (for group management later)
+  role            String       @default("MEMBER")
   joinedAt        DateTime     @default(now())
   lastReadAt      DateTime     @default(now())
   
@@ -220,42 +218,38 @@ model Place {
   category            LocationCategory
   description         String
   
-  // Source tracking
-  sources             String[]  // ["reddit", "tripadvisor", "tiktok"]
+
+  sources             String[]
   sourceUrls          String[]
   popularity          Int       @default(0)
-  
-  // Google Places enrichment
+
   googlePlaceId       String?   @unique
   rating              Float?
   totalRatings        Int?
   priceLevel          PriceLevel?
-  openingHours        Json?     // Stored as JSON
-  topReviews          Json?     // Top 3 reviews as JSON array
+  openingHours        Json?
+  topReviews          Json?
   
-  // Location
+
   latitude            Float
   longitude           Float
   address             String?
-  city                String    // City name for filtering
+  city                String
   country             String    @default("Lebanon")
   
-  // Cost estimates (from sources)
   costMinUSD          Float?
   costMaxUSD          Float?
   
-  // Metadata
-  activityTypes       String[]  // ["food", "culture", "nature", etc]
+
+  activityTypes       String[]
   bestTimeToVisit     String?
   localTip            String?
   scamWarning         String?
   
-  // Images and reviews from sources
-  imageUrl            String?   // Primary image from TripAdvisor or Google
-  imageUrls           String[]  // Multiple images
-  sourceReviews       Json?     // Curated reviews from Reddit/TripAdvisor as JSON
+  imageUrl            String?
+  imageUrls           String[]
+  sourceReviews       Json?
   
-  // Data freshness
   lastEnrichedAt      DateTime?
   lastValidatedAt     DateTime?
   
@@ -273,31 +267,30 @@ model Place {
   @@index([country, category])
 }
 
-// Structured Itinerary for RAG and versioning
+
 model UserItinerary {
   id                  String   @id @default(cuid())
   userId              String?
   user                User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // Trip details
   country             String
   airportCode         String
   numberOfDays        Int
   budgetUSD           Float
-  travelStyles        String[] // ["food", "culture", "nature"]
+  travelStyles        String[]
   
-  // Flight info for notifications
+
   flightDate          DateTime?
   notificationsEnabled Boolean  @default(false)
   
-  // Versioning
+
   version             Int      @default(1)
   
-  // Generated output
+
   totalEstimatedCostUSD Float?
   routeSummary        String?
   
-  // Timestamps
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   
@@ -319,14 +312,14 @@ model ItineraryDay {
   itinerary     UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   
   dayNumber     Int
-  theme         String?       // "CULTURAL", "ADVENTURE", etc.
-  description   String?       // "Exploring Beirut's historic downtown"
+  theme         String?
+  description   String?
   
-  // Hotel for this day (usually same across days)
+
   hotelId       String?
   hotel         Place? @relation("DayHotel", fields: [hotelId], references: [id])
   
-  // Timestamps
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
@@ -341,12 +334,12 @@ model ItineraryItem {
   
   orderInDay          Int
   
-  // Duration and timing
-  suggestedStartTime  String?  // "09:00"
-  suggestedDuration   Int?     // minutes
-  travelTimeFromPrev  Int?     // minutes
+
+  suggestedStartTime  String?
+  suggestedDuration   Int?
+  travelTimeFromPrev  Int?
   
-  // Item type for structured days
+
   itemType            ItineraryItemType @default(ACTIVITY)
   
   notes               String?
@@ -379,8 +372,8 @@ model ChecklistItem {
   
   category            ChecklistCategory
   item                String
-  reason              String?  // Why this item is recommended
-  source              String?  // "weather", "terrain", "activity", etc.
+  reason              String?
+  source              String?
   
   isChecked           Boolean  @default(false)
   
@@ -403,27 +396,27 @@ enum ChecklistCategory {
   DOCUMENTATION
 }
 
-// RAG Embeddings for itinerary Q&A
+
 model ItineraryEmbedding {
   id              String   @id @default(cuid())
 
   itineraryId     String
   itinerary       UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   
-  // Chunk info
+
   chunkIndex      Int
   chunkType       ChunkType
-  chunkText       String     // Original text that was embedded
+  chunkText       String
   
-  // Metadata for filtering
-  placeIds        String[]   // Place IDs referenced in this chunk
-  dayNumbers      Int[]      // Days covered
-  activityTypes   String[]   // Activity types in chunk
+
+  placeIds        String[]
+  dayNumbers      Int[]
+  activityTypes   String[]
   
-  // Vector embedding (1536 dimensions for OpenAI ada-002)
+
   embedding       Unsupported("vector(1536)")?
   
-  // Legacy JSON field - will be removed after migration
+
   embeddingJson   Json?      @ignore
   
   createdAt       DateTime @default(now())
@@ -435,17 +428,14 @@ model ItineraryEmbedding {
 model KnowledgeEmbedding {
   id              String   @id @default(cuid())
   
-  content         String   // The actual text content
-  countryCode     String   // ISO alpha-2 "LB"
-  source          String   // "reddit", "wikipedia", etc.
+  content         String
+  countryCode     String
+  source          String
   
-  // Metadata like author, url, activityTypes, popularity
   metadata        Json?    
   
-  // Vector embedding (1536 dimensions for OpenAI ada-002)
   embedding       Unsupported("vector(1536)")?
   
-  // Legacy JSON field - will be removed after migration  
   embeddingJson   Json?    @ignore
   
   createdAt       DateTime @default(now())
@@ -463,7 +453,7 @@ enum ChunkType {
   ROUTE_OVERVIEW
 }
 
-// ITINERARY SHARING MODELS
+
 
 enum SharePermission {
   OWNER
@@ -509,9 +499,9 @@ model UserLocation {
   
   latitude          Float
   longitude         Float
-  accuracy          Float?        // meters
-  heading           Float?        // degrees
-  speed             Float?        // m/s
+  accuracy          Float?
+  heading           Float?
+  speed             Float?
   
   lastUpdatedAt     DateTime      @default(now())
   createdAt         DateTime      @default(now())
@@ -522,7 +512,7 @@ model UserLocation {
   @@index([lastUpdatedAt])
 }
 
-// POST/SOCIAL MODELS
+
 
 enum PostVisibility {
   PUBLIC
@@ -538,11 +528,11 @@ model Post {
   description   String?
   visibility    PostVisibility @default(FRIENDS)
   
-  // Counter fields for performance (avoid heavy joins)
+
   likesCount    Int            @default(0)
   commentsCount Int            @default(0)
   
-  // Soft delete for moderation
+
   deletedAt     DateTime?
   
   createdAt     DateTime       @default(now())
@@ -552,7 +542,7 @@ model Post {
   comments      Comment[]
   notifications Notification[] @relation("PostNotifications")
   
-  // Performance indexes for feed queries
+
   @@index([authorId, createdAt])
   @@index([visibility, createdAt])
   @@index([deletedAt])
@@ -565,7 +555,7 @@ model Like {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   
-  // Composite primary key prevents double likes and race conditions
+
   @@id([postId, userId])
   @@index([postId])
   @@index([userId])
@@ -579,14 +569,14 @@ model Comment {
   author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
   content       String
   
-  // Soft delete for moderation
+
   deletedAt     DateTime?
   
   createdAt     DateTime       @default(now())
   
   notifications Notification[] @relation("CommentNotifications")
   
-  // Performance indexes
+
   @@index([postId, createdAt])
   @@index([authorId])
   @@index([deletedAt])

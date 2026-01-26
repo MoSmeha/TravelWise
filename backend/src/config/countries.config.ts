@@ -1,5 +1,4 @@
-// Countries configuration with predefined airports and minimum budgets
-// This is the ONLY source of truth for supported countries - no mock data
+
 
 export interface Airport {
   name: string;
@@ -9,13 +8,13 @@ export interface Airport {
 }
 
 export interface CountryConfig {
-  key: string;  // Unique key for API calls
+  key: string;
   name: string;
   code: string;
   currency: string;
   minBudgetPerDay: number;
   airports: Airport[];
-  regions: string[];  // Major regions/areas to explore
+  regions: string[];
 }
 
 export const COUNTRIES: Record<string, CountryConfig> = {
@@ -112,30 +111,30 @@ export const COUNTRIES: Record<string, CountryConfig> = {
   },
 };
 
-// Helper function to get all countries as array
+
 export function getCountriesList(): CountryConfig[] {
   return Object.values(COUNTRIES);
 }
 
-// Helper function to find country by key (now checks explicit key field)
+
 export function getCountryByKey(key: string): CountryConfig | undefined {
   const normalizedKey = key.toLowerCase().trim();
-  // Direct lookup first
+
   if (COUNTRIES[normalizedKey]) {
     return COUNTRIES[normalizedKey];
   }
-  // Then search by key field
+
   return Object.values(COUNTRIES).find(c => c.key === normalizedKey);
 }
 
-// Helper function to find airport by code within a country
+
 export function getAirportByCode(countryKey: string, airportCode: string): Airport | undefined {
   const country = getCountryByKey(countryKey);
   if (!country) return undefined;
   return country.airports.find(a => a.code === airportCode);
 }
 
-// Validate budget meets minimum for country
+
 export function validateBudget(countryKey: string, budgetUSD: number, numberOfDays: number): { valid: boolean; minRequired: number } {
   const country = getCountryByKey(countryKey);
   if (!country) return { valid: false, minRequired: 0 };
@@ -144,7 +143,7 @@ export function validateBudget(countryKey: string, budgetUSD: number, numberOfDa
   return { valid: budgetUSD >= minRequired, minRequired };
 }
 
-// Get combined country and airport config (useful for response building)
+
 export function getAirportConfig(country: string, airportCode: string): {
   countryConfig: CountryConfig | undefined;
   airportConfig: Airport | undefined;

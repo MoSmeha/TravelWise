@@ -11,8 +11,7 @@ const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-// Helper to map string to LocationCategory enum
-// Helper to map string to LocationCategory enum
+
 function mapCategory(cat: string): LocationCategory {
   if (!cat) return LocationCategory.OTHER;
   
@@ -24,7 +23,7 @@ function mapCategory(cat: string): LocationCategory {
   return LocationCategory.OTHER;
 }
 
-// Helper to map string to LocationClassification enum
+
 function mapClassification(cls: string): LocationClassification {
   const normalized = cls.toUpperCase();
   if (normalized in LocationClassification) {
@@ -33,7 +32,7 @@ function mapClassification(cls: string): LocationClassification {
   return LocationClassification.CONDITIONAL;
 }
 
-// Helper to map string to PriceLevel enum
+
 function mapPriceLevel(level: string | null): PriceLevel | null {
   if (!level) return null;
   const normalized = level.toUpperCase();
@@ -46,7 +45,7 @@ function mapPriceLevel(level: string | null): PriceLevel | null {
 async function main() {
   console.log("🚀 Seeding database from data_to_seed.json...");
 
-  // Load data from JSON file
+
   const dataPath = path.join(process.cwd(), "../frontend/data/data_to_seed.json");
   
   if (!fs.existsSync(dataPath)) {
@@ -60,7 +59,7 @@ async function main() {
 
   console.log(`📦 Found ${places.length} places to seed.`);
 
-  // Clear existing places to avoid duplicates
+
   console.log("🧹 Clearing existing places...");
   await prisma.place.deleteMany({});
 
@@ -70,7 +69,7 @@ async function main() {
 
   for (const place of places) {
     try {
-      // Handle description array -> string
+
       let description = "";
       if (Array.isArray(place.description)) {
         description = place.description.join(", ");
@@ -78,7 +77,7 @@ async function main() {
         description = place.description;
       }
 
-      // Basic validation
+
       if (!place.name || (!place.latitude && !place.longitude)) {
         console.warn(`⚠️ Skipping ${place.name || "Unnamed"}: missing name or coordinates`);
         skipped++;
@@ -108,7 +107,7 @@ async function main() {
           bestTimeToVisit: place.bestTimeToVisit || null,
           localTip: place.localTip || null,
           scamWarning: place.scamWarning || null,
-          // New fields
+
           topReviews: place.topReviews || [],
           openingHours: place.openingHours || null,
           priceLevel: mapPriceLevel(place.priceLevel),
@@ -132,7 +131,7 @@ async function main() {
   console.log(`⚠️ Skipped: ${skipped}`);
   console.log(`❌ Errors: ${errors}`);
 
-  // Seed Users
+
   console.log("\n🚀 Seeding users...");
   
   const password = "Password123-";

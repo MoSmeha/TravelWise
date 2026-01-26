@@ -12,7 +12,7 @@ import {
 export async function sendFriendRequest(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
-    const { addresseeId } = req.body; // Already validated by middleware
+    const { addresseeId } = req.body;
 
     if (userId === addresseeId) {
       return res.status(400).json({ error: 'Cannot send friend request to yourself' });
@@ -29,7 +29,7 @@ export async function sendFriendRequest(req: AuthRequest, res: Response) {
 export async function acceptFriendRequest(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
-    const { id } = req.params; // Already validated by middleware
+    const { id } = req.params;
 
     const friendship = await acceptRequest(userId, id);
     return res.json(friendship);
@@ -41,7 +41,7 @@ export async function acceptFriendRequest(req: AuthRequest, res: Response) {
 export async function rejectFriendRequest(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.userId;
-    const { id } = req.params; // Already validated by middleware
+    const { id } = req.params;
 
     const friendship = await rejectRequest(userId, id);
     return res.json(friendship);

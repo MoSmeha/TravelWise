@@ -1,7 +1,4 @@
-/**
- * Admin Controller
- * Handles admin dashboard API endpoints
- */
+
 
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
@@ -16,14 +13,9 @@ import {
   getEngagementStats,
 } from '../services/admin.service.js';
 
-// ============================================================================
-// Overview
-// ============================================================================
 
-/**
- * GET /api/admin/stats/overview
- * Get high-level KPI statistics
- */
+
+
 export async function getOverview(
   _req: AuthenticatedRequest,
   res: Response
@@ -37,14 +29,9 @@ export async function getOverview(
   }
 }
 
-// ============================================================================
-// Itinerary Statistics
-// ============================================================================
 
-/**
- * GET /api/admin/stats/itineraries
- * Get itinerary-related statistics
- */
+
+
 export async function getItineraryStats(
   _req: AuthenticatedRequest,
   res: Response
@@ -67,14 +54,9 @@ export async function getItineraryStats(
   }
 }
 
-// ============================================================================
-// User Statistics
-// ============================================================================
 
-/**
- * GET /api/admin/stats/users
- * Get user growth and demographics
- */
+
+
 export async function getUserStats(
   req: AuthenticatedRequest,
   res: Response
@@ -90,10 +72,7 @@ export async function getUserStats(
   }
 }
 
-/**
- * GET /api/admin/users
- * Get paginated user list
- */
+
 export async function listUsers(
   req: AuthenticatedRequest,
   res: Response
@@ -111,14 +90,9 @@ export async function listUsers(
   }
 }
 
-// ============================================================================
-// Category Statistics
-// ============================================================================
 
-/**
- * GET /api/admin/stats/categories
- * Get location category breakdown
- */
+
+
 export async function getCategoryStats(
   _req: AuthenticatedRequest,
   res: Response
@@ -132,14 +106,9 @@ export async function getCategoryStats(
   }
 }
 
-// ============================================================================
-// Engagement Statistics
-// ============================================================================
 
-/**
- * GET /api/admin/stats/engagement
- * Get engagement metrics (likes, comments, notifications)
- */
+
+
 export async function getEngagement(
   _req: AuthenticatedRequest,
   res: Response
