@@ -234,6 +234,7 @@ TravelWise/
 </div>
 
 <br/>
+
 ### Optimizations
 
 <div id="optimizations"></div>
