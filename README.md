@@ -13,7 +13,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <!-- project overview -->
 <img src="./readme/title2.svg"/>
 
-> TravelWise is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps. It also lets travelers share experiences, making every journey easier and more enjoyable.
+> **TravelWise** is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps.  
+> It also lets travelers share experiences, making every journey easier and more enjoyable.
 
 <br><br>
 
@@ -50,18 +51,46 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### User Screens
 
-| Login & Onboarding | Creating Itinerary | Creating Post |
+#### Authentication
+| Login | Register | Email Verification |
 | :---: | :---: | :---: |
-| <img src="./readme/LoginOnboarding.gif" width="100%"> | <img src="./readme/Creating_Itinerary.gif" width="100%"> | <img src="./readme/Creating_Post.gif" width="100%"> |
+| <img src="./readme/auth/Login.jpeg" width="100%"> | <img src="./readme/auth/Register.jpeg" width="100%"> | <img src="./readme/auth/Email_Verfication.jpeg" width="100%"> |
 
-| Live Location & Hidden Gems | GPS Sharing | AI Chatbot |
+#### Feed & Activity
+| User Feed | Notifications | Chat |
 | :---: | :---: | :---: |
-| <img src="./readme/HiddenGem_Card_&Live_Location.gif" width="100%"> | <img src="./readme/ItineraryGPS_Sharing.gif" width="100%"> | <img src="./readme/Rag_Chatbot.gif" width="100%"> |
+| <img src="./readme/feed/UserFeed.jpeg" width="100%"> | <img src="./readme/communication/Notifications_Page.jpeg" width="100%"> | <img src="./readme/communication/ChatApp.jpeg" width="100%"> |
 
-| User Profile | Notifications | Itinerary Details |
+#### Itinerary, Map & AI
+| User Trips | Trip Map | Hidden Gem Details |
 | :---: | :---: | :---: |
-| <img src="./readme/Profile.jpeg" width="100%"> | <img src="./readme/Notifications_Page.jpeg" width="100%"> | <img src="./readme/Itinerary_Details.jpeg" width="100%"> |
+| <img src="./readme/itinerary_rag/User_Trips.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Trip_Map.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Hidden_Gem_Card.jpeg" width="100%"> |
 
-| Itinerary Checklist | Chat Demo |
+| Itinerary Details | RAG AI Chatbot | Itinerary Checklist |
+| :---: | :---: | :---: |
+| <img src="./readme/itinerary_rag/Itinerary_Details.jpeg" width="100%"> | <img src="./readme/itinerary_rag/RAG_Chatbot.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Itinerary_Checklist.jpeg" width="100%"> |
+
+#### Profile
+| User Profile | Friends | Profile Feed |
+| :---: | :---: | :---: |
+| <img src="./readme/profile/Profile.jpeg" width="100%"> | <img src="./readme/profile/Friends.jpeg" width="100%"> | <img src="./readme/profile/profile_feed.jpeg" width="100%"> |
+
+### Application Demo
+
+| Login & Onboarding | Gmail Verification | Creating Itinerary |
+| :---: | :---: | :---: |
+| <img src="./readme/gifs/LoginOnboarding.gif" width="100%"> | <img src="./readme/gifs/Gmail_Verification.gif" width="100%"> | <img src="./readme/gifs/Creating_Itinerary.gif" width="100%"> |
+
+| Creating Post | Live Location & Gems | GPS Sharing |
+| :---: | :---: | :---: |
+| <img src="./readme/gifs/Creating_Post.gif" width="100%"> | <img src="./readme/gifs/HiddenGem_Card_&Live_Location.gif" width="100%"> | <img src="./readme/gifs/ItineraryGPS_Sharing.gif" width="100%"> |
+
+| AI Chatbot | Chat Demo |
 | :---: | :---: |
-| <img src="./readme/Itinerary_Checklist.jpeg" width="100%"> | <img src="./readme/ChatApp-Demo.gif" width="100%"> |
+| <img src="./readme/gifs/Rag_Chatbot.gif" width="100%"> | <img src="./readme/gifs/ChatApp-Demo.gif" width="100%"> |
+
+### Admin Dashboard
+
+| Admin Login | Dashboard Overview | User Management |
+| :---: | :---: | :---: |
+| <img src="./readme/admin/Admin_Login.png" width="100%"> | <img src="./readme/admin/Admin_Dashboard.png" width="100%"> | <img src="./readme/admin/Admin_Users_Table.png" width="100%"> |
