@@ -71,9 +71,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 | <img src="./readme/itinerary_rag/Itinerary_Details.jpeg" width="100%"> | <img src="./readme/itinerary_rag/RAG_Chatbot.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Itinerary_Checklist.jpeg" width="100%"> |
 
 #### Profile
-| User Profile | Friends |
-| :---: | :---: |
-| <img src="./readme/profile/Profile.jpeg" width="100%"> | <img src="./readme/profile/Friends.jpeg" width="100%"> |
+| User Profile | Friends | Profile Feed |
+| :---: | :---: | :---: |
+| <img src="./readme/profile/Profile.jpeg" width="100%"> | <img src="./readme/profile/Friends.jpeg" width="100%"> | <img src="./readme/profile/profile_feed.jpeg" width="100%"> |
 
 ### Application Demo
 
