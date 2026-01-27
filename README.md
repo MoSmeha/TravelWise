@@ -52,64 +52,62 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### User Screens
 
 #### Authentication
-<p align="center">
-  <img src="./readme/auth/Login.jpeg" width="30%">
-  <img src="./readme/auth/Register.jpeg" width="30%">
-  <img src="./readme/auth/Email_Verfication.jpeg" width="30%">
-</p>
+| Login | Register | Email Verification |
+| :---: | :---: | :---: |
+| <img src="./readme/auth/Login.jpeg" width="100%"> | <img src="./readme/auth/Register.jpeg" width="100%"> | <img src="./readme/auth/Email_Verfication.jpeg" width="100%"> |
 
 #### Feed & Discovery
-<p align="center">
-  <img src="./readme/feed/UserFeed.jpeg" width="30%">
-  <img src="./readme/feed/Hidden_Gem_Card.jpeg" width="30%">
-</p>
+| User Feed | Hidden Gem Details |
+| :---: | :---: |
+| <img src="./readme/feed/UserFeed.jpeg" width="100%"> | <img src="./readme/feed/Hidden_Gem_Card.jpeg" width="100%"> |
 
 #### Communication
-<p align="center">
-  <img src="./readme/communication/Notifications_Page.jpeg" width="30%">
-  <img src="./readme/communication/ChatApp.jpeg" width="30%">
-</p>
+| Notifications | Chat |
+| :---: | :---: |
+| <img src="./readme/communication/Notifications_Page.jpeg" width="100%"> | <img src="./readme/communication/ChatApp.jpeg" width="100%"> |
 
 #### Itinerary, Map & AI
-<p align="center">
-  <img src="./readme/itinerary_rag/Itinerary_Details.jpeg" width="23%">
-  <img src="./readme/itinerary_rag/Trip_Map.jpeg" width="23%">
-  <img src="./readme/itinerary_rag/RAG_Chatbot.jpeg" width="23%">
-  <img src="./readme/itinerary_rag/Itinerary_Checklist.jpeg" width="23%">
-</p>
+| Itinerary Details | Trip Map |
+| :---: | :---: |
+| <img src="./readme/itinerary_rag/Itinerary_Details.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Trip_Map.jpeg" width="100%"> |
+
+| RAG AI Chatbot | Itinerary Checklist |
+| :---: | :---: |
+| <img src="./readme/itinerary_rag/RAG_Chatbot.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Itinerary_Checklist.jpeg" width="100%"> |
 
 #### Profile
-<p align="center">
-  <img src="./readme/profile/Profile.jpeg" width="30%">
-  <img src="./readme/profile/Friends.jpeg" width="30%">
-  <img src="./readme/profile/User_Trips.jpeg" width="30%">
-</p>
+| User Profile | Friends | User Trips |
+| :---: | :---: | :---: |
+| <img src="./readme/profile/Profile.jpeg" width="100%"> | <img src="./readme/profile/Friends.jpeg" width="100%"> | <img src="./readme/profile/User_Trips.jpeg" width="100%"> |
 
 ### Application Demo
 
-<p align="center">
-  <img src="./readme/gifs/LoginOnboarding.gif" width="45%">
-  <img src="./readme/gifs/Gmail_Verification.gif" width="45%">
-</p>
-<p align="center">
-  <img src="./readme/gifs/Creating_Itinerary.gif" width="45%">
-  <img src="./readme/gifs/Creating_Post.gif" width="45%">
-</p>
-<p align="center">
-  <img src="./readme/gifs/HiddenGem_Card_&Live_Location.gif" width="45%">
-  <img src="./readme/gifs/ItineraryGPS_Sharing.gif" width="45%">
-</p>
-<p align="center">
-  <img src="./readme/gifs/Rag_Chatbot.gif" width="45%">
-  <img src="./readme/gifs/ChatApp-Demo.gif" width="45%">
-</p>
+| Login & Onboarding | Gmail Verification |
+| :---: | :---: |
+| <img src="./readme/gifs/LoginOnboarding.gif" width="100%"> | <img src="./readme/gifs/Gmail_Verification.gif" width="100%"> |
+
+| Creating Itinerary | Creating Post |
+| :---: | :---: |
+| <img src="./readme/gifs/Creating_Itinerary.gif" width="100%"> | <img src="./readme/gifs/Creating_Post.gif" width="100%"> |
+
+| Live Location & Hidden Gems | GPS Sharing |
+| :---: | :---: |
+| <img src="./readme/gifs/HiddenGem_Card_&Live_Location.gif" width="100%"> | <img src="./readme/gifs/ItineraryGPS_Sharing.gif" width="100%"> |
+
+| AI Chatbot | Chat Demo |
+| :---: | :---: |
+| <img src="./readme/gifs/Rag_Chatbot.gif" width="100%"> | <img src="./readme/gifs/ChatApp-Demo.gif" width="100%"> |
 
 ### Admin Dashboard
 
-<p align="center">
-  <img src="./readme/admin/Admin_Login.png" width="80%">
-  <br><br>
-  <img src="./readme/admin/Admin_Dashboard.png" width="80%">
-  <br><br>
-  <img src="./readme/admin/Admin_Users_Table.png" width="80%">
-</p>
+| Admin Login |
+| :---: |
+| <img src="./readme/admin/Admin_Login.png" width="100%"> |
+
+| Dashboard Overview |
+| :---: |
+| <img src="./readme/admin/Admin_Dashboard.png" width="100%"> |
+
+| User Management |
+| :---: |
+| <img src="./readme/admin/Admin_Users_Table.png" width="100%"> |
