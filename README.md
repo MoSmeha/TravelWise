@@ -13,7 +13,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <!-- project overview -->
 <img src="./readme/title2.svg"/>
 
-> TravelWise is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps. It also lets travelers share experiences, making every journey easier and more enjoyable.
+> **TravelWise** is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps.  
+> It also lets travelers share experiences, making every journey easier and more enjoyable.
 
 <br><br>
 
@@ -50,18 +51,65 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### User Screens
 
-| Login & Onboarding | Creating Itinerary | Creating Post |
-| :---: | :---: | :---: |
-| <img src="./readme/LoginOnboarding.gif" width="100%"> | <img src="./readme/Creating_Itinerary.gif" width="100%"> | <img src="./readme/Creating_Post.gif" width="100%"> |
+#### Authentication
+<p align="center">
+  <img src="./readme/auth/Login.jpeg" width="30%">
+  <img src="./readme/auth/Register.jpeg" width="30%">
+  <img src="./readme/auth/Email_Verfication.jpeg" width="30%">
+</p>
 
-| Live Location & Hidden Gems | GPS Sharing | AI Chatbot |
-| :---: | :---: | :---: |
-| <img src="./readme/HiddenGem_Card_&Live_Location.gif" width="100%"> | <img src="./readme/ItineraryGPS_Sharing.gif" width="100%"> | <img src="./readme/Rag_Chatbot.gif" width="100%"> |
+#### Feed & Discovery
+<p align="center">
+  <img src="./readme/feed/UserFeed.jpeg" width="30%">
+  <img src="./readme/feed/Hidden_Gem_Card.jpeg" width="30%">
+</p>
 
-| User Profile | Notifications | Itinerary Details |
-| :---: | :---: | :---: |
-| <img src="./readme/Profile.jpeg" width="100%"> | <img src="./readme/Notifications_Page.jpeg" width="100%"> | <img src="./readme/Itinerary_Details.jpeg" width="100%"> |
+#### Communication
+<p align="center">
+  <img src="./readme/communication/Notifications_Page.jpeg" width="30%">
+  <img src="./readme/communication/ChatApp.jpeg" width="30%">
+</p>
 
-| Itinerary Checklist | Chat Demo |
-| :---: | :---: |
-| <img src="./readme/Itinerary_Checklist.jpeg" width="100%"> | <img src="./readme/ChatApp-Demo.gif" width="100%"> |
+#### Itinerary, Map & AI
+<p align="center">
+  <img src="./readme/itinerary_rag/Itinerary_Details.jpeg" width="23%">
+  <img src="./readme/itinerary_rag/Trip_Map.jpeg" width="23%">
+  <img src="./readme/itinerary_rag/RAG_Chatbot.jpeg" width="23%">
+  <img src="./readme/itinerary_rag/Itinerary_Checklist.jpeg" width="23%">
+</p>
+
+#### Profile
+<p align="center">
+  <img src="./readme/profile/Profile.jpeg" width="30%">
+  <img src="./readme/profile/Friends.jpeg" width="30%">
+  <img src="./readme/profile/User_Trips.jpeg" width="30%">
+</p>
+
+### Application Demo
+
+<p align="center">
+  <img src="./readme/gifs/LoginOnboarding.gif" width="45%">
+  <img src="./readme/gifs/Gmail_Verification.gif" width="45%">
+</p>
+<p align="center">
+  <img src="./readme/gifs/Creating_Itinerary.gif" width="45%">
+  <img src="./readme/gifs/Creating_Post.gif" width="45%">
+</p>
+<p align="center">
+  <img src="./readme/gifs/HiddenGem_Card_&Live_Location.gif" width="45%">
+  <img src="./readme/gifs/ItineraryGPS_Sharing.gif" width="45%">
+</p>
+<p align="center">
+  <img src="./readme/gifs/Rag_Chatbot.gif" width="45%">
+  <img src="./readme/gifs/ChatApp-Demo.gif" width="45%">
+</p>
+
+### Admin Dashboard
+
+<p align="center">
+  <img src="./readme/admin/Admin_Login.png" width="80%">
+  <br><br>
+  <img src="./readme/admin/Admin_Dashboard.png" width="80%">
+  <br><br>
+  <img src="./readme/admin/Admin_Users_Table.png" width="80%">
+</p>
