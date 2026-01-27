@@ -6,6 +6,9 @@ COPY package*.json ./
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
 
+# Set placeholder DATABASE_URL for prisma generate during postinstall
+ENV DATABASE_URL="postgresql://placeholder:placeholder@placeholder:5432/placeholder"
+
 RUN npm ci
 
 COPY . .
