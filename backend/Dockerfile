@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY prisma ./prisma/
+COPY prisma.config.ts ./
 
 RUN npm ci
 
@@ -25,11 +26,10 @@ COPY package*.json ./
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
 
-RUN npm ci --only=production
-
+# Set placeholder DATABASE_URL for prisma generate during postinstall
 ENV DATABASE_URL="postgresql://placeholder:placeholder@placeholder:5432/placeholder"
 
-RUN npx prisma generate
+RUN npm ci --only=production
 
 COPY --from=builder /app/dist ./dist
 
