@@ -56,24 +56,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 | :---: | :---: | :---: |
 | <img src="./readme/auth/Login.jpeg" width="100%"> | <img src="./readme/auth/Register.jpeg" width="100%"> | <img src="./readme/auth/Email_Verfication.jpeg" width="100%"> |
 
-#### Feed & Discovery
-| User Feed | Hidden Gem Details |
-| :---: | :---: |
-| <img src="./readme/feed/UserFeed.jpeg" width="100%"> | <img src="./readme/feed/Hidden_Gem_Card.jpeg" width="100%"> |
+#### Feed & Activity
+| User Feed | Hidden Gem Details | Notifications |
+| :---: | :---: | :---: |
+| <img src="./readme/feed/UserFeed.jpeg" width="100%"> | <img src="./readme/feed/Hidden_Gem_Card.jpeg" width="100%"> | <img src="./readme/communication/Notifications_Page.jpeg" width="100%"> |
 
-#### Communication
-| Notifications | Chat |
-| :---: | :---: |
-| <img src="./readme/communication/Notifications_Page.jpeg" width="100%"> | <img src="./readme/communication/ChatApp.jpeg" width="100%"> |
+| Chat |
+| :---: |
+| <img src="./readme/communication/ChatApp.jpeg" width="100%"> |
 
 #### Itinerary, Map & AI
-| Itinerary Details | Trip Map |
-| :---: | :---: |
-| <img src="./readme/itinerary_rag/Itinerary_Details.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Trip_Map.jpeg" width="100%"> |
+| Trip Map | RAG AI Chatbot | Itinerary Checklist |
+| :---: | :---: | :---: |
+| <img src="./readme/itinerary_rag/Trip_Map.jpeg" width="100%"> | <img src="./readme/itinerary_rag/RAG_Chatbot.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Itinerary_Checklist.jpeg" width="100%"> |
 
-| RAG AI Chatbot | Itinerary Checklist |
-| :---: | :---: |
-| <img src="./readme/itinerary_rag/RAG_Chatbot.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Itinerary_Checklist.jpeg" width="100%"> |
+| Itinerary Details |
+| :---: |
+| <img src="./readme/itinerary_rag/Itinerary_Details.jpeg" width="100%"> |
 
 #### Profile
 | User Profile | Friends | User Trips |
@@ -100,14 +99,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Admin Dashboard
 
-| Admin Login |
-| :---: |
-| <img src="./readme/admin/Admin_Login.png" width="100%"> |
-
-| Dashboard Overview |
-| :---: |
-| <img src="./readme/admin/Admin_Dashboard.png" width="100%"> |
-
-| User Management |
-| :---: |
-| <img src="./readme/admin/Admin_Users_Table.png" width="100%"> |
+| Admin Login | Dashboard Overview | User Management |
+| :---: | :---: | :---: |
+| <img src="./readme/admin/Admin_Login.png" width="100%"> | <img src="./readme/admin/Admin_Dashboard.png" width="100%"> | <img src="./readme/admin/Admin_Users_Table.png" width="100%"> |
