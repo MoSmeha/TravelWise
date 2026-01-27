@@ -4,6 +4,26 @@
 
 <br/>
 
+## Tech Stack
+
+<div align="center">
+	<img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+	<img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" />
+	<img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" />
+	<img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" />
+	<img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" />
+	<img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" />
+	<img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+	<img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+	<img src="https://img.shields.io/badge/MUI-007FFF?style=for-the-badge&logo=mui&logoColor=white" />
+	<img src="https://img.shields.io/badge/React_Query-FF4154?style=for-the-badge&logo=react-query&logoColor=white" />
+	<img src="https://img.shields.io/badge/Zustand-orange?style=for-the-badge&logo=zustand&logoColor=white" />
+	<img src="https://img.shields.io/badge/Zod-3E67B1?style=for-the-badge&logo=zod&logoColor=white" />
+	<img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" />
+	<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+	<img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" />
+</div>
+
 ## License
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -20,6 +40,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 - [System Design](#system-design)
 - [Features](#interesting-features)
 - [User Screens](#user-screens)
+- [Optimizations](#optimizations)
 - [Development & Testing](#tests)
 - [Deployment](#deployment-map)
 
@@ -29,28 +50,12 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 <div id="overview" align="center">
   <img src="./readme/title2.svg" width="100%" />
 </div>
+<br/>
 
 > **TravelWise** is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps.
 > It also lets travelers share experiences, making every journey easier and more enjoyable.
 
-<br/>
-## Tech Stack
 
-<div align="center">
-	<img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
-	<img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" />
-	<img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" />
-	<img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" />
-	<img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" />
-	<img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" />
-	<img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
-	<img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
-	<img src="https://img.shields.io/badge/Zod-3E67B1?style=for-the-badge&logo=zod&logoColor=white" />
-	<img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" />
-	<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
-	<img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" />
-	<img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" />
-</div>
 
 <br/>
 
@@ -111,11 +116,7 @@ TravelWise/
 
 ### Interesting Features
 
-* **Real-time GPS & Sharing** — Share live location and routes
-* **Smart Weather Logistics** — Automated calendar updates and personalized packing lists adapted to real-time weather forecasts (powered by n8n)
-
-### Feature Figure
-<img src="./readme/Interesting_features.png"/>
+<img src="./readme/Interesting_Features.png"/>
 
 <br/>
 
@@ -177,22 +178,6 @@ TravelWise/
 
 <br/>
 
-#### Profile
-
-<table align="center" width="100%">
-  <tr>
-    <th width="33%">User Profile</th>
-    <th width="33%">Friends</th>
-    <th width="33%">Profile Feed</th>
-  </tr>
-  <tr>
-    <td><img src="./readme/profile/Profile.jpeg" width="100%" /></td>
-    <td><img src="./readme/profile/Friends.jpeg" width="100%" /></td>
-    <td><img src="./readme/profile/profile_feed.jpeg" width="100%" /></td>
-  </tr>
-</table>
-
-<br/>
 
 ### Application Demo
 
@@ -248,6 +233,29 @@ TravelWise/
   <img src="./readme/title6.svg" width="100%" />
 </div>
 
+<br/>
+### Optimizations
+
+<div id="optimizations"></div>
+<table align="center" width="100%">
+  <thead>
+    <tr>
+      <th width="50%">Frontend</th>
+      <th width="50%">Backend</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Memoization:</strong> Use <code>useMemo</code> & <code>useCallback</code> to prevent unnecessary re-renders.</td>
+      <td><strong>API Caching:</strong> Use <code>node-cache</code> with TTL strategies for Google Places & Weather API responses.</td>
+    </tr>
+    <tr>
+      <td><strong>Smart Caching:</strong> Use <strong>React Query</strong> for efficient server-state caching and background updates.</td>
+      <td><strong>Database Indexing:</strong> Prisma <code>@@index</code> on frequently queried fields for faster queries.</td>
+    </tr>
+  </tbody>
+</table>
+
 
 
 ### Tests
@@ -287,3 +295,9 @@ TravelWise/
 | Deployment Flow                        |
 | -------------------------------------- |
 | ![Map](./readme/Docker_Deployment.png) |
+
+<br/>
+
+| AWS EC2 Server Running                    |
+| ----------------------------------------- |
+| ![Server](./readme/CI/Server_Running.png) |
