@@ -23,6 +23,7 @@ RUN apk add --no-cache dumb-init
 
 COPY package*.json ./
 COPY prisma ./prisma/
+COPY prisma.config.ts ./
 
 RUN npm ci --only=production
 
@@ -43,4 +44,4 @@ EXPOSE 3000
 
 ENTRYPOINT ["dumb-init", "--"]
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "echo \"DATABASE_URL=\\\"$DATABASE_URL\\\"\" > .env && npx prisma migrate deploy && node dist/index.js"]

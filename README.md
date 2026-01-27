@@ -34,7 +34,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 > It also lets travelers share experiences, making every journey easier and more enjoyable.
 
 <br/>
-
 ## Tech Stack
 
 <div align="center">
