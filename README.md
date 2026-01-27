@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./readme/title1.svg" width="700" />
+  <img src="./readme/title1.svg" width="100%" />
 </div>
 
 <br/>
@@ -12,19 +12,64 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <br/>
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [System Design](#system-design)
+- [Features](#interesting-features)
+- [User Screens](#user-screens)
+- [Development & Testing](#tests)
+- [Deployment](#deployment-map)
+
+<br/>
+
 <!-- project overview -->
-<div align="center">
-  <img src="./readme/title2.svg" width="700" />
+<div id="overview" align="center">
+  <img src="./readme/title2.svg" width="100%" />
 </div>
 
 > **TravelWise** is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps.
 > It also lets travelers share experiences, making every journey easier and more enjoyable.
 
 <br/>
+## Tech Stack
+
+<div align="center">
+	<img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+	<img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" />
+	<img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" />
+	<img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" />
+	<img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" />
+	<img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" />
+	<img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+	<img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+	<img src="https://img.shields.io/badge/Zod-3E67B1?style=for-the-badge&logo=zod&logoColor=white" />
+	<img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" />
+	<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+	<img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" />
+	<img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" />
+</div>
+
+<br/>
+
+## Project Structure
+
+```bash
+TravelWise/
+├── backend/            # Express.js API + Prisma ORM
+├── frontend/           # React Native Expo Application
+├── AdminDashboard/     # React + Vite Web Dashboard
+├── n8n/                # Workflow Automation Services
+└── readme/             # Documentation Assets
+```
+
+<br/>
 
 <!-- System Design -->
 <div align="center">
-  <img src="./readme/title3.svg" width="700" />
+  <img src="./readme/title3.svg" width="100%" />
 </div>
 
 ### System Design
@@ -61,7 +106,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <!-- Project Highlights -->
 <div align="center">
-  <img src="./readme/title4.svg" width="700" />
+  <img src="./readme/title4.svg" width="100%" />
 </div>
 
 ### Interesting Features
@@ -76,7 +121,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <!-- User Screens -->
 <div align="center">
-  <img src="./readme/title5.svg" width="700" />
+  <img src="./readme/title5.svg" width="100%" />
 </div>
 
 ### User Screens
@@ -200,7 +245,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <!-- Development & Testing -->
 <div align="center">
-  <img src="./readme/title6.svg" width="700" />
+  <img src="./readme/title6.svg" width="100%" />
 </div>
 
 
@@ -234,7 +279,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <!-- Deployment -->
 <div align="center">
-  <img src="./readme/title7.svg" width="700" />
+  <img src="./readme/title7.svg" width="100%" />
 </div>
 
 ### Deployment Map
