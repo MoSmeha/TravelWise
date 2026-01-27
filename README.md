@@ -57,41 +57,33 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 | <img src="./readme/auth/Login.jpeg" width="100%"> | <img src="./readme/auth/Register.jpeg" width="100%"> | <img src="./readme/auth/Email_Verfication.jpeg" width="100%"> |
 
 #### Feed & Activity
-| User Feed | Hidden Gem Details | Notifications |
+| User Feed | Notifications | Chat |
 | :---: | :---: | :---: |
-| <img src="./readme/feed/UserFeed.jpeg" width="100%"> | <img src="./readme/feed/Hidden_Gem_Card.jpeg" width="100%"> | <img src="./readme/communication/Notifications_Page.jpeg" width="100%"> |
-
-| Chat |
-| :---: |
-| <img src="./readme/communication/ChatApp.jpeg" width="100%"> |
+| <img src="./readme/feed/UserFeed.jpeg" width="100%"> | <img src="./readme/communication/Notifications_Page.jpeg" width="100%"> | <img src="./readme/communication/ChatApp.jpeg" width="100%"> |
 
 #### Itinerary, Map & AI
-| Trip Map | RAG AI Chatbot | Itinerary Checklist |
+| User Trips | Trip Map | Hidden Gem Details |
 | :---: | :---: | :---: |
-| <img src="./readme/itinerary_rag/Trip_Map.jpeg" width="100%"> | <img src="./readme/itinerary_rag/RAG_Chatbot.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Itinerary_Checklist.jpeg" width="100%"> |
+| <img src="./readme/itinerary_rag/User_Trips.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Trip_Map.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Hidden_Gem_Card.jpeg" width="100%"> |
 
-| Itinerary Details |
-| :---: |
-| <img src="./readme/itinerary_rag/Itinerary_Details.jpeg" width="100%"> |
+| Itinerary Details | RAG AI Chatbot | Itinerary Checklist |
+| :---: | :---: | :---: |
+| <img src="./readme/itinerary_rag/Itinerary_Details.jpeg" width="100%"> | <img src="./readme/itinerary_rag/RAG_Chatbot.jpeg" width="100%"> | <img src="./readme/itinerary_rag/Itinerary_Checklist.jpeg" width="100%"> |
 
 #### Profile
-| User Profile | Friends | User Trips |
-| :---: | :---: | :---: |
-| <img src="./readme/profile/Profile.jpeg" width="100%"> | <img src="./readme/profile/Friends.jpeg" width="100%"> | <img src="./readme/profile/User_Trips.jpeg" width="100%"> |
+| User Profile | Friends |
+| :---: | :---: |
+| <img src="./readme/profile/Profile.jpeg" width="100%"> | <img src="./readme/profile/Friends.jpeg" width="100%"> |
 
 ### Application Demo
 
-| Login & Onboarding | Gmail Verification |
-| :---: | :---: |
-| <img src="./readme/gifs/LoginOnboarding.gif" width="100%"> | <img src="./readme/gifs/Gmail_Verification.gif" width="100%"> |
+| Login & Onboarding | Gmail Verification | Creating Itinerary |
+| :---: | :---: | :---: |
+| <img src="./readme/gifs/LoginOnboarding.gif" width="100%"> | <img src="./readme/gifs/Gmail_Verification.gif" width="100%"> | <img src="./readme/gifs/Creating_Itinerary.gif" width="100%"> |
 
-| Creating Itinerary | Creating Post |
-| :---: | :---: |
-| <img src="./readme/gifs/Creating_Itinerary.gif" width="100%"> | <img src="./readme/gifs/Creating_Post.gif" width="100%"> |
-
-| Live Location & Hidden Gems | GPS Sharing |
-| :---: | :---: |
-| <img src="./readme/gifs/HiddenGem_Card_&Live_Location.gif" width="100%"> | <img src="./readme/gifs/ItineraryGPS_Sharing.gif" width="100%"> |
+| Creating Post | Live Location & Gems | GPS Sharing |
+| :---: | :---: | :---: |
+| <img src="./readme/gifs/Creating_Post.gif" width="100%"> | <img src="./readme/gifs/HiddenGem_Card_&Live_Location.gif" width="100%"> | <img src="./readme/gifs/ItineraryGPS_Sharing.gif" width="100%"> |
 
 | AI Chatbot | Chat Demo |
 | :---: | :---: |
