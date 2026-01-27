@@ -1,11 +1,5 @@
-/**
- * Test Setup
- * Common utilities and mocks for controller tests
- */
-
 import { vi } from 'vitest';
 
-// Mock Prisma client
 export const mockPrisma = {
   user: {
     findUnique: vi.fn(),
@@ -55,7 +49,6 @@ export const mockPrisma = {
   $transaction: vi.fn((fn) => fn(mockPrisma)),
 };
 
-// Mock user for authenticated requests
 export const mockUser = {
   id: 'test-user-id-123',
   email: 'test@example.com',
@@ -68,13 +61,11 @@ export const mockUser = {
   updatedAt: new Date(),
 };
 
-// Generate a mock JWT payload
 export const mockJwtPayload = {
   userId: mockUser.id,
   email: mockUser.email,
 };
 
-// Helper to create mock request/response
 export function createMockContext() {
   const req: any = {
     body: {},
@@ -86,12 +77,12 @@ export function createMockContext() {
   const res: any = {
     status: vi.fn().mockReturnThis(),
     json: vi.fn().mockReturnThis(),
+    send: vi.fn().mockReturnThis(),
   };
   
   return { req, res };
 }
 
-// Helper to reset all mocks
 export function resetAllMocks() {
   vi.clearAllMocks();
 }
