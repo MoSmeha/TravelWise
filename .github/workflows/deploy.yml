@@ -87,15 +87,16 @@ jobs:
                 - CLOUDINARY_API_NAME=${{ secrets.CLOUDINARY_API_NAME }}
                 - CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
                 - CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
-          # test
+                - ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
+                - ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+                - ADMIN_NAME=${{ secrets.ADMIN_NAME }}
+          
           volumes:
             postgres_data:
           EOF
           
           docker-compose pull backend
-          
           docker-compose down
-          
           docker-compose up -d
           
           echo "Waiting for database to be ready..."
