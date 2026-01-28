@@ -35,8 +35,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 > **TravelWise** is a smart travel companion that creates personalized trips, helps users discover hidden gems and local culture, and avoid tourist traps.
 > It also lets travelers share experiences, making every journey easier and more enjoyable.
 
-
-
 <br/>
 
 ## Project Structure
@@ -158,7 +156,6 @@ TravelWise/
 
 <br/>
 
-
 ### Application Demo
 
 <table align="center" width="100%">
@@ -237,23 +234,21 @@ TravelWise/
   </tbody>
 </table>
 
-
-
 ### Tests
 
 <table width="100%">
   <tr>
-    <th>CI</th>
+    <th>CI/CD</th>
   </tr>
   <tr>
     <td align="center">
-      <a href="./readme/CI/CI.png">
-        <img src="./readme/CI/CI.png" alt="CI/CD" width="1200">
+      <a href="./readme/CI/CI-CD.png">
+        <img src="./readme/CI/CI-CD.png" alt="CI/CD" width="1200">
       </a>
     </td>
   </tr>
   <tr>
-    <th>Testing</th>
+    <th>Unit Tests Using Vitest</th>
   </tr>
   <tr>
     <td align="center">
