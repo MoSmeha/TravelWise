@@ -120,7 +120,40 @@ export default function MapScreen() {
 
 
 
-  const allLocations: Location[] = data?.days?.flatMap((day) => day.locations) || [];
+
+
+  const allLocations: Location[] = useMemo(() => {
+    const locations: Location[] = [];
+    
+    data?.days?.forEach((day) => {
+      // Add regular locations
+      locations.push(...day.locations);
+      
+      // Add meals as locations
+      if (day.meals) {
+        [day.meals.breakfast, day.meals.lunch, day.meals.dinner].forEach((meal) => {
+          if (meal) {
+            locations.push({
+              id: meal.id,
+              name: meal.name,
+              classification: 'HIDDEN_GEM' as const,
+              category: meal.category,
+              description: meal.description || `${meal.rating || 4}★ restaurant`,
+              latitude: meal.latitude,
+              longitude: meal.longitude,
+              crowdLevel: 'MODERATE' as const,
+              rating: meal.rating,
+              totalRatings: meal.totalRatings,
+              imageUrl: meal.imageUrl,
+            } as Location);
+          }
+        });
+      }
+    });
+    
+    return locations;
+  }, [data?.days]);
+  
   const hotels: Hotel[] = data?.hotels || [];
 
 

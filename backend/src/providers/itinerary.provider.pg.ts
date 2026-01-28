@@ -26,15 +26,23 @@ class ItineraryPgProvider implements IItineraryProvider {
 
   async fetchPlaces(params: FetchPlacesParams): Promise<PlaceRecord[]> {
     const { categories, country, city, limit, excludeIds = [], priceLevel } = params;
+   
+    const isFoodCategory = categories.some(cat => 
+      cat === LocationCategory.RESTAURANT || 
+      cat === LocationCategory.CAFE || 
+      cat === LocationCategory.BAR
+    );
 
     const where: any = {
-      // Prioritize hidden gems unless specified
-      classification: { not: LocationClassification.TOURIST_TRAP },
       category: { in: categories },
       country: { equals: country, mode: 'insensitive' },
     };
 
-    // Add city filter if provided
+    // Only filter out tourist traps for categories that aren't food
+    if (!isFoodCategory) {
+      where.classification = { not: LocationClassification.TOURIST_TRAP };
+    }
+
     if (city) {
       where.city = { equals: city, mode: 'insensitive' };
     }
@@ -45,7 +53,6 @@ class ItineraryPgProvider implements IItineraryProvider {
     }
 
 
-    // Exclude already used places to avoid duplicates
     if (excludeIds.length > 0) {
       where.id = { notIn: excludeIds };
     }
@@ -53,7 +60,7 @@ class ItineraryPgProvider implements IItineraryProvider {
     let places = await prisma.place.findMany({
       where,
       orderBy: [
-        { classification: 'asc' },
+        { classification: 'desc' }, // MUST_SEE comes before HIDDEN_GEM/CONDITIONAL when descending
         { rating: 'desc' },
         { popularity: 'desc' },
       ],
@@ -64,12 +71,15 @@ class ItineraryPgProvider implements IItineraryProvider {
     // Fallback strategy: If not enough city-specific places found, fill the rest with country-wide places
     if (places.length < limit && city) {
       const fallbackWhere: any = {
-        classification: { not: LocationClassification.TOURIST_TRAP },
         category: { in: categories },
         country: { equals: country, mode: 'insensitive' },
         // IMPORTANT: Exclude both the original excluded IDs AND the places we just found in the city search
         id: { notIn: [...excludeIds, ...places.map((p) => p.id)] },
       };
+      
+      if (!isFoodCategory) {
+        fallbackWhere.classification = { not: LocationClassification.TOURIST_TRAP };
+      }
       
       // Apply same price filter to fallback
       if (priceLevel) {
@@ -92,6 +102,30 @@ class ItineraryPgProvider implements IItineraryProvider {
       where: { googlePlaceId },
       select: { id: true },
     });
+  }
+
+  async findPlacesByName(name: string, country: string): Promise<PlaceRecord[]> {
+    // Search for places matching the name (case-insensitive, partial match)
+    const places = await prisma.place.findMany({
+      where: {
+        name: { contains: name, mode: 'insensitive' },
+        country: { equals: country, mode: 'insensitive' },
+      },
+      take: 5,
+      orderBy: { rating: 'desc' },
+    });
+    return places as PlaceRecord[];
+  }
+
+  async fetchTouristTraps(country: string): Promise<PlaceRecord[]> {
+    const places = await prisma.place.findMany({
+      where: {
+        country: { equals: country, mode: 'insensitive' },
+        classification: LocationClassification.TOURIST_TRAP,
+      },
+      take: 20,
+    });
+    return places as PlaceRecord[];
   }
 
   async updatePlaceEnrichment(placeId: string, data: UpdatePlaceEnrichmentData): Promise<void> {

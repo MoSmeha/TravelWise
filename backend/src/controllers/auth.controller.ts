@@ -28,7 +28,6 @@ export async function register(req: Request, res: Response): Promise<void> {
 
     const { user, verificationOTP } = await registerUser(input);
 
-    // Send verification email
     if (user.email) {
       await sendVerificationEmail(user.email, user.name, verificationOTP);
     }
@@ -115,7 +114,6 @@ export async function verifyEmail(req: Request, res: Response): Promise<void> {
       throw new AppError('Invalid or expired OTP', 400);
     }
 
-    // Get user info for welcome email
     const user = await getUserById(result.userId);
     if (user?.email) {
       await sendWelcomeEmail(user.email, user.name);
@@ -143,7 +141,6 @@ export async function resendVerification(req: Request, res: Response): Promise<v
     const user = await getUserByEmail(input.email);
 
     if (!user) {
-      // Don't reveal if email exists or not
       res.json({ message: 'If that email exists, a verification email has been sent' });
       return;
     }

@@ -450,15 +450,22 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     ? kMeansClustering(placesForClustering, Math.min(numberOfDays, activityPool.length))
     : [];
 
+  console.log(`[CLUSTER] Created ${clusters.length} clusters with distribution: ${clusters.map(c => c.length).join(', ')}`);
+
   // Order clusters geographically starting from Airport/Beirut
   const startCoords = { lat: 33.8209, lng: 35.4913 }; 
   clusters = orderClustersByProximity(clusters, startCoords);
 
-  // Balance Clusters (Steal from rich, give to poor)
-  const MIN_PER_DAY = 2;
-  const MAX_ATTEMPTS = 10;
+  // Enhanced Balance Clusters - Ensure each day has close to the average number of activities
+  const totalActivities = clusters.reduce((sum, c) => sum + c.length, 0);
+  const targetPerDay = Math.floor(totalActivities / numberOfDays);
+  const MIN_PER_DAY = Math.max(3, targetPerDay - 1); // At least 3, or 1 below average
+  const MAX_PER_DAY = targetPerDay + 2; // Allow some variance
+  const MAX_ATTEMPTS = 30;
   let attempts = 0;
   let rebalanced = true;
+
+  console.log(`[CLUSTER] Target per day: ${targetPerDay}, Min: ${MIN_PER_DAY}, Max: ${MAX_PER_DAY}`);
 
   while(rebalanced && attempts < MAX_ATTEMPTS) {
       rebalanced = false;
@@ -472,7 +479,8 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
           if (c.length > maxLen) { maxLen = c.length; maxIdx = idx; }
       });
 
-      if (minIdx !== -1 && maxIdx !== -1 && minLen < MIN_PER_DAY && maxLen > MIN_PER_DAY + 1) {
+      // Transfer from over-capacity clusters to under-capacity clusters
+      if (minIdx !== -1 && maxIdx !== -1 && (minLen < MIN_PER_DAY || maxLen > MAX_PER_DAY)) {
            const receiverCentroid = clusters[minIdx].length > 0 ? calculateCentroid(clusters[minIdx]) : startCoords;
            
            let bestTransferIdx = -1;
@@ -486,13 +494,15 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
                }
            });
 
-           if (bestTransferIdx !== -1) {
+           if (bestTransferIdx !== -1 && clusters[maxIdx].length > 1) {
                const item = clusters[maxIdx].splice(bestTransferIdx, 1)[0];
                clusters[minIdx].push(item);
                rebalanced = true; 
            }
       }
   }
+
+  console.log(`[CLUSTER] After rebalancing (${attempts} attempts): ${clusters.map(c => c.length).join(', ')}`);
 
 
 
@@ -548,6 +558,8 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     const dayClusterSimple = clusters[i] || [];
     let dayActivities = getFullPlaces(dayClusterSimple);
 
+    console.log(`[DAY ${dayNum}] Cluster assigned ${dayClusterSimple.length} activities`);
+
     // Limit to max 4 activities per day to prevent exhaustion and "overkill"
     // Also ensures we don't dump 21 places in Day 1.
     const MAX_PER_DAY = 4;
@@ -555,6 +567,7 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
 
       dayActivities.sort((a, b) => (b.rating || 0) - (a.rating || 0));
       dayActivities = dayActivities.slice(0, MAX_PER_DAY);
+      console.log(`[DAY ${dayNum}] Limited to ${MAX_PER_DAY} activities (sorted by rating)`);
     }
 
 
@@ -562,9 +575,11 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
         const unused = activityPool.filter(p => !globalUsedIds.has(p.id));
         if (unused.length > 0) {
             dayActivities = unused.slice(0, 3);
+            console.log(`[DAY ${dayNum}] No activities in cluster, added ${dayActivities.length} from unused pool`);
         }
     }
 
+    console.log(`[DAY ${dayNum}] Final activity count: ${dayActivities.length}`);
 
     dayActivities.forEach(p => globalUsedIds.add(p.id));
 
@@ -600,26 +615,168 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     const midLoc = dayActivities[Math.floor(dayActivities.length / 2)] || morningLoc;
     const endLoc = dayActivities[dayActivities.length - 1] || midLoc;
 
-
+    // Fetch restaurants near activities for meals with more lenient distance thresholds
+    console.log(`[MEALS] Day ${dayNum}: Fetching restaurants for breakfast (near ${morningLoc.name || 'start'}), lunch (near ${midLoc.name || 'mid'}), dinner (near ${endLoc.name || 'end'})...`);
+    
+    const BREAKFAST_RADIUS_KM = 15;
+    const LUNCH_RADIUS_KM = 15;
+    const DINNER_RADIUS_KM = 20;
+    
     const [breakfasts, lunches, dinners] = await Promise.all([
-        fetchPlaces([LocationCategory.CAFE, LocationCategory.RESTAURANT], country, null, 5, Array.from(globalUsedIds), priceLevel).then(res => 
-            res.filter(r => haversineDistance(r.latitude, r.longitude, morningLoc.latitude, morningLoc.longitude) < 5)
-        ),
-        fetchPlaces([LocationCategory.RESTAURANT], country, null, 5, Array.from(globalUsedIds), priceLevel).then(res => 
-            res.filter(r => haversineDistance(r.latitude, r.longitude, midLoc.latitude, midLoc.longitude) < 5)
-        ),
-        fetchPlaces([LocationCategory.RESTAURANT, LocationCategory.BAR], country, null, 5, Array.from(globalUsedIds), priceLevel).then(res => 
-            res.filter(r => haversineDistance(r.latitude, r.longitude, endLoc.latitude, endLoc.longitude) < 10)
-        )
+        fetchPlaces([LocationCategory.CAFE, LocationCategory.RESTAURANT], country, null, 10, Array.from(globalUsedIds), priceLevel).then(res => {
+            const filtered = res.filter(r => haversineDistance(r.latitude, r.longitude, morningLoc.latitude, morningLoc.longitude) < BREAKFAST_RADIUS_KM);
+            console.log(`[MEALS] Breakfast: Found ${res.length} cafes/restaurants, ${filtered.length} within ${BREAKFAST_RADIUS_KM}km`);
+            return filtered;
+        }),
+        fetchPlaces([LocationCategory.RESTAURANT], country, null, 10, Array.from(globalUsedIds), priceLevel).then(res => {
+            const filtered = res.filter(r => haversineDistance(r.latitude, r.longitude, midLoc.latitude, midLoc.longitude) < LUNCH_RADIUS_KM);
+            console.log(`[MEALS] Lunch: Found ${res.length} restaurants, ${filtered.length} within ${LUNCH_RADIUS_KM}km`);
+            return filtered;
+        }),
+        fetchPlaces([LocationCategory.RESTAURANT, LocationCategory.BAR], country, null, 10, Array.from(globalUsedIds), priceLevel).then(res => {
+            const filtered = res.filter(r => haversineDistance(r.latitude, r.longitude, endLoc.latitude, endLoc.longitude) < DINNER_RADIUS_KM);
+            console.log(`[MEALS] Dinner: Found ${res.length} restaurants/bars, ${filtered.length} within ${DINNER_RADIUS_KM}km`);
+            return filtered;
+        })
     ]);
 
-    const breakfast = breakfasts[0] || null;
-    const lunch = lunches[0] || null;
-    const dinner = dinners[0] || null;
+    // Track used meal IDs within this day to prevent duplicates
+    const dayMealIds = new Set<string>();
 
-    if (breakfast) globalUsedIds.add(breakfast.id);
-    if (lunch) globalUsedIds.add(lunch.id);
-    if (dinner) globalUsedIds.add(dinner.id);
+    // Select breakfast first
+    let breakfast = breakfasts.find(r => !dayMealIds.has(r.id)) || null;
+    if (breakfast) dayMealIds.add(breakfast.id);
+
+    // Select lunch, avoiding the breakfast restaurant
+    let lunch = lunches.find(r => !dayMealIds.has(r.id)) || null;
+    if (lunch) dayMealIds.add(lunch.id);
+
+    // Select dinner, avoiding breakfast and lunch restaurants
+    let dinner = dinners.find(r => !dayMealIds.has(r.id)) || null;
+
+    // Fallback to Google Places if no restaurants found in DB
+    if (!breakfast && morningLoc.latitude && morningLoc.longitude) {
+        console.log(`[MEALS] Searching Google Places for breakfast near ${morningLoc.name || 'start'}...`);
+        const googleResult = await searchPlacesByText(`restaurant OR cafe near ${morningLoc.name || country}`, 3.5);
+        if (googleResult.places.length > 0) {
+            const nearbyPlace = googleResult.places.find(p => 
+                haversineDistance(p.latitude, p.longitude, morningLoc.latitude, morningLoc.longitude) < BREAKFAST_RADIUS_KM &&
+                !dayMealIds.has(p.googlePlaceId)
+            );
+            if (nearbyPlace) {
+                const savedPlace = await itineraryProvider.createPlace({
+                    googlePlaceId: nearbyPlace.googlePlaceId,
+                    name: nearbyPlace.name,
+                    latitude: nearbyPlace.latitude,
+                    longitude: nearbyPlace.longitude,
+                    country,
+                    city: cityName || country,
+                    address: nearbyPlace.formattedAddress,
+                    category: LocationCategory.RESTAURANT,
+                    description: `${nearbyPlace.rating}★ breakfast spot`,
+                    rating: nearbyPlace.rating,
+                    totalRatings: nearbyPlace.totalRatings,
+                    priceLevel: nearbyPlace.priceLevel !== null ? (nearbyPlace.priceLevel >= 3 ? PriceLevel.EXPENSIVE : nearbyPlace.priceLevel >= 2 ? PriceLevel.MODERATE : PriceLevel.INEXPENSIVE) : null,
+                    imageUrl: nearbyPlace.photos[0] || null,
+                    imageUrls: nearbyPlace.photos,
+                    websiteUrl: nearbyPlace.websiteUrl,
+                    classification: LocationClassification.HIDDEN_GEM,
+                });
+                breakfast = { id: savedPlace.id, ...nearbyPlace } as unknown as PlaceExtended;
+                dayMealIds.add(savedPlace.id);
+                console.log(`[MEALS] ✓ Found Google breakfast: ${nearbyPlace.name}`);
+            }
+        }
+    }
+
+    if (!lunch && midLoc.latitude && midLoc.longitude) {
+        console.log(`[MEALS] Searching Google Places for lunch near ${midLoc.name || 'mid'}...`);
+        const googleResult = await searchPlacesByText(`restaurant near ${midLoc.name || country}`, 3.5);
+        if (googleResult.places.length > 0) {
+            const nearbyPlace = googleResult.places.find(p => 
+                haversineDistance(p.latitude, p.longitude, midLoc.latitude, midLoc.longitude) < LUNCH_RADIUS_KM &&
+                !dayMealIds.has(p.googlePlaceId)
+            );
+            if (nearbyPlace) {
+                const savedPlace = await itineraryProvider.createPlace({
+                    googlePlaceId: nearbyPlace.googlePlaceId,
+                    name: nearbyPlace.name,
+                    latitude: nearbyPlace.latitude,
+                    longitude: nearbyPlace.longitude,
+                    country,
+                    city: cityName || country,
+                    address: nearbyPlace.formattedAddress,
+                    category: LocationCategory.RESTAURANT,
+                    description: `${nearbyPlace.rating}★ lunch spot`,
+                    rating: nearbyPlace.rating,
+                    totalRatings: nearbyPlace.totalRatings,
+                    priceLevel: nearbyPlace.priceLevel !== null ? (nearbyPlace.priceLevel >= 3 ? PriceLevel.EXPENSIVE : nearbyPlace.priceLevel >= 2 ? PriceLevel.MODERATE : PriceLevel.INEXPENSIVE) : null,
+                    imageUrl: nearbyPlace.photos[0] || null,
+                    imageUrls: nearbyPlace.photos,
+                    websiteUrl: nearbyPlace.websiteUrl,
+                    classification: LocationClassification.HIDDEN_GEM,
+                });
+                lunch = { id: savedPlace.id, ...nearbyPlace } as unknown as PlaceExtended;
+                dayMealIds.add(savedPlace.id);
+                console.log(`[MEALS] ✓ Found Google lunch: ${nearbyPlace.name}`);
+            }
+        }
+    }
+
+    if (!dinner && endLoc.latitude && endLoc.longitude) {
+        console.log(`[MEALS] Searching Google Places for dinner near ${endLoc.name || 'end'}...`);
+        const googleResult = await searchPlacesByText(`restaurant OR bar near ${endLoc.name || country}`, 3.5);
+        if (googleResult.places.length > 0) {
+            const nearbyPlace = googleResult.places.find(p => 
+                haversineDistance(p.latitude, p.longitude, endLoc.latitude, endLoc.longitude) < DINNER_RADIUS_KM &&
+                !dayMealIds.has(p.googlePlaceId)
+            );
+            if (nearbyPlace) {
+                const savedPlace = await itineraryProvider.createPlace({
+                    googlePlaceId: nearbyPlace.googlePlaceId,
+                    name: nearbyPlace.name,
+                    latitude: nearbyPlace.latitude,
+                    longitude: nearbyPlace.longitude,
+                    country,
+                    city: cityName || country,
+                    address: nearbyPlace.formattedAddress,
+                    category: LocationCategory.RESTAURANT,
+                    description: `${nearbyPlace.rating}★ dinner spot`,
+                    rating: nearbyPlace.rating,
+                    totalRatings: nearbyPlace.totalRatings,
+                    priceLevel: nearbyPlace.priceLevel !== null ? (nearbyPlace.priceLevel >= 3 ? PriceLevel.EXPENSIVE : nearbyPlace.priceLevel >= 2 ? PriceLevel.MODERATE : PriceLevel.INEXPENSIVE) : null,
+                    imageUrl: nearbyPlace.photos[0] || null,
+                    imageUrls: nearbyPlace.photos,
+                    websiteUrl: nearbyPlace.websiteUrl,
+                    classification: LocationClassification.HIDDEN_GEM,
+                });
+                dinner = { id: savedPlace.id, ...nearbyPlace } as unknown as PlaceExtended;
+                dayMealIds.add(savedPlace.id);
+                console.log(`[MEALS] ✓ Found Google dinner: ${nearbyPlace.name}`);
+            }
+        }
+    }
+
+    if (breakfast) {
+        globalUsedIds.add(breakfast.id);
+        console.log(`[MEALS] ✓ Breakfast: ${breakfast.name}`);
+    } else {
+        console.log(`[MEALS] ✗ No breakfast found for Day ${dayNum}`);
+    }
+    
+    if (lunch) {
+        globalUsedIds.add(lunch.id);
+        console.log(`[MEALS] ✓ Lunch: ${lunch.name}`);
+    } else {
+        console.log(`[MEALS] ✗ No lunch found for Day ${dayNum}`);
+    }
+    
+    if (dinner) {
+        globalUsedIds.add(dinner.id);
+        console.log(`[MEALS] ✓ Dinner: ${dinner.name}`);
+    } else {
+        console.log(`[MEALS] ✗ No dinner found for Day ${dayNum}`);
+    }
     
     const theme = dayActivities.length > 0 ? (dayActivities[0].category as string) : 'Relaxation';
 
@@ -663,9 +820,11 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
     return sum + day.locations.reduce((dSum, loc) => dSum + (loc.costMinUSD || 20), 0) + (budgetLevel === BudgetLevel.HIGH ? 150 : 50);
   }, 0);
 
+  // Add 10% buffer to budget to avoid over-trimming
+  const budgetWithBuffer = budgetUSD * 1.10;
 
-  if (budgetUSD > 0 && totalEstimatedCostUSD > budgetUSD) {
-    console.log(`[BUDGET] Over budget ($${totalEstimatedCostUSD} > $${budgetUSD}). Trimming...`);
+  if (budgetUSD > 0 && totalEstimatedCostUSD > budgetWithBuffer) {
+    console.log(`[BUDGET] Over budget ($${totalEstimatedCostUSD} > $${budgetUSD} + 10% buffer). Trimming...`);
     
 
     let allLocs: {loc: PlaceExtended, dayIdx: number}[] = [];
@@ -676,19 +835,25 @@ export async function generateItinerary(params: GenerateItineraryParams): Promis
 
     allLocs.sort((a, b) => (b.loc.costMinUSD || 20) - (a.loc.costMinUSD || 20));
 
-    while (totalEstimatedCostUSD > budgetUSD && allLocs.length > 0) {
+    let removedCount = 0;
+    while (totalEstimatedCostUSD > budgetWithBuffer && allLocs.length > 0) {
        const candidate = allLocs.shift();
        if (!candidate) break;
 
 
        const day = days[candidate.dayIdx];
 
-       if (day.locations.length > 2) {
+       // Keep at least 3 activities per day (changed from 2)
+       if (day.locations.length > 3) {
          day.locations = day.locations.filter(l => l.id !== candidate.loc.id);
          totalEstimatedCostUSD -= (candidate.loc.costMinUSD || 20);
+         removedCount++;
          console.log(`[BUDGET] Removed expensive item "${candidate.loc.name}" to save $${candidate.loc.costMinUSD || 20}`);
        }
     }
+    console.log(`[BUDGET] Trimming complete. Removed ${removedCount} activities. New total: $${totalEstimatedCostUSD}`);
+  } else {
+    console.log(`[BUDGET] Within budget: $${totalEstimatedCostUSD} <= $${budgetUSD}`);
   }
 
   return {
@@ -1016,6 +1181,7 @@ export function buildItineraryResponse(
       bookingUrl: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(result.hotel.name)}`,
       amenities: ['WiFi', 'Parking', 'Breakfast'],
       neighborhood: result.hotel.city || result.hotel.address || 'City Center',
+      imageUrl: result.hotel.imageUrl || result.hotel.imageUrls?.[0] || null,
     }] : [],
     routeSummary: result.routeSummary || '',
   };
@@ -1099,6 +1265,7 @@ export function buildItineraryDetailsResponse(
       bookingUrl: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(primaryHotel.name)}`,
       amenities: ['WiFi', 'Parking', 'Breakfast'],
       neighborhood: primaryHotel.city || primaryHotel.address || 'City Center',
+      imageUrl: primaryHotel.imageUrl || primaryHotel.imageUrls?.[0] || null,
     }] : [],
     airport: mapAirportToResponse(airportConfig, {
       country: itinerary.country,

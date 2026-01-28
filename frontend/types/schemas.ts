@@ -92,9 +92,13 @@ export const MealInfoSchema = z.object({
   id: z.string(),
   name: z.string(),
   category: LocationCategorySchema,
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  latitude: z.number(),
+  longitude: z.number(),
   imageUrl: z.string().nullable().optional().transform(nullToUndefined),
+  rating: z.number().nullable().optional().transform(nullToUndefined),
+  totalRatings: z.number().nullable().optional().transform(nullToUndefined),
+  description: z.string().optional(),
+  address: z.string().nullable().optional().transform(nullToUndefined),
 }).nullable();
 
 export const HotelInfoSchema = z.object({

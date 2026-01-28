@@ -79,6 +79,13 @@ export interface MealResponse {
   id: string;
   name: string;
   category: string;
+  latitude: number;
+  longitude: number;
+  imageUrl: string | null;
+  rating: number | null;
+  totalRatings: number | null;
+  description: string;
+  address: string | null;
 }
 
 export interface HotelResponse {
@@ -126,6 +133,13 @@ export function mapPlaceToMeal(place: PlaceLike | null): MealResponse | null {
     id: place.id,
     name: place.name,
     category: String(place.category),
+    latitude: place.latitude,
+    longitude: place.longitude,
+    imageUrl: convertPhotoRefToUrl(place.imageUrl),
+    rating: place.rating || null,
+    totalRatings: place.totalRatings || null,
+    description: place.description || `${place.rating || 4}★ ${place.category}`,
+    address: place.address || null,
   };
 }
 
