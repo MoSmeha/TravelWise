@@ -4,26 +4,6 @@
 
 <br/>
 
-## Tech Stack
-
-<div align="center">
-	<img src="https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
-	<img src="https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white" />
-	<img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" />
-	<img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" />
-	<img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" />
-	<img src="https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white" />
-	<img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
-	<img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
-	<img src="https://img.shields.io/badge/MUI-007FFF?style=for-the-badge&logo=mui&logoColor=white" />
-	<img src="https://img.shields.io/badge/React_Query-FF4154?style=for-the-badge&logo=react-query&logoColor=white" />
-	<img src="https://img.shields.io/badge/Zustand-orange?style=for-the-badge&logo=zustand&logoColor=white" />
-	<img src="https://img.shields.io/badge/Zod-3E67B1?style=for-the-badge&logo=zod&logoColor=white" />
-	<img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" />
-	<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
-	<img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" />
-</div>
-
 ## License
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -302,3 +282,16 @@ TravelWise/
 | AWS EC2 Server Running                    |
 | ----------------------------------------- |
 | ![Server](./readme/CI/Server_Running.png) |
+
+<br/>
+
+### AMA Chatbot
+
+Additionally, I made this chatbot to answer questions regarding me and my SE Factory experience. You can try it out [here](https://ama-chatbot.vercel.app/).  
+Built with **Supabase**, **React**, and **Express**.
+
+<div align="center">
+  <a href="https://ama-chatbot.vercel.app/">
+    <img src="./readme/AMA-Chatbot.png" style="max-width:100%; height:auto;" />
+  </a>
+</div>
