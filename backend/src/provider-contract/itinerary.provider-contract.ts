@@ -47,6 +47,23 @@ export interface CreateChecklistItemData {
   reason?: string;
 }
 
+export interface CreateWarningData {
+  itineraryId: string;
+  title: string;
+  description: string;
+}
+
+export interface CreateTouristTrapData {
+  itineraryId: string;
+  name: string;
+  reason: string;
+}
+
+export interface CreateLocalTipData {
+  itineraryId: string;
+  tip: string;
+}
+
 export interface CreateExternalHotelData {
   googlePlaceId: string;
   name: string;
@@ -128,6 +145,9 @@ export interface UserItineraryWithDays {
   routeSummary: string | null;
   days: ItineraryDayWithItems[];
   checklist: ChecklistItemRecord[];
+  warnings: WarningRecord[];
+  touristTraps: TouristTrapRecord[];
+  localTips: LocalTipRecord[];
 }
 
 export interface ItineraryDayWithItems {
@@ -153,6 +173,23 @@ export interface ChecklistItemRecord {
   item: string;
   reason: string | null;
   isChecked: boolean;
+}
+
+export interface WarningRecord {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface TouristTrapRecord {
+  id: string;
+  name: string;
+  reason: string;
+}
+
+export interface LocalTipRecord {
+  id: string;
+  tip: string;
 }
 
 export interface ItineraryDayRecord {
@@ -222,4 +259,8 @@ export interface IItineraryProvider {
   createPlace(data: CreatePlaceData): Promise<{ id: string }>;
   
   deleteItinerary(id: string): Promise<void>;
+
+  createWarning(data: CreateWarningData): Promise<{ id: string }>;
+  createTouristTrap(data: CreateTouristTrapData): Promise<{ id: string }>;
+  createLocalTip(data: CreateLocalTipData): Promise<{ id: string }>;
 }

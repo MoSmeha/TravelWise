@@ -771,6 +771,8 @@ export async function saveItineraryToDb(
       hotelId,
     });
     
+    console.log(`[DEBUG] Day ${day.dayNumber} saved with hotelId: ${hotelId}, hotel name: ${day.hotel?.name || 'none'}`);
+    
     let order = 1;
     
 
@@ -827,6 +829,35 @@ export async function saveItineraryToDb(
       category: item.category as ChecklistCategory,
       item: item.item,
       reason: item.reason,
+    });
+  }
+
+  // Save warnings
+  const warningItems = generated.warnings || [];
+  for (const warning of warningItems) {
+    await provider.createWarning({
+      itineraryId: itinerary.id,
+      title: warning.title,
+      description: warning.description,
+    });
+  }
+
+  // Save tourist traps
+  const touristTrapItems = generated.touristTraps || [];
+  for (const trap of touristTrapItems) {
+    await provider.createTouristTrap({
+      itineraryId: itinerary.id,
+      name: trap.name,
+      reason: trap.reason,
+    });
+  }
+
+  // Save local tips
+  const localTipItems = generated.localTips || [];
+  for (const tip of localTipItems) {
+    await provider.createLocalTip({
+      itineraryId: itinerary.id,
+      tip: tip,
     });
   }
   
@@ -975,6 +1006,17 @@ export function buildItineraryResponse(
     warnings: result.warnings.map((w: any, idx: number) => ({ id: `warn-${idx}`, ...w })),
     touristTraps: result.touristTraps.map((t: any, idx: number) => ({ id: `trap-${idx}`, ...t })),
     localTips: result.localTips,
+    hotels: result.hotel ? [{
+      id: result.hotel.id,
+      name: result.hotel.name,
+      description: result.hotel.description || `${result.hotel.rating || 4}★ hotel`,
+      pricePerNightUSD: { min: 80, max: 150 },
+      latitude: result.hotel.latitude,
+      longitude: result.hotel.longitude,
+      bookingUrl: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(result.hotel.name)}`,
+      amenities: ['WiFi', 'Parking', 'Breakfast'],
+      neighborhood: result.hotel.city || result.hotel.address || 'City Center',
+    }] : [],
     routeSummary: result.routeSummary || '',
   };
 }
@@ -1014,7 +1056,27 @@ export function buildItineraryDetailsResponse(
     };
   });
 
+  // Get the primary hotel (first day's hotel, or first hotel found)
+  const primaryHotel = itinerary.days.find((d: any) => d.hotel)?.hotel || null;
+  console.log(`[DEBUG] buildItineraryDetailsResponse - primaryHotel found:`, primaryHotel ? `${primaryHotel.name} (id: ${primaryHotel.id})` : 'null');
+  console.log(`[DEBUG] First day hotel:`, itinerary.days[0]?.hotel ? `${itinerary.days[0].hotel.name}` : 'null');
 
+  // Map warnings from DB
+  const warnings = (itinerary.warnings || []).map((w: any, idx: number) => ({
+    id: w.id || `warn-${idx}`,
+    title: w.title,
+    description: w.description,
+  }));
+
+  // Map tourist traps from DB
+  const touristTraps = (itinerary.touristTraps || []).map((t: any, idx: number) => ({
+    id: t.id || `trap-${idx}`,
+    name: t.name,
+    reason: t.reason,
+  }));
+
+  // Map local tips from DB
+  const localTips = (itinerary.localTips || []).map((t: any) => t.tip);
 
   return {
     source: 'DATABASE',
@@ -1026,14 +1088,25 @@ export function buildItineraryDetailsResponse(
       travelStyles: itinerary.travelStyles,
     },
     days,
-
+    hotel: mapPlaceToHotel(primaryHotel),
+    hotels: primaryHotel ? [{
+      id: primaryHotel.id,
+      name: primaryHotel.name,
+      description: primaryHotel.description || `${primaryHotel.rating || 4}★ hotel`,
+      pricePerNightUSD: { min: 80, max: 150 }, // Placeholder since we don't track actual prices
+      latitude: primaryHotel.latitude,
+      longitude: primaryHotel.longitude,
+      bookingUrl: `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(primaryHotel.name)}`,
+      amenities: ['WiFi', 'Parking', 'Breakfast'],
+      neighborhood: primaryHotel.city || primaryHotel.address || 'City Center',
+    }] : [],
     airport: mapAirportToResponse(airportConfig, {
       country: itinerary.country,
       code: itinerary.airportCode,
     }),
-    warnings: [],
-    touristTraps: [],
-    localTips: [],
+    warnings,
+    touristTraps,
+    localTips,
     routeSummary: itinerary.routeSummary,
   };
 }

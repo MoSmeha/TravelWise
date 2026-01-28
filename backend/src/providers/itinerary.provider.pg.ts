@@ -8,6 +8,9 @@ import {
   CreateItineraryItemData,
   CreatedItinerary,
   CreatePlaceData,
+  CreateWarningData,
+  CreateTouristTrapData,
+  CreateLocalTipData,
   FetchPlacesParams,
   IItineraryProvider,
   ItineraryDayRecord,
@@ -142,6 +145,9 @@ class ItineraryPgProvider implements IItineraryProvider {
           orderBy: { dayNumber: 'asc' },
         },
         checklist: true,
+        warnings: true,
+        touristTraps: true,
+        localTips: true,
       },
     });
 
@@ -291,6 +297,38 @@ class ItineraryPgProvider implements IItineraryProvider {
   async deleteItinerary(id: string): Promise<void> {
     await prisma.userItinerary.delete({
       where: { id },
+    });
+  }
+
+  async createWarning(data: CreateWarningData): Promise<{ id: string }> {
+    return prisma.itineraryWarning.create({
+      data: {
+        itineraryId: data.itineraryId,
+        title: data.title,
+        description: data.description,
+      },
+      select: { id: true },
+    });
+  }
+
+  async createTouristTrap(data: CreateTouristTrapData): Promise<{ id: string }> {
+    return prisma.itineraryTouristTrap.create({
+      data: {
+        itineraryId: data.itineraryId,
+        name: data.name,
+        reason: data.reason,
+      },
+      select: { id: true },
+    });
+  }
+
+  async createLocalTip(data: CreateLocalTipData): Promise<{ id: string }> {
+    return prisma.itineraryLocalTip.create({
+      data: {
+        itineraryId: data.itineraryId,
+        tip: data.tip,
+      },
+      select: { id: true },
     });
   }
 }
