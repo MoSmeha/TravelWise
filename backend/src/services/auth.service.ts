@@ -7,11 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { RegisterInput, LoginInput } from '../schemas/auth.schema.js';
 import { authProvider } from '../providers/auth.provider.pg.js';
 import { UserResponse, UserWithPassword } from '../provider-contract/auth.provider-contract.js';
-import {
-  UserAlreadyExistsError,
-  InvalidCredentialsError,
-  EmailNotVerifiedError,
-} from '../errors/auth.errors.js';
+// Removed auth.error.ts imports
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-duper-secret-se-factory';
 
@@ -48,13 +44,13 @@ export async function register(input: RegisterInput): Promise<RegisterResult> {
 
   const existingEmail = await authProvider.findUserByEmail(input.email);
   if (existingEmail) {
-    throw new UserAlreadyExistsError('Email already registered');
+    throw new Error('Email already registered');
   }
 
 
   const existingUsername = await authProvider.findUserByUsername(input.username);
   if (existingUsername) {
-    throw new UserAlreadyExistsError('Username already taken');
+    throw new Error('Username already taken');
   }
 
 
@@ -91,12 +87,12 @@ export async function login(input: LoginInput): Promise<LoginResult> {
 
   const isValid = await verifyPassword(input.password, user.passwordHash);
   if (!isValid) {
-    throw new InvalidCredentialsError();
+    throw new Error('Invalid credentials');
   }
 
 
   if (!user.emailVerified) {
-    throw new EmailNotVerifiedError();
+    throw new Error('Email not verified');
   }
 
 

@@ -1,18 +1,13 @@
-// ==========================================
-// CIRCUIT BREAKER
-// Prevents cascading failures from external API outages
-// ==========================================
-
 export enum CircuitState {
-  CLOSED = 'CLOSED',     // Normal operation
+  CLOSED = 'CLOSED',     // Normal 
   OPEN = 'OPEN',         // Failing, reject requests
   HALF_OPEN = 'HALF_OPEN' // Testing if service recovered
 }
 
 interface CircuitBreakerConfig {
-  failureThreshold: number;  // Failures before opening
-  resetTimeout: number;      // Ms before trying again (half-open)
-  halfOpenRequests: number;  // Requests to allow in half-open state
+  failureThreshold: number;  
+  resetTimeout: number;      
+  halfOpenRequests: number;  
 }
 
 interface CircuitBreakerState {
@@ -45,7 +40,6 @@ export class CircuitBreaker {
 
   isOpen(): boolean {
     if (this.state.state === CircuitState.OPEN) {
-      // Check if we should transition to half-open
       if (this.state.lastFailureTime && 
           Date.now() - this.state.lastFailureTime >= this.config.resetTimeout) {
         this.state.state = CircuitState.HALF_OPEN;

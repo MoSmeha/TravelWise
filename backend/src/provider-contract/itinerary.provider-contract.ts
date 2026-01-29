@@ -9,6 +9,7 @@ export interface FetchPlacesParams {
   limit: number;
   excludeIds?: string[];
   priceLevel?: PriceLevel;
+  excludeTouristTraps?: boolean;
 }
 
 export interface CreateItineraryData {
@@ -47,15 +48,33 @@ export interface CreateChecklistItemData {
   reason?: string;
 }
 
+export interface CreateWarningData {
+  itineraryId: string;
+  title: string;
+  description: string;
+}
+
+export interface CreateTouristTrapData {
+  itineraryId: string;
+  name: string;
+  reason: string;
+}
+
+export interface CreateLocalTipData {
+  itineraryId: string;
+  tip: string;
+}
+
 export interface CreateExternalHotelData {
   googlePlaceId: string;
   name: string;
   latitude: number;
   longitude: number;
   country: string;
+  classification: LocationClassification;
+  description: string;
   city?: string;
   address?: string;
-  description?: string;
   rating?: number | null;
   totalRatings?: number | null;
   priceLevel?: PriceLevel | null;
@@ -128,6 +147,9 @@ export interface UserItineraryWithDays {
   routeSummary: string | null;
   days: ItineraryDayWithItems[];
   checklist: ChecklistItemRecord[];
+  warnings: WarningRecord[];
+  touristTraps: TouristTrapRecord[];
+  localTips: LocalTipRecord[];
 }
 
 export interface ItineraryDayWithItems {
@@ -153,6 +175,23 @@ export interface ChecklistItemRecord {
   item: string;
   reason: string | null;
   isChecked: boolean;
+}
+
+export interface WarningRecord {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface TouristTrapRecord {
+  id: string;
+  name: string;
+  reason: string;
+}
+
+export interface LocalTipRecord {
+  id: string;
+  tip: string;
 }
 
 export interface ItineraryDayRecord {
@@ -182,17 +221,17 @@ export interface CreatePlaceData {
   latitude: number;
   longitude: number;
   country: string;
+  category: LocationCategory;
+  classification: LocationClassification;
+  description: string;
   city?: string;
   address?: string;
-  category: LocationCategory;
-  description?: string;
   rating?: number | null;
   totalRatings?: number | null;
   priceLevel?: PriceLevel | null;
   imageUrl?: string | null;
   imageUrls?: string[];
   websiteUrl?: string | null;
-  classification?: LocationClassification;
 }
 
 export interface IItineraryProvider {
@@ -222,4 +261,8 @@ export interface IItineraryProvider {
   createPlace(data: CreatePlaceData): Promise<{ id: string }>;
   
   deleteItinerary(id: string): Promise<void>;
+
+  createWarning(data: CreateWarningData): Promise<{ id: string }>;
+  createTouristTrap(data: CreateTouristTrapData): Promise<{ id: string }>;
+  createLocalTip(data: CreateLocalTipData): Promise<{ id: string }>;
 }

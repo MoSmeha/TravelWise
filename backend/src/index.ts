@@ -1,7 +1,7 @@
-import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import { authenticate } from './middleware/auth.middleware.js';
+import { corsMiddleware } from './middleware/cors.middleware.js';
 import authRouter from './routes/auth.js';
 import checklistRouter from './routes/checklist.js';
 import itineraryRouter from './routes/itinerary.js';
@@ -24,8 +24,7 @@ dotenv.config();
 const app: Express = express();
 const PORT = process.env.PORT || 3000;
 
-
-app.use(cors());
+app.use(corsMiddleware);
 app.use(express.json());
 
 

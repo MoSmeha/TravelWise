@@ -23,11 +23,7 @@ import {
   rotateRefreshToken,
   getUserById
 } from '../services/auth.service.js';
-import {
-  UserAlreadyExistsError,
-  InvalidCredentialsError,
-  EmailNotVerifiedError,
-} from '../errors/auth.errors.js';
+// Removed auth.error.ts imports
 
 describe('Auth Controller', () => {
   beforeEach(() => {
@@ -58,7 +54,7 @@ describe('Auth Controller', () => {
       const { req, res } = createMockContext();
       req.body = { email: 'existing@example.com', password: 'SecurePass123!', name: 'Test', username: 'testuser' };
 
-      vi.mocked(registerService).mockRejectedValue(new UserAlreadyExistsError('Email already registered'));
+      vi.mocked(registerService).mockRejectedValue(new Error('Email already registered'));
 
       await register(req, res);
 
@@ -86,7 +82,7 @@ describe('Auth Controller', () => {
       const { req, res } = createMockContext();
       req.body = { email: 'test@example.com', password: 'wrongpassword' };
 
-      vi.mocked(loginService).mockRejectedValue(new InvalidCredentialsError());
+      vi.mocked(loginService).mockRejectedValue(new Error('Invalid credentials'));
 
       await login(req, res);
 
@@ -97,7 +93,7 @@ describe('Auth Controller', () => {
       const { req, res } = createMockContext();
       req.body = { email: 'unverified@example.com', password: 'Password123!' };
 
-      vi.mocked(loginService).mockRejectedValue(new EmailNotVerifiedError());
+      vi.mocked(loginService).mockRejectedValue(new Error('Email not verified'));
 
       await login(req, res);
 

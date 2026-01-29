@@ -299,6 +299,9 @@ model UserItinerary {
   embeddings          ItineraryEmbedding[]
   shares              ItineraryShare[]   @relation("ItineraryShares")
   userLocations       UserLocation[]     @relation("ItineraryLocations")
+  warnings            ItineraryWarning[]
+  touristTraps        ItineraryTouristTrap[]
+  localTips           ItineraryLocalTip[]
   
   @@index([userId])
   @@index([flightDate])
@@ -394,6 +397,38 @@ enum ChecklistCategory {
   ACTIVITY
   SAFETY
   DOCUMENTATION
+}
+
+model ItineraryWarning {
+  id            String        @id @default(cuid())
+  itineraryId   String
+  itinerary     UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  title         String
+  description   String
+  createdAt     DateTime      @default(now())
+  
+  @@index([itineraryId])
+}
+
+model ItineraryTouristTrap {
+  id            String        @id @default(cuid())
+  itineraryId   String
+  itinerary     UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  name          String
+  reason        String
+  createdAt     DateTime      @default(now())
+  
+  @@index([itineraryId])
+}
+
+model ItineraryLocalTip {
+  id            String        @id @default(cuid())
+  itineraryId   String
+  itinerary     UserItinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  tip           String
+  createdAt     DateTime      @default(now())
+  
+  @@index([itineraryId])
 }
 
 

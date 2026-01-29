@@ -3,7 +3,7 @@ import * as ExpoLocation from 'expo-location';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Text, View, TouchableOpacity } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-import { MapPin, MapPinOff } from 'lucide-react-native';
+import { MapPin, MapPinOff, Plane, Hotel as HotelIcon } from 'lucide-react-native';
 import { placesService } from '../services/api';
 import { DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
@@ -18,6 +18,9 @@ import {
   MapHeader,
   BottomNavigation,
   MapLegend,
+  CustomMapPin,
+  BorderedPolyline,
+  StableMarker,
 } from '../components/map';
 
 const HOTEL_COLOR = '#8b5cf6';
@@ -50,6 +53,7 @@ export default function MapScreen() {
 
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [locationPhotos, setLocationPhotos] = useState<Record<string, LocationPhotosData>>({});
 
 
@@ -120,7 +124,40 @@ export default function MapScreen() {
 
 
 
-  const allLocations: Location[] = data?.days?.flatMap((day) => day.locations) || [];
+
+
+  const allLocations: Location[] = useMemo(() => {
+    const locations: Location[] = [];
+    
+    data?.days?.forEach((day) => {
+      // Add regular locations
+      locations.push(...day.locations);
+      
+      // Add meals as locations
+      if (day.meals) {
+        [day.meals.breakfast, day.meals.lunch, day.meals.dinner].forEach((meal) => {
+          if (meal) {
+            locations.push({
+              id: meal.id,
+              name: meal.name,
+              classification: 'HIDDEN_GEM' as const,
+              category: meal.category,
+              description: meal.description || `${meal.rating || 4}★ restaurant`,
+              latitude: meal.latitude,
+              longitude: meal.longitude,
+              crowdLevel: 'MODERATE' as const,
+              rating: meal.rating,
+              totalRatings: meal.totalRatings,
+              imageUrl: meal.imageUrl,
+            } as Location);
+          }
+        });
+      }
+    });
+    
+    return locations;
+  }, [data?.days]);
+  
   const hotels: Hotel[] = data?.hotels || [];
 
 
@@ -252,7 +289,11 @@ export default function MapScreen() {
         itineraryId={data.itinerary.id}
       />
 
-      <MapLegend days={data.itinerary.numberOfDays} />
+      <MapLegend 
+        days={data.itinerary.numberOfDays} 
+        selectedDay={selectedDay}
+        onSelectDay={(dayIndex) => setSelectedDay(prev => prev === dayIndex ? null : dayIndex)}
+      />
 
 
       <MapView
@@ -266,6 +307,8 @@ export default function MapScreen() {
         {dayRoutes.map((fallbackRoute, index) => {
           const routeToRender = realRoutes[index] || fallbackRoute;
           
+          const isSelected = selectedDay === index;
+          const isDimmed = selectedDay !== null && !isSelected;
 
           let connector = null;
           if (index < dayRoutes.length - 1) {
@@ -279,14 +322,18 @@ export default function MapScreen() {
                const end = nextRoute[0];
                
                const connectorCoords = fetchedConnector || [start, end];
+               
+               // Dim connectors if any specific day is selected
+               const isConnectorDimmed = selectedDay !== null;
 
                connector = (
                  <Polyline
                    key={`connector-${index}`}
                    coordinates={connectorCoords}
-                   strokeColor="#9CA3AF"
-                   strokeWidth={5}
+                   strokeColor={isConnectorDimmed ? "#E5E7EB" : "#9CA3AF"}
+                   strokeWidth={isConnectorDimmed ? 3 : 5}
                    lineDashPattern={[10, 5]}
+                   zIndex={isConnectorDimmed ? 0 : 5}
                  />
                );
              }
@@ -296,11 +343,11 @@ export default function MapScreen() {
             <React.Fragment key={`route-group-${index}`}>
 
               {routeToRender.length > 1 && (
-                <Polyline
+                <BorderedPolyline
                   key={`route-${index}`}
                   coordinates={routeToRender}
-                  strokeColor={DAY_COLORS[index % DAY_COLORS.length]}
-                  strokeWidth={5}
+                  color={DAY_COLORS[index % DAY_COLORS.length]}
+                  isDimmed={isDimmed}
                 />
               )}
 
@@ -311,15 +358,19 @@ export default function MapScreen() {
 
 
         {data.airport && (
-          <Marker
+          <StableMarker
             coordinate={{
               latitude: data.airport.latitude,
               longitude: data.airport.longitude,
             }}
-            pinColor={AIRPORT_COLOR}
             title={`✈️ ${data.airport.name}`}
             description="Your arrival airport"
-          />
+          >
+            <CustomMapPin
+              color={AIRPORT_COLOR}
+              icon={<Plane size={18} color="white" strokeWidth={2.5} />}
+            />
+          </StableMarker>
         )}
 
 
@@ -337,20 +388,24 @@ export default function MapScreen() {
 
 
         {hotels.map((hotel) => (
-          <Marker
+          <StableMarker
             key={hotel.id}
             coordinate={{
               latitude: hotel.latitude,
               longitude: hotel.longitude,
             }}
-            pinColor={HOTEL_COLOR}
             title={`🏨 ${hotel.name}`}
             description={hotel.neighborhood}
             onPress={() => {
               setSelectedHotel(hotel);
               setSelectedLocation(null);
             }}
-          />
+          >
+            <CustomMapPin
+              color={HOTEL_COLOR}
+              icon={<HotelIcon size={18} color="white" strokeWidth={2.5} />}
+            />
+          </StableMarker>
         ))}
 
 

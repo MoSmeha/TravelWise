@@ -3,6 +3,7 @@ import { AppState, AppStateStatus } from 'react-native';
 import { useAuth } from '../store/authStore';
 import { socketService } from '../services/socketService';
 import { useNotificationStore } from '../store/notificationStore';
+import { useChatStore } from '../store/chatStore';
 import { Notification } from './queries/useNotifications';
 import Toast from 'react-native-toast-message';
 import { useCallback } from 'react';
@@ -17,6 +18,7 @@ interface NewMessageEvent {
 export const useSocket = () => {
   const { accessToken, user, isRestoring } = useAuth();
   const { handleNewNotification } = useNotificationStore();
+  const activeConversationId = useChatStore((state) => state.activeConversationId);
   const queryClient = useQueryClient();
   const appState = useRef(AppState.currentState);
 
@@ -27,29 +29,66 @@ export const useSocket = () => {
     handleNewNotification(notification);
     
 
+    // Choose toast variant based on notification type
+    let toastType = 'info';
+    switch (notification.type) {
+      case 'POST_LIKE':
+        toastType = 'post_like';
+        break;
+      case 'POST_COMMENT':
+        toastType = 'post_comment';
+        break;
+      case 'FRIEND_REQUEST':
+        toastType = 'friend_request';
+        break;
+      case 'FRIEND_ACCEPTED':
+        toastType = 'friend_accepted';
+        break;
+      case 'ITINERARY_SHARED':
+        toastType = 'itinerary_shared';
+        break;
+      case 'ITINERARY_ACCEPTED':
+        toastType = 'itinerary_accepted';
+        break;
+    }
+
     Toast.show({
-      type: 'info',
+      type: toastType,
       text1: notification.title,
       text2: notification.message,
     });
   }, [handleNewNotification]);
 
-  const handleNewMessage = useCallback((event: NewMessageEvent) => {
+  const handleNewMessage = useCallback(async (event: NewMessageEvent) => {
     console.log('[useSocket] Received new message:', event);
     
+    const isViewingThisConversation = activeConversationId === event.conversationId;
+    
+    // If user is viewing this conversation, mark as read BEFORE invalidating
+    // This ensures the conversations list refetches with updated read status
+    if (isViewingThisConversation) {
+      try {
+        const api = (await import('../services/api')).default;
+        await api.put(`/messages/conversations/${event.conversationId}/read`);
+      } catch (error) {
+        console.error('[useSocket] Failed to mark conversation as read:', error);
+      }
+    }
 
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
     queryClient.invalidateQueries({ queryKey: ['messages', event.conversationId] });
     
-
-    Toast.show({
-      type: 'info',
-      text1: event.message.sender?.name || 'New Message',
-      text2: event.message.content.length > 50 
-        ? event.message.content.substring(0, 47) + '...' 
-        : event.message.content,
-    });
-  }, [queryClient]);
+    // Only show toast if user is NOT currently viewing this conversation
+    if (!isViewingThisConversation) {
+      Toast.show({
+        type: 'message',
+        text1: event.message.sender?.name || 'New Message',
+        text2: event.message.content.length > 50 
+          ? event.message.content.substring(0, 47) + '...' 
+          : event.message.content,
+      });
+    }
+  }, [queryClient, activeConversationId]);
 
 
   useEffect(() => {
