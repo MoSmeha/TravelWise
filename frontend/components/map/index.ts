@@ -5,3 +5,4 @@ export { MapHeader } from './MapHeader';
 export { BottomNavigation } from './BottomNavigation';
 export { MapLegend } from './MapLegend';
 export { CustomMapPin } from './CustomMapPin';
+export { BorderedPolyline } from './BorderedPolyline';

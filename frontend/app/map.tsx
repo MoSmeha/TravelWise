@@ -19,6 +19,7 @@ import {
   BottomNavigation,
   MapLegend,
   CustomMapPin,
+  BorderedPolyline,
 } from '../components/map';
 
 const HOTEL_COLOR = '#8b5cf6';
@@ -51,6 +52,7 @@ export default function MapScreen() {
 
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [locationPhotos, setLocationPhotos] = useState<Record<string, LocationPhotosData>>({});
 
 
@@ -286,7 +288,11 @@ export default function MapScreen() {
         itineraryId={data.itinerary.id}
       />
 
-      <MapLegend days={data.itinerary.numberOfDays} />
+      <MapLegend 
+        days={data.itinerary.numberOfDays} 
+        selectedDay={selectedDay}
+        onSelectDay={(dayIndex) => setSelectedDay(prev => prev === dayIndex ? null : dayIndex)}
+      />
 
 
       <MapView
@@ -300,6 +306,8 @@ export default function MapScreen() {
         {dayRoutes.map((fallbackRoute, index) => {
           const routeToRender = realRoutes[index] || fallbackRoute;
           
+          const isSelected = selectedDay === index;
+          const isDimmed = selectedDay !== null && !isSelected;
 
           let connector = null;
           if (index < dayRoutes.length - 1) {
@@ -313,14 +321,18 @@ export default function MapScreen() {
                const end = nextRoute[0];
                
                const connectorCoords = fetchedConnector || [start, end];
+               
+               // Dim connectors if any specific day is selected
+               const isConnectorDimmed = selectedDay !== null;
 
                connector = (
                  <Polyline
                    key={`connector-${index}`}
                    coordinates={connectorCoords}
-                   strokeColor="#9CA3AF"
-                   strokeWidth={5}
+                   strokeColor={isConnectorDimmed ? "#E5E7EB" : "#9CA3AF"}
+                   strokeWidth={isConnectorDimmed ? 3 : 5}
                    lineDashPattern={[10, 5]}
+                   zIndex={isConnectorDimmed ? 0 : 5}
                  />
                );
              }
@@ -330,11 +342,11 @@ export default function MapScreen() {
             <React.Fragment key={`route-group-${index}`}>
 
               {routeToRender.length > 1 && (
-                <Polyline
+                <BorderedPolyline
                   key={`route-${index}`}
                   coordinates={routeToRender}
-                  strokeColor={DAY_COLORS[index % DAY_COLORS.length]}
-                  strokeWidth={5}
+                  color={DAY_COLORS[index % DAY_COLORS.length]}
+                  isDimmed={isDimmed}
                 />
               )}
 
