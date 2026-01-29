@@ -103,12 +103,13 @@ export default function ChatScreen() {
     const isOtherUserOnline = otherUser?.id ? (onlineStatus[otherUser.id] || false) : false;
 
 
-    // Mark conversation as read when new messages arrive while in the chat
+    // Mark conversation as read on initial load
     useEffect(() => {
-        if (id && messages.length > 0) {
+        if (id) {
             markReadMutation.mutate(id);
         }
-    }, [id, messages.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
 
     const handleSend = async () => {
         if (!message.trim() || !id) return;

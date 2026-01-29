@@ -59,15 +59,27 @@ export const useSocket = () => {
     });
   }, [handleNewNotification]);
 
-  const handleNewMessage = useCallback((event: NewMessageEvent) => {
+  const handleNewMessage = useCallback(async (event: NewMessageEvent) => {
     console.log('[useSocket] Received new message:', event);
     
+    const isViewingThisConversation = activeConversationId === event.conversationId;
+    
+    // If user is viewing this conversation, mark as read BEFORE invalidating
+    // This ensures the conversations list refetches with updated read status
+    if (isViewingThisConversation) {
+      try {
+        const api = (await import('../services/api')).default;
+        await api.put(`/messages/conversations/${event.conversationId}/read`);
+      } catch (error) {
+        console.error('[useSocket] Failed to mark conversation as read:', error);
+      }
+    }
 
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
     queryClient.invalidateQueries({ queryKey: ['messages', event.conversationId] });
     
     // Only show toast if user is NOT currently viewing this conversation
-    if (activeConversationId !== event.conversationId) {
+    if (!isViewingThisConversation) {
       Toast.show({
         type: 'message',
         text1: event.message.sender?.name || 'New Message',
