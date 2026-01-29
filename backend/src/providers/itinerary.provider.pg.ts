@@ -24,22 +24,16 @@ import {
 class ItineraryPgProvider implements IItineraryProvider {
 
 
-  async fetchPlaces(params: FetchPlacesParams): Promise<PlaceRecord[]> {
-    const { categories, country, city, limit, excludeIds = [], priceLevel } = params;
-   
-    const isFoodCategory = categories.some(cat => 
-      cat === LocationCategory.RESTAURANT || 
-      cat === LocationCategory.CAFE || 
-      cat === LocationCategory.BAR
-    );
+  // Pure data access - fetches places from database with basic filtering
+  async fetchPlacesRaw(params: FetchPlacesParams): Promise<PlaceRecord[]> {
+    const { categories, country, city, limit, excludeIds = [], priceLevel, excludeTouristTraps } = params;
 
     const where: any = {
       category: { in: categories },
       country: { equals: country, mode: 'insensitive' },
     };
 
-    // Only filter out tourist traps for categories that aren't food
-    if (!isFoodCategory) {
+    if (excludeTouristTraps) {
       where.classification = { not: LocationClassification.TOURIST_TRAP };
     }
 
@@ -47,54 +41,29 @@ class ItineraryPgProvider implements IItineraryProvider {
       where.city = { equals: city, mode: 'insensitive' };
     }
 
-
     if (priceLevel) {
       where.priceLevel = priceLevel;
     }
-
 
     if (excludeIds.length > 0) {
       where.id = { notIn: excludeIds };
     }
 
-    let places = await prisma.place.findMany({
+    const places = await prisma.place.findMany({
       where,
       orderBy: [
-        { classification: 'desc' }, // MUST_SEE comes before HIDDEN_GEM/CONDITIONAL when descending
         { rating: 'desc' },
         { popularity: 'desc' },
       ],
       take: limit,
     });
 
-
-    // Fallback strategy: If not enough city-specific places found, fill the rest with country-wide places
-    if (places.length < limit && city) {
-      const fallbackWhere: any = {
-        category: { in: categories },
-        country: { equals: country, mode: 'insensitive' },
-        // IMPORTANT: Exclude both the original excluded IDs AND the places we just found in the city search
-        id: { notIn: [...excludeIds, ...places.map((p) => p.id)] },
-      };
-      
-      if (!isFoodCategory) {
-        fallbackWhere.classification = { not: LocationClassification.TOURIST_TRAP };
-      }
-      
-      // Apply same price filter to fallback
-      if (priceLevel) {
-        fallbackWhere.priceLevel = priceLevel;
-      }
-      
-      const countryPlaces = await prisma.place.findMany({
-        where: fallbackWhere,
-        orderBy: [{ classification: 'asc' }, { rating: 'desc' }, { popularity: 'desc' }],
-        take: limit - places.length,
-      });
-      places = [...places, ...countryPlaces];
-    }
-
     return places as PlaceRecord[];
+  }
+
+  // For backwards compatibility - delegates to service wrapper
+  async fetchPlaces(params: FetchPlacesParams): Promise<PlaceRecord[]> {
+    return this.fetchPlacesRaw(params);
   }
 
   async findPlaceByGoogleId(googlePlaceId: string): Promise<{ id: string } | null> {
@@ -250,11 +219,9 @@ class ItineraryPgProvider implements IItineraryProvider {
   }
 
   async createExternalHotel(data: CreateExternalHotelData): Promise<{ id: string }> {
-
     const hotel = await prisma.place.upsert({
       where: { googlePlaceId: data.googlePlaceId },
       update: {
-
         rating: data.rating ?? undefined,
         totalRatings: data.totalRatings ?? undefined,
         imageUrl: data.imageUrl ?? undefined,
@@ -263,9 +230,9 @@ class ItineraryPgProvider implements IItineraryProvider {
       },
       create: {
         name: data.name,
-        classification: LocationClassification.MUST_SEE,
+        classification: data.classification,
         category: LocationCategory.HOTEL,
-        description: data.description || `${data.rating ?? 0}★ hotel with ${data.totalRatings ?? 0} reviews`,
+        description: data.description,
         sources: ['google_places'],
         sourceUrls: [],
         popularity: data.totalRatings ?? 0,
@@ -286,7 +253,6 @@ class ItineraryPgProvider implements IItineraryProvider {
       select: { id: true },
     });
     
-    console.log(`[HOTEL] Saved external hotel "${data.name}" to database with id: ${hotel.id}`);
     return hotel;
   }
 
@@ -302,9 +268,9 @@ class ItineraryPgProvider implements IItineraryProvider {
       },
       create: {
         name: data.name,
-        classification: data.classification || LocationClassification.HIDDEN_GEM,
+        classification: data.classification,
         category: data.category,
-        description: data.description || `${data.rating ?? 0}★ ${data.category.replace('_', ' ')}`,
+        description: data.description,
         sources: ['google_places', 'user_generation'],
         sourceUrls: [],
         popularity: data.totalRatings ?? 0,
@@ -324,7 +290,6 @@ class ItineraryPgProvider implements IItineraryProvider {
       },
       select: { id: true },
     });
-    console.log(`[PLACE] Saved new place "${data.name}" to database with id: ${place.id}`);
     return place;
   }
 

@@ -206,6 +206,30 @@ function mapToValidChecklistCategory(category: string): ChecklistCategory | null
 }
 
 
+// Classification priority: MUST_SEE and HIDDEN_GEM share highest priority
+function getClassificationPriority(classification: LocationClassification): number {
+  switch (classification) {
+    case LocationClassification.MUST_SEE:
+    case LocationClassification.HIDDEN_GEM:
+      return 0;
+    case LocationClassification.CONDITIONAL:
+      return 1;
+    case LocationClassification.TOURIST_TRAP:
+      return 2;
+    default:
+      return 3;
+  }
+}
+
+// Business logic: Detect if categories are food-related (tourist traps allowed for food)
+function isFoodCategory(categories: LocationCategory[]): boolean {
+  return categories.some(cat => 
+    cat === LocationCategory.RESTAURANT || 
+    cat === LocationCategory.CAFE || 
+    cat === LocationCategory.BAR
+  );
+}
+
 async function fetchPlaces(
   categories: LocationCategory[],
   country: string,
@@ -215,15 +239,57 @@ async function fetchPlaces(
   priceLevel?: PriceLevel,
   provider: IItineraryProvider = itineraryProvider
 ): Promise<PlaceExtended[]> {
-  const places = await provider.fetchPlaces({
+  const isFood = isFoodCategory(categories);
+  
+  // Fetch more than needed to allow for sorting and filtering
+  const fetchLimit = limit * 2;
+  
+  let places = await provider.fetchPlaces({
     categories,
     country,
     city,
-    limit,
+    limit: fetchLimit,
     excludeIds,
     priceLevel,
+    excludeTouristTraps: !isFood, // Only exclude tourist traps for non-food categories
   });
-  
+
+  // Sort by custom classification priority, then by rating and popularity
+  places.sort((a, b) => {
+    const priorityDiff = getClassificationPriority(a.classification) - getClassificationPriority(b.classification);
+    if (priorityDiff !== 0) return priorityDiff;
+    const ratingDiff = (b.rating ?? 0) - (a.rating ?? 0);
+    if (ratingDiff !== 0) return ratingDiff;
+    return (b.popularity ?? 0) - (a.popularity ?? 0);
+  });
+
+  // Take only the requested limit after sorting
+  places = places.slice(0, limit);
+
+  // Fallback strategy: If not enough city-specific places found, fill with country-wide places
+  if (places.length < limit && city) {
+    const existingIds = [...excludeIds, ...places.map(p => p.id)];
+    
+    const countryPlaces = await provider.fetchPlaces({
+      categories,
+      country,
+      city: null, // Search country-wide
+      limit: limit - places.length,
+      excludeIds: existingIds,
+      priceLevel,
+      excludeTouristTraps: !isFood,
+    });
+    
+    // Sort fallback places the same way
+    countryPlaces.sort((a, b) => {
+      const priorityDiff = getClassificationPriority(a.classification) - getClassificationPriority(b.classification);
+      if (priorityDiff !== 0) return priorityDiff;
+      return (b.rating ?? 0) - (a.rating ?? 0);
+    });
+    
+    places = [...places, ...countryPlaces];
+  }
+
   return places as PlaceExtended[];
 }
 
@@ -910,9 +976,10 @@ export async function saveItineraryToDb(
           latitude: day.hotel.latitude,
           longitude: day.hotel.longitude,
           country: day.hotel.country,
+          classification: LocationClassification.MUST_SEE,
+          description: day.hotel.description ?? `${day.hotel.rating ?? 0}★ hotel with ${day.hotel.totalRatings ?? 0} reviews`,
           city: day.hotel.city ?? undefined,
           address: day.hotel.address ?? undefined,
-          description: day.hotel.description ?? undefined,
           rating: day.hotel.rating ?? undefined,
           totalRatings: day.hotel.totalRatings ?? undefined,
           priceLevel: day.hotel.priceLevel ?? undefined,

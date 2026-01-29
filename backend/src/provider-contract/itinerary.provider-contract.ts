@@ -9,6 +9,7 @@ export interface FetchPlacesParams {
   limit: number;
   excludeIds?: string[];
   priceLevel?: PriceLevel;
+  excludeTouristTraps?: boolean;
 }
 
 export interface CreateItineraryData {
@@ -70,9 +71,10 @@ export interface CreateExternalHotelData {
   latitude: number;
   longitude: number;
   country: string;
+  classification: LocationClassification;
+  description: string;
   city?: string;
   address?: string;
-  description?: string;
   rating?: number | null;
   totalRatings?: number | null;
   priceLevel?: PriceLevel | null;
@@ -219,17 +221,17 @@ export interface CreatePlaceData {
   latitude: number;
   longitude: number;
   country: string;
+  category: LocationCategory;
+  classification: LocationClassification;
+  description: string;
   city?: string;
   address?: string;
-  category: LocationCategory;
-  description?: string;
   rating?: number | null;
   totalRatings?: number | null;
   priceLevel?: PriceLevel | null;
   imageUrl?: string | null;
   imageUrls?: string[];
   websiteUrl?: string | null;
-  classification?: LocationClassification;
 }
 
 export interface IItineraryProvider {
