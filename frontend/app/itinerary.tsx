@@ -1,15 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { 
     AlertTriangle, 
-    ArrowLeft, 
-    DollarSign, 
     Hotel, 
     Lightbulb, 
-    Plane, 
-    ShieldAlert,
-    Utensils,
-    Car,
-    Ticket
+    ShieldAlert
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -19,10 +13,13 @@ import {
     ScrollView,
     Text,
     TouchableOpacity,
-    View
+    View,
+    StatusBar,
+    Platform,
+    UIManager
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DayAccordion } from '../components/itinerary/DayAccordion';
+import { DayAccordion, ItineraryHeader, BudgetGrid, TouristTrapCard, LocalTipCard, WarningCard } from '../components/itinerary';
 import { useItineraryStore } from '../store/itineraryStore';
 import type { Hotel as HotelType, ItineraryResponse } from '../types/api';
 
@@ -33,19 +30,35 @@ export default function ItineraryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
-
   const itineraryId = typeof params.itineraryId === 'string' ? params.itineraryId : null;
   
-
   const { data: fetchedData, isLoading } = useItineraryDetails(itineraryId || '');
   
   const [passedData, setPassedData] = useState<ItineraryResponse | null>(null);
   
-
   const setActiveItinerary = useItineraryStore((state) => state.setActiveItinerary);
+  
+  // Section expansion state
+  const [expandTraps, setExpandTraps] = useState(false);
+  const [expandTips, setExpandTips] = useState(false);
+  const [expandWarnings, setExpandWarnings] = useState(false);
+
+  // Enable LayoutAnimation for Android
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      if (UIManager.setLayoutAnimationEnabledExperimental) {
+        UIManager.setLayoutAnimationEnabledExperimental(true);
+      }
+    }
+  }, []);
+
+  // Helper for layout animation
+  const toggleSection = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+    // LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); // Handled by Reanimated in children
+    setter(prev => !prev);
+  };
 
   useEffect(() => {
-
     if (params.data) {
       try {
         const parsed = JSON.parse(params.data as string);
@@ -67,7 +80,6 @@ export default function ItineraryScreen() {
       Alert.alert('Error', 'Could not open booking link');
     });
   };
-
 
   const data = (fetchedData as ItineraryResponse) || passedData;
 
@@ -96,177 +108,70 @@ export default function ItineraryScreen() {
 
   return (
     <View className="flex-1 bg-gray-50">
+      <StatusBar barStyle="light-content" />
+      
+      {/* Header */}
+      <ItineraryHeader 
+        countryName={data.country?.name || 'Your Trip'}
+        days={data.itinerary.numberOfDays}
+        budget={data.itinerary.budgetUSD}
+        airport={data.airport.name}
+        totalCost={data.itinerary.totalEstimatedCostUSD}
+      />
 
-      <View 
-        className="bg-white border-b border-gray-200"
-        style={{ paddingTop: insets.top }}
-      >
-        <View className="flex-row items-center px-4 py-3">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="mr-3 p-1"
-          >
-            <ArrowLeft size={24} color="#374151" />
-          </TouchableOpacity>
-          <Text className="text-lg font-semibold text-gray-900">Itinerary</Text>
-        </View>
-      </View>
-
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-
-        <View className="bg-white mx-4 mt-4 p-5 rounded-2xl">
-          <View className="flex-row items-start justify-between">
-            <View className="flex-1">
-              <Text className="text-2xl font-bold text-gray-900">
-                {data.country?.name || 'Your'} Trip
-              </Text>
-              <Text className="text-base text-gray-500 mt-1">
-                {data.itinerary.numberOfDays} days - ${data.itinerary.budgetUSD} budget
-              </Text>
-            </View>
-            <View className="bg-[#094772] px-3 py-1.5 rounded-full">
-              <Text className="text-white text-xs font-semibold">AI Generated</Text>
-            </View>
-          </View>
-          
-          <View className="flex-row items-center mt-3">
-            <Plane size={16} color="#0284C7" />
-            <Text className="text-sm text-sky-600 ml-2">
-              Arriving at {data.airport.name} ({data.airport.code})
-            </Text>
-          </View>
-          
-          {data.itinerary.totalEstimatedCostUSD && (
-            <View className="flex-row items-center mt-2 pt-3 border-t border-gray-100">
-              <DollarSign size={18} color="#22C55E" />
-              <Text className="text-lg font-bold text-green-600 ml-1">
-                Est. Total: ${data.itinerary.totalEstimatedCostUSD} USD
-              </Text>
-            </View>
-          )}
-        </View>
-
-
+      <ScrollView className="flex-1 -mt-4 bg-gray-50 pt-6 rounded-t-[32px]" showsVerticalScrollIndicator={false}>
+        
+        {/* Budget Breakdown */}
         {data.itinerary.budgetBreakdown && (
-          <View className="bg-white mx-4 mt-3 p-4 rounded-2xl">
-            <Text className="text-base font-bold mb-3 text-gray-800">Budget Breakdown</Text>
-            <View className="flex-row justify-between py-2 border-b border-gray-100">
-              <View className="flex-row items-center">
-                <Utensils size={16} color="#6B7280" />
-                <Text className="text-sm text-gray-700 ml-2">Food</Text>
-              </View>
-              <Text className="text-sm font-semibold text-green-600">${data.itinerary.budgetBreakdown.food}</Text>
-            </View>
-            <View className="flex-row justify-between py-2 border-b border-gray-100">
-              <View className="flex-row items-center">
-                <Ticket size={16} color="#6B7280" />
-                <Text className="text-sm text-gray-700 ml-2">Activities</Text>
-              </View>
-              <Text className="text-sm font-semibold text-green-600">${data.itinerary.budgetBreakdown.activities}</Text>
-            </View>
-            <View className="flex-row justify-between py-2 border-b border-gray-100">
-              <View className="flex-row items-center">
-                <Car size={16} color="#6B7280" />
-                <Text className="text-sm text-gray-700 ml-2">Transport</Text>
-              </View>
-              <Text className="text-sm font-semibold text-green-600">${data.itinerary.budgetBreakdown.transport}</Text>
-            </View>
-            <View className="flex-row justify-between py-2">
-              <View className="flex-row items-center">
-                <Hotel size={16} color="#6B7280" />
-                <Text className="text-sm text-gray-700 ml-2">Accommodation</Text>
-              </View>
-              <Text className="text-sm font-semibold text-green-600">${data.itinerary.budgetBreakdown.accommodation}</Text>
-            </View>
-          </View>
+          <BudgetGrid breakdown={data.itinerary.budgetBreakdown} />
         )}
 
-
+        {/* Hotels Section */}
         {data.hotels && data.hotels.length > 0 && (
-          <View className="mx-4 mt-4">
-            <View className="flex-row items-center mb-3">
-              <Hotel size={18} color="#374151" />
-              <Text className="text-base font-bold text-gray-800 ml-2">Recommended Hotels</Text>
+          <View className="px-5 mt-8">
+            <View className="flex-row items-center mb-4">
+              <Hotel size={18} color="#111827" />
+              <Text className="text-base font-bold text-gray-900 ml-2">Recommended Stays</Text>
             </View>
             {data.hotels.map((hotel: HotelType) => (
-              <View key={hotel.id} className="bg-white p-4 rounded-2xl mb-3">
+              <View key={hotel.id} className="bg-white p-4 rounded-2xl mb-4 shadow-sm border border-gray-100">
                 <Text className="text-lg font-bold text-gray-900">{hotel.name}</Text>
                 <Text className="text-sm text-gray-500 mt-0.5">{hotel.neighborhood}</Text>
 
-                <Text className="text-base font-bold text-green-600 mt-2">
+                <Text className="text-base font-bold text-emerald-600 mt-2">
                   ${hotel.pricePerNightUSD.min}-${hotel.pricePerNightUSD.max}/night
                 </Text>
-                <View className="flex-row flex-wrap gap-1.5 mt-2">
+                <View className="flex-row flex-wrap gap-1.5 mt-3">
                   {hotel.amenities.slice(0, 4).map((amenity, idx) => (
-                    <View key={idx} className="bg-gray-100 px-2.5 py-1 rounded-full">
-                      <Text className="text-xs text-gray-700">{amenity}</Text>
+                    <View key={idx} className="bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
+                      <Text className="text-xs text-gray-600 font-medium">{amenity}</Text>
                     </View>
                   ))}
                 </View>
                 {hotel.warnings && (
                   <View className="mt-3 p-3 bg-amber-50 rounded-xl flex-row items-start">
-                    <AlertTriangle size={16} color="#D97706" />
-                    <Text className="text-sm text-amber-800 ml-2 flex-1">{hotel.warnings}</Text>
+                    <AlertTriangle size={14} color="#D97706" style={{ marginTop: 2 }} />
+                    <Text className="text-sm text-amber-800 ml-2 flex-1 leading-5">{hotel.warnings}</Text>
                   </View>
                 )}
                 <TouchableOpacity
-                  className="bg-[#094772] p-3.5 rounded-xl items-center mt-3"
+                  className="p-3.5 rounded-xl items-center mt-4 active:opacity-90"
+                  style={{ backgroundColor: '#004e89' }}
                   onPress={() => handleHotelBook(hotel.bookingUrl)}
                 >
-                  <Text className="text-white text-sm font-semibold">Book on Booking.com</Text>
+                  <Text className="text-white text-sm font-bold">Details</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </View>
         )}
 
-
-        {data.touristTraps && data.touristTraps.length > 0 && (
-          <View className="bg-red-50 mx-4 mt-3 p-4 rounded-2xl">
-            <View className="flex-row items-center mb-3">
-              <ShieldAlert size={18} color="#DC2626" />
-              <Text className="text-base font-bold text-gray-800 ml-2">Tourist Traps to Avoid</Text>
-            </View>
-            {data.touristTraps.map((trap) => (
-              <View key={trap.id} className="mb-3 last:mb-0">
-                <Text className="text-sm font-semibold text-red-800">{trap.name}</Text>
-                <Text className="text-sm text-red-700 mt-0.5">{trap.reason}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-
-        {data.localTips && data.localTips.length > 0 && (
-          <View className="bg-blue-50 mx-4 mt-3 p-4 rounded-2xl">
-            <View className="flex-row items-center mb-3">
-              <Lightbulb size={18} color="#2563EB" />
-              <Text className="text-base font-bold text-gray-800 ml-2">Local Tips</Text>
-            </View>
-            {data.localTips.map((tip, idx) => (
-              <Text key={idx} className="text-sm text-blue-800 mb-2 last:mb-0 leading-5">{tip}</Text>
-            ))}
-          </View>
-        )}
-
-
-        {data.warnings && data.warnings.length > 0 && (
-          <View className="bg-amber-50 mx-4 mt-3 p-4 rounded-2xl">
-            <View className="flex-row items-center mb-3">
-              <AlertTriangle size={18} color="#D97706" />
-              <Text className="text-base font-bold text-gray-800 ml-2">Important Warnings</Text>
-            </View>
-            {data.warnings.map((warning) => (
-              <View key={warning.id} className="mb-3 last:mb-0">
-                <Text className="text-sm font-semibold text-amber-800">{warning.title}</Text>
-                <Text className="text-sm text-amber-700 mt-0.5">{warning.description}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-
-        <View className="mt-4">
+        {/* Daily Itinerary */}
+        <View className="mt-6 mb-2 pt-6 border-t border-gray-200/60">
+           <View className="px-5 mb-4">
+             <Text className="text-lg font-bold text-gray-900">Daily Plan</Text>
+             <Text className="text-sm text-gray-500">Your step-by-step guide</Text>
+           </View>
           {data.days.map((day, index) => (
             <DayAccordion
               key={day.id || `day-${index}`}
@@ -277,6 +182,86 @@ export default function ItineraryScreen() {
           ))}
         </View>
 
+        {/* Tourist Traps Section */}
+        {data.touristTraps && data.touristTraps.length > 0 && (
+          <View className="mt-8">
+            <TouchableOpacity 
+              activeOpacity={0.7}
+              onPress={() => toggleSection(setExpandTraps)}
+              className="flex-row items-center px-5 mb-3"
+            >
+              <ShieldAlert size={18} color="#DC2626" />
+              <Text className="text-base font-bold text-gray-900 ml-2 flex-1">Tourist Traps to Avoid</Text>
+              <Text className="text-xs text-red-600 font-medium ml-2">
+                {expandTraps ? 'Collapse' : 'Expand All'}
+              </Text>
+            </TouchableOpacity>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              contentContainerStyle={{ paddingHorizontal: 20 }}
+              className="flex-row"
+            >
+              {data.touristTraps.map((trap) => (
+                <TouristTrapCard key={trap.id} trap={trap} isExpanded={expandTraps} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Local Tips Section */}
+        {data.localTips && data.localTips.length > 0 && (
+          <View className="mt-6">
+            <TouchableOpacity 
+              activeOpacity={0.7}
+              onPress={() => toggleSection(setExpandTips)}
+              className="flex-row items-center px-5 mb-3"
+            >
+              <Lightbulb size={18} color="#2563EB" />
+              <Text className="text-base font-bold text-gray-900 ml-2 flex-1">Local Tips</Text>
+              <Text className="text-xs text-blue-600 font-medium ml-2">
+                {expandTips ? 'Collapse' : 'Expand All'}
+              </Text>
+            </TouchableOpacity>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              contentContainerStyle={{ paddingHorizontal: 20 }}
+              className="flex-row"
+            >
+              {Array.from(new Set(data.localTips)).map((tip, idx) => (
+                <LocalTipCard key={idx} tip={tip} isExpanded={expandTips} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Warnings Section */}
+        {data.warnings && data.warnings.length > 0 && (
+          <View className="mt-6 mb-8">
+            <TouchableOpacity 
+              activeOpacity={0.7}
+              onPress={() => toggleSection(setExpandWarnings)}
+              className="flex-row items-center px-5 mb-3"
+            >
+              <AlertTriangle size={18} color="#D97706" />
+              <Text className="text-base font-bold text-gray-900 ml-2 flex-1">Important Warnings</Text>
+              <Text className="text-xs text-amber-600 font-medium ml-2">
+                {expandWarnings ? 'Collapse' : 'Expand All'}
+              </Text>
+            </TouchableOpacity>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              contentContainerStyle={{ paddingHorizontal: 20 }}
+              className="flex-row"
+            >
+              {data.warnings.map((warning) => (
+                <WarningCard key={warning.id} warning={warning} isExpanded={expandWarnings} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         <View style={{ height: insets.bottom + 20 }} />
 
