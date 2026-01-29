@@ -259,24 +259,24 @@ export default function NewTripScreen() {
 
 
         <View>
-          <Text className="text-base font-bold text-gray-800 mb-2">Trip duration</Text>
-          <View className="flex-row items-center bg-gray-50 rounded-xl p-1 border border-gray-200">
+          <Text className="text-base font-bold text-gray-800 mb-1">Trip duration</Text>
+          <View className="flex-row items-center  rounded-lg border border-white">
             <TouchableOpacity 
               onPress={() => {
                 const current = parseInt(numberOfDays) || 1;
                 if (current > 1) handleDaysChange(String(current - 1));
               }}
-              className="w-10 h-10 bg-gray-200 rounded-lg justify-center items-center"
+              className="w-9 h-9 bg-gray-200 rounded-md justify-center items-center m-0.5"
             >
               <Text className="text-2xl text-gray-600 font-medium">-</Text>
             </TouchableOpacity>
             
-            <View className="flex-1 items-center py-1">
+            <View className="flex-1 flex-row items-center justify-center py-1">
               <TextInput
                 value={numberOfDays}
                 onChangeText={handleDaysChange}
                 keyboardType="numeric"
-                className="text-base font-bold text-center w-full"
+                className="text-base font-bold text-center w-10"
               />
               <Text className="text-xs text-gray-500">days</Text>
             </View>
@@ -286,29 +286,27 @@ export default function NewTripScreen() {
                 const current = parseInt(numberOfDays) || 1;
                 if (current < 30) handleDaysChange(String(current + 1));
               }}
-              className="w-10 h-10 bg-gray-200 rounded-lg justify-center items-center"
+              className="w-9 h-9 bg-gray-200 rounded-md justify-center items-center m-0.5"
             >
-              <Text className="text-2xl text-gray-600 font-medium">+</Text>
+              <Text className="text-xl text-gray-600 font-medium">+</Text>
             </TouchableOpacity>
           </View>
         </View>
 
 
         <View>
-          <Text className="text-base font-bold text-gray-800 mb-2">Budget level</Text>
-          <View className="bg-white border border-gray-200 rounded-xl p-3 flex-row items-center shadow-sm">
-            <DollarSign size={18} color="#666" className="mr-2" />
+          <Text className="text-sm font-bold text-gray-800 mb-1">Budget level</Text>
+          <View className="bg-white border border-gray-200 rounded-lg py-1 px-3 flex-row items-center">
+            <DollarSign size={16} color="#666" />
             <TextInput
-              className="flex-1 text-sm ml-2 text-gray-900"
+              className="flex-1 text-sm ml-1.5 text-gray-900"
               value={budgetUSD}
               onChangeText={setBudgetUSD}
               keyboardType="numeric"
               placeholder={`Min: $${minBudget}`}
             />
+            <Text className="text-xs text-gray-400">min ${minBudget}</Text>
           </View>
-          <Text className="text-xs text-gray-500 mt-1 ml-1">
-             Minimum for {days} days: ${minBudget}
-          </Text>
         </View>
 
 
@@ -350,8 +348,11 @@ export default function NewTripScreen() {
             <DateTimePicker
               value={travelDate || new Date()}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              display={Platform.OS === 'ios' ? 'inline' : 'default'}
               minimumDate={new Date()}
+              accentColor="#004e89"
+              textColor="#004e89"
+              themeVariant="light"
               onChange={(event: DateTimePickerEvent, selectedDate?: Date) => {
                 setShowDatePicker(Platform.OS === 'ios');
                 if (event.type === 'set' && selectedDate) {
