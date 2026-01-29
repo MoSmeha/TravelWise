@@ -27,8 +27,31 @@ export const useSocket = () => {
     handleNewNotification(notification);
     
 
+    // Choose toast variant based on notification type
+    let toastType = 'info';
+    switch (notification.type) {
+      case 'POST_LIKE':
+        toastType = 'post_like';
+        break;
+      case 'POST_COMMENT':
+        toastType = 'post_comment';
+        break;
+      case 'FRIEND_REQUEST':
+        toastType = 'friend_request';
+        break;
+      case 'FRIEND_ACCEPTED':
+        toastType = 'friend_accepted';
+        break;
+      case 'ITINERARY_SHARED':
+        toastType = 'itinerary_shared';
+        break;
+      case 'ITINERARY_ACCEPTED':
+        toastType = 'itinerary_accepted';
+        break;
+    }
+
     Toast.show({
-      type: 'info',
+      type: toastType,
       text1: notification.title,
       text2: notification.message,
     });
@@ -43,7 +66,7 @@ export const useSocket = () => {
     
 
     Toast.show({
-      type: 'info',
+      type: 'message',
       text1: event.message.sender?.name || 'New Message',
       text2: event.message.content.length > 50 
         ? event.message.content.substring(0, 47) + '...' 
