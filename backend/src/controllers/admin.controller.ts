@@ -14,8 +14,6 @@ import {
 } from '../services/admin.service.js';
 
 
-
-
 export async function getOverview(
   _req: AuthenticatedRequest,
   res: Response
@@ -28,8 +26,6 @@ export async function getOverview(
     res.status(500).json({ error: 'Failed to fetch overview stats' });
   }
 }
-
-
 
 
 export async function getItineraryStats(
@@ -54,9 +50,6 @@ export async function getItineraryStats(
   }
 }
 
-
-
-
 export async function getUserStats(
   req: AuthenticatedRequest,
   res: Response
@@ -71,7 +64,6 @@ export async function getUserStats(
     res.status(500).json({ error: 'Failed to fetch user stats' });
   }
 }
-
 
 export async function listUsers(
   req: AuthenticatedRequest,

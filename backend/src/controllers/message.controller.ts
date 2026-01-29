@@ -40,7 +40,7 @@ export async function getConversation(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Data already validated by middleware
+    
     const { id } = req.params;
     const conversation = await fetchConversation(id, userId);
 
@@ -63,7 +63,7 @@ export async function createConversation(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Data already validated by middleware
+    
     const { friendId } = req.body;
 
     if (friendId === userId) {
@@ -86,7 +86,7 @@ export async function getMessages(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Data already validated by middleware
+    
     const { id } = req.params;
     const { page, limit } = req.query as unknown as { page: number; limit: number };
 
@@ -109,7 +109,7 @@ export async function sendMessage(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Data already validated by middleware
+    
     const conversationId = req.params.id;
     const { content } = req.body;
 
@@ -144,7 +144,7 @@ export async function markConversationRead(req: AuthRequest, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Data already validated by middleware
+    
     const { id } = req.params;
 
     await markRead(id, userId);

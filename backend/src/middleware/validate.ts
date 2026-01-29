@@ -12,7 +12,6 @@ export function validate(schema: ZodTypeAny, target: ValidationTarget = 'body') 
       const data = req[target];
       const validated = await schema.parseAsync(data);
       
-      // Replace request data with parsed/transformed values
       req[target] = validated;
       next();
     } catch (error) {
