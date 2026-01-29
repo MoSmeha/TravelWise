@@ -24,6 +24,7 @@ import {
 import { useUser } from '../../hooks/queries/useUser';
 import { useOnlineStatus } from '../../hooks/queries/useOnlineStatus';
 import { OnlineIndicator } from '../../components/OnlineIndicator';
+import { useChatStore } from '../../store/chatStore';
 import Toast from 'react-native-toast-message';
 
 export default function ChatScreen() {
@@ -32,8 +33,18 @@ export default function ChatScreen() {
     const { data: currentUser } = useUser();
     const [message, setMessage] = useState('');
     const flatListRef = useRef<FlatList>(null);
-    const hasMarkedRead = useRef(false);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
+    const setActiveConversation = useChatStore((state) => state.setActiveConversation);
+
+    // Set active conversation when entering and clear when leaving
+    useEffect(() => {
+        if (id) {
+            setActiveConversation(id);
+        }
+        return () => {
+            setActiveConversation(null);
+        };
+    }, [id, setActiveConversation]);
 
     useEffect(() => {
         if (Platform.OS === 'android') {
@@ -92,12 +103,12 @@ export default function ChatScreen() {
     const isOtherUserOnline = otherUser?.id ? (onlineStatus[otherUser.id] || false) : false;
 
 
+    // Mark conversation as read when new messages arrive while in the chat
     useEffect(() => {
-        if (id && !hasMarkedRead.current) {
-            hasMarkedRead.current = true;
+        if (id && messages.length > 0) {
             markReadMutation.mutate(id);
         }
-    }, [id, markReadMutation]);
+    }, [id, messages.length]);
 
     const handleSend = async () => {
         if (!message.trim() || !id) return;

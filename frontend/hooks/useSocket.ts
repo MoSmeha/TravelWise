@@ -3,6 +3,7 @@ import { AppState, AppStateStatus } from 'react-native';
 import { useAuth } from '../store/authStore';
 import { socketService } from '../services/socketService';
 import { useNotificationStore } from '../store/notificationStore';
+import { useChatStore } from '../store/chatStore';
 import { Notification } from './queries/useNotifications';
 import Toast from 'react-native-toast-message';
 import { useCallback } from 'react';
@@ -17,6 +18,7 @@ interface NewMessageEvent {
 export const useSocket = () => {
   const { accessToken, user, isRestoring } = useAuth();
   const { handleNewNotification } = useNotificationStore();
+  const activeConversationId = useChatStore((state) => state.activeConversationId);
   const queryClient = useQueryClient();
   const appState = useRef(AppState.currentState);
 
@@ -64,15 +66,17 @@ export const useSocket = () => {
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
     queryClient.invalidateQueries({ queryKey: ['messages', event.conversationId] });
     
-
-    Toast.show({
-      type: 'message',
-      text1: event.message.sender?.name || 'New Message',
-      text2: event.message.content.length > 50 
-        ? event.message.content.substring(0, 47) + '...' 
-        : event.message.content,
-    });
-  }, [queryClient]);
+    // Only show toast if user is NOT currently viewing this conversation
+    if (activeConversationId !== event.conversationId) {
+      Toast.show({
+        type: 'message',
+        text1: event.message.sender?.name || 'New Message',
+        text2: event.message.content.length > 50 
+          ? event.message.content.substring(0, 47) + '...' 
+          : event.message.content,
+      });
+    }
+  }, [queryClient, activeConversationId]);
 
 
   useEffect(() => {
