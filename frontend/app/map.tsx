@@ -3,7 +3,7 @@ import * as ExpoLocation from 'expo-location';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Text, View, TouchableOpacity } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-import { MapPin, MapPinOff, Plane } from 'lucide-react-native';
+import { MapPin, MapPinOff, Plane, Hotel as HotelIcon } from 'lucide-react-native';
 import { placesService } from '../services/api';
 import { DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
@@ -20,6 +20,7 @@ import {
   MapLegend,
   CustomMapPin,
   BorderedPolyline,
+  StableMarker,
 } from '../components/map';
 
 const HOTEL_COLOR = '#8b5cf6';
@@ -357,7 +358,7 @@ export default function MapScreen() {
 
 
         {data.airport && (
-          <Marker
+          <StableMarker
             coordinate={{
               latitude: data.airport.latitude,
               longitude: data.airport.longitude,
@@ -369,7 +370,7 @@ export default function MapScreen() {
               color={AIRPORT_COLOR}
               icon={<Plane size={18} color="white" strokeWidth={2.5} />}
             />
-          </Marker>
+          </StableMarker>
         )}
 
 
@@ -387,20 +388,24 @@ export default function MapScreen() {
 
 
         {hotels.map((hotel) => (
-          <Marker
+          <StableMarker
             key={hotel.id}
             coordinate={{
               latitude: hotel.latitude,
               longitude: hotel.longitude,
             }}
-            pinColor={HOTEL_COLOR}
             title={`🏨 ${hotel.name}`}
             description={hotel.neighborhood}
             onPress={() => {
               setSelectedHotel(hotel);
               setSelectedLocation(null);
             }}
-          />
+          >
+            <CustomMapPin
+              color={HOTEL_COLOR}
+              icon={<HotelIcon size={18} color="white" strokeWidth={2.5} />}
+            />
+          </StableMarker>
         ))}
 
 

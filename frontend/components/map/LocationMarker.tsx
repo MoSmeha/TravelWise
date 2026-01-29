@@ -1,8 +1,8 @@
-import React, { memo, useEffect, useState } from 'react';
-import { Marker } from 'react-native-maps';
+import React, { memo } from 'react';
 import { Gem, Star, AlertTriangle } from 'lucide-react-native';
 import { CLASSIFICATION_COLORS } from '../../constants/theme';
 import { CustomMapPin } from './CustomMapPin';
+import { StableMarker } from './StableMarker';
 import type { Location } from '../../types/api';
 
 interface LocationMarkerProps {
@@ -12,8 +12,6 @@ interface LocationMarkerProps {
 }
 
 export const LocationMarker = memo(({ location, index, onPress }: LocationMarkerProps) => {
-  const [tracksViewChanges, setTracksViewChanges] = useState(true);
-  
   const getPinConfig = (classification: string) => {
     switch (classification) {
       case 'HIDDEN_GEM':
@@ -30,17 +28,8 @@ export const LocationMarker = memo(({ location, index, onPress }: LocationMarker
   const pinConfig = getPinConfig(location.classification);
   const isSpecialPin = !!pinConfig;
 
-  useEffect(() => {
-    if (isSpecialPin && tracksViewChanges) {
-      const timer = setTimeout(() => {
-        setTracksViewChanges(false);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isSpecialPin, tracksViewChanges]);
-
   return (
-    <Marker
+    <StableMarker
       key={`${location.id}-${index}`}
       coordinate={{
         latitude: location.latitude,
@@ -50,7 +39,6 @@ export const LocationMarker = memo(({ location, index, onPress }: LocationMarker
       title={location.name}
       description={location.category}
       onPress={onPress}
-      tracksViewChanges={isSpecialPin ? tracksViewChanges : false}
     >
       {isSpecialPin && pinConfig && (
         <CustomMapPin 
@@ -58,8 +46,9 @@ export const LocationMarker = memo(({ location, index, onPress }: LocationMarker
           icon={<pinConfig.Icon size={18} color="white" strokeWidth={2.5} />} 
         />
       )}
-    </Marker>
+    </StableMarker>
   );
 });
 
 LocationMarker.displayName = 'LocationMarker';
+
