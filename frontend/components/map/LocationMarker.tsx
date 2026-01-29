@@ -1,8 +1,8 @@
 import React, { memo, useEffect, useState } from 'react';
-import { View } from 'react-native';
 import { Marker } from 'react-native-maps';
-import { Gem } from 'lucide-react-native';
+import { Gem, Star, AlertTriangle } from 'lucide-react-native';
 import { CLASSIFICATION_COLORS } from '../../constants/theme';
+import { CustomMapPin } from './CustomMapPin';
 import type { Location } from '../../types/api';
 
 interface LocationMarkerProps {
@@ -13,17 +13,31 @@ interface LocationMarkerProps {
 
 export const LocationMarker = memo(({ location, index, onPress }: LocationMarkerProps) => {
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
-  const isHiddenGem = location.classification === 'HIDDEN_GEM';
+  
+  const getPinConfig = (classification: string) => {
+    switch (classification) {
+      case 'HIDDEN_GEM':
+        return { color: CLASSIFICATION_COLORS.HIDDEN_GEM, Icon: Gem };
+      case 'MUST_SEE':
+        return { color: CLASSIFICATION_COLORS.MUST_SEE, Icon: Star };
+      case 'CONDITIONAL':
+        return { color: CLASSIFICATION_COLORS.CONDITIONAL, Icon: AlertTriangle };
+      default:
+        return null;
+    }
+  };
+
+  const pinConfig = getPinConfig(location.classification);
+  const isSpecialPin = !!pinConfig;
 
   useEffect(() => {
-
-    if (isHiddenGem && tracksViewChanges) {
+    if (isSpecialPin && tracksViewChanges) {
       const timer = setTimeout(() => {
         setTracksViewChanges(false);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isHiddenGem, tracksViewChanges]);
+  }, [isSpecialPin, tracksViewChanges]);
 
   return (
     <Marker
@@ -32,32 +46,17 @@ export const LocationMarker = memo(({ location, index, onPress }: LocationMarker
         latitude: location.latitude,
         longitude: location.longitude,
       }}
-      pinColor={!isHiddenGem ? (CLASSIFICATION_COLORS[location.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF') : undefined}
+      pinColor={!isSpecialPin ? (CLASSIFICATION_COLORS[location.classification as keyof typeof CLASSIFICATION_COLORS] || '#007AFF') : undefined}
       title={location.name}
       description={location.category}
       onPress={onPress}
-      tracksViewChanges={isHiddenGem ? tracksViewChanges : false}
+      tracksViewChanges={isSpecialPin ? tracksViewChanges : false}
     >
-      {isHiddenGem && (
-        <View className="items-center justify-center">
-          <View className="bg-green-500 p-2 rounded-full border-2 border-white">
-            <Gem size={18} color="white" strokeWidth={2.5} />
-          </View>
-
-          <View
-            style={{
-              width: 0,
-              height: 0,
-              borderLeftWidth: 6,
-              borderRightWidth: 6,
-              borderTopWidth: 8,
-              borderLeftColor: 'transparent',
-              borderRightColor: 'transparent',
-              borderTopColor: '#22c55e',
-              marginTop: -1,
-            }}
-          />
-        </View>
+      {isSpecialPin && pinConfig && (
+        <CustomMapPin 
+          color={pinConfig.color} 
+          icon={<pinConfig.Icon size={18} color="white" strokeWidth={2.5} />} 
+        />
       )}
     </Marker>
   );

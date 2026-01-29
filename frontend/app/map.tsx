@@ -3,7 +3,7 @@ import * as ExpoLocation from 'expo-location';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Text, View, TouchableOpacity } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-import { MapPin, MapPinOff } from 'lucide-react-native';
+import { MapPin, MapPinOff, Plane } from 'lucide-react-native';
 import { placesService } from '../services/api';
 import { DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
@@ -18,6 +18,7 @@ import {
   MapHeader,
   BottomNavigation,
   MapLegend,
+  CustomMapPin,
 } from '../components/map';
 
 const HOTEL_COLOR = '#8b5cf6';
@@ -349,10 +350,14 @@ export default function MapScreen() {
               latitude: data.airport.latitude,
               longitude: data.airport.longitude,
             }}
-            pinColor={AIRPORT_COLOR}
             title={`✈️ ${data.airport.name}`}
             description="Your arrival airport"
-          />
+          >
+            <CustomMapPin
+              color={AIRPORT_COLOR}
+              icon={<Plane size={18} color="white" strokeWidth={2.5} />}
+            />
+          </Marker>
         )}
 
 
