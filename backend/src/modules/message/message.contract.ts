@@ -1,6 +1,6 @@
 
 
-import { Conversation, ConversationParticipant, Message } from '../generated/prisma/client.js';
+import { Conversation, ConversationParticipant, Message } from '../../generated/prisma/client.js';
 
 
 export interface ConversationWithDetails extends Conversation {

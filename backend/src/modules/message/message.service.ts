@@ -2,8 +2,8 @@ import {
   ConversationWithDetails,
   MessageWithSender,
   PaginatedResult,
-} from '../provider-contract/message.provider-contract.js';
-import { messageProvider } from '../providers/message.provider.pg.js';
+} from './message.contract.js';
+import { messageProvider } from './message.provider.js';
 
 
 export async function getOrCreateDirectConversation(userId: string, friendId: string): Promise<ConversationWithDetails> {

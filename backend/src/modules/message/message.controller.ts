@@ -7,8 +7,8 @@ import {
   sendMessage as sendUserMessage,
   markConversationRead as markRead,
   getConversationParticipantIds
-} from '../services/message.service.js';
-import { socketService } from '../services/socket.service.js';
+} from './message.service.js';
+import { socketService } from '../../services/socket.service.js';
 
 interface AuthRequest extends Request {
   user?: { userId: string };

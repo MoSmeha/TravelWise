@@ -6,7 +6,7 @@ import {
   getMessages,
   sendMessage,
   markConversationRead,
-} from '../controllers/message.controller.js';
+} from '../modules/message/message.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import { validate, validateMultiple } from '../middleware/validate.js';
 import {

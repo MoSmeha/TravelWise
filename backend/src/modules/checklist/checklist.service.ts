@@ -1,10 +1,10 @@
-import { ChecklistCategory } from '../generated/prisma/client.js';
-import { checklistProvider } from '../providers/checklist.provider.pg.js';
+import { ChecklistCategory } from '../../generated/prisma/client.js';
+import { checklistProvider } from './checklist.provider.js';
 import {
   ChecklistItemRecord,
   CreateChecklistItemData,
-} from '../provider-contract/checklist.provider-contract.js';
-import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema.js';
+} from './checklist.contract.js';
+import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../../schemas/checklist.schema.js';
 
 
 

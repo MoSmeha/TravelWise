@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../schemas/checklist.schema.js';
+import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../../schemas/checklist.schema.js';
 import {
   getItineraryChecklist,
   updateItem as updateChecklistItem,
   createItem as createChecklistItem,
   deleteItem as deleteChecklistItem,
   deleteAllItems as deleteAllChecklistItems
-} from '../services/checklist.service.js';
+} from './checklist.service.js';
 
 
 export async function getChecklist(req: Request, res: Response) {

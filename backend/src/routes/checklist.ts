@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getChecklist, updateItem, createItem, deleteItem, deleteAllItems } from '../controllers/checklist.controller.js';
+import { getChecklist, updateItem, createItem, deleteItem, deleteAllItems } from '../modules/checklist/checklist.controller.js';
 import { requireOwnership } from '../middleware/ownership.middleware.js';
 import { validate } from '../middleware/validate.js';
 import { 

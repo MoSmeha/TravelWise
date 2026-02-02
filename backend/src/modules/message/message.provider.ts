@@ -1,12 +1,12 @@
 
-import { ConversationType } from '../generated/prisma/client.js';
-import prisma from '../lib/prisma.js';
+import { ConversationType } from '../../generated/prisma/client.js';
+import prisma from '../../lib/prisma.js';
 import {
   IMessageProvider,
   ConversationWithDetails,
   MessageWithSender,
   PaginatedResult,
-} from '../provider-contract/message.provider-contract.js';
+} from './message.contract.js';
 
 export class PostgresMessageProvider implements IMessageProvider {
 

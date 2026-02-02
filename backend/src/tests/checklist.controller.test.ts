@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext, resetAllMocks } from './setup.js';
 
-vi.mock('../services/checklist.service.js', () => ({
+vi.mock('../modules/checklist/checklist.service.js', () => ({
   getItineraryChecklist: vi.fn(),
   updateItem: vi.fn(),
   createItem: vi.fn(),
@@ -9,8 +9,8 @@ vi.mock('../services/checklist.service.js', () => ({
   deleteAllItems: vi.fn(),
 }));
 
-import * as ChecklistController from '../controllers/checklist.controller.js';
-import * as checklistService from '../services/checklist.service.js';
+import * as ChecklistController from '../modules/checklist/checklist.controller.js';
+import * as checklistService from '../modules/checklist/checklist.service.js';
 
 const mockItem = {
   id: 'item-123',
