@@ -1,5 +1,5 @@
 
-import { LocationCategory, LocationClassification, PriceLevel } from '../generated/prisma/client.js';
+import { LocationCategory, LocationClassification, PriceLevel } from '../../generated/prisma/client.js';
 
 
 export interface PlaceFilters {

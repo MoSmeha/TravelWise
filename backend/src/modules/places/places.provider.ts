@@ -1,4 +1,4 @@
-import prisma from '../lib/prisma.js';
+import prisma from '../../lib/prisma.js';
 import {
   CategoryCount,
   CityCount,
@@ -8,7 +8,7 @@ import {
   PlaceEnrichmentData,
   PlaceFilters,
   PlaceRecord,
-} from '../provider-contract/places.provider-contract.js';
+} from './places.contract.js';
 
 class PlacesPgProvider implements IPlacesProvider {
 

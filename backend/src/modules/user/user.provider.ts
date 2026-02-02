@@ -1,6 +1,6 @@
-import { User } from '../generated/prisma/client.js';
-import prisma from '../lib/prisma.js';
-import { IUserProvider } from '../provider-contract/user.provider-contract.js';
+import { User } from '../../generated/prisma/client.js';
+import prisma from '../../lib/prisma.js';
+import { IUserProvider } from './user.contract.js';
 
 export class PostgresUserProvider implements IUserProvider {
   async findById(userId: string): Promise<User | null> {

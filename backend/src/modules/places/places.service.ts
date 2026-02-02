@@ -1,6 +1,6 @@
 
 
-import { placesProvider } from '../providers/places.provider.pg.js';
+import { placesProvider } from './places.provider.js';
 import {
   IPlacesProvider,
   PlaceFilters,
@@ -9,7 +9,7 @@ import {
   CityCount,
   CategoryCount,
   PlaceEnrichmentData,
-} from '../provider-contract/places.provider-contract.js';
+} from './places.contract.js';
 import {
   isGooglePlacesConfigured,
   searchPlace as googleSearchPlace,
@@ -17,8 +17,8 @@ import {
   getDirections as googleGetDirections,
   PlaceEnrichment
 } from './google-places.service.js';
-import { extractCityFromAddress } from '../utils/enum-mappers.js';
-import { mapGooglePriceLevel } from '../utils/prisma-helpers.js';
+import { extractCityFromAddress } from '../../utils/enum-mappers.js';
+import { mapGooglePriceLevel } from '../../utils/prisma-helpers.js';
 
 
 

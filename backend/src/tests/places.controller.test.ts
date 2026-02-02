@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext, resetAllMocks } from './setup.js';
 
-vi.mock('../services/places.service.js', () => ({
+vi.mock('../modules/places/places.service.js', () => ({
   placesService: {
     getPhotosAndReviews: vi.fn(),
     getDirections: vi.fn(),
@@ -13,8 +13,8 @@ vi.mock('../services/places.service.js', () => ({
   },
 }));
 
-import * as PlacesController from '../controllers/places.controller.js';
-import { placesService } from '../services/places.service.js';
+import * as PlacesController from '../modules/places/places.controller.js';
+import { placesService } from '../modules/places/places.service.js';
 
 const mockPlace = { id: 'place-123', name: 'Test Restaurant' };
 

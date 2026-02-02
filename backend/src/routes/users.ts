@@ -3,7 +3,7 @@ import {
   searchUsers,
   getOnlineStatus,
   updateAvatar,
-} from '../controllers/users.controller.js';
+} from '../modules/user/user.controller.js';
 import { validate } from '../middleware/validate.js';
 import { onlineStatusSchema, searchUsersSchema } from '../schemas/user.schema.js';
 import { avatarUpload } from '../middleware/upload.middleware.js';

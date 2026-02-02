@@ -7,7 +7,7 @@ import {
   listPlaces,
   getPlaceById,
   getDirections,
-} from '../controllers/places.controller.js';
+} from '../modules/places/places.controller.js';
 import { validate } from '../middleware/validate.js';
 import { getPhotosSchema, listPlacesSchema, searchPlaceSchema } from '../schemas/places.schema.js';
 

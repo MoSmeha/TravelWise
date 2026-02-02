@@ -1,8 +1,8 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware.js';
-import { searchUsers as findUsers } from '../services/friendship.service.js';
-import { updateAvatar as updateUserAvatar, getUserById as fetchUser, sanitizeUser } from '../services/user.service.js';
-import { socketService } from '../services/socket.service.js';
+import { AuthRequest } from '../../middleware/auth.middleware.js';
+import { searchUsers as findUsers } from '../../services/friendship.service.js';
+import { updateAvatar as updateUserAvatar, getUserById as fetchUser, sanitizeUser } from './user.service.js';
+import { socketService } from '../../services/socket.service.js';
 
 export async function searchUsers(req: AuthRequest, res: Response) {
   try {

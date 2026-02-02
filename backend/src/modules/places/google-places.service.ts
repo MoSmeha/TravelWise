@@ -1,5 +1,5 @@
-import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/circuit-breaker.js';
-import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from './cache.service.js';
+import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../../lib/circuit-breaker.js';
+import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from '../../services/cache.service.js';
 
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;

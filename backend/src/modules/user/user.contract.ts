@@ -1,4 +1,4 @@
-import { User } from '../generated/prisma/client.js';
+import { User } from '../../generated/prisma/client.js';
 
 export interface IUserProvider {
   findById(userId: string): Promise<User | null>;

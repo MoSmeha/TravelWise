@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { GetPhotosInput, ListPlacesInput, SearchPlaceInput } from '../schemas/places.schema.js';
-import { placesService } from '../services/places.service.js';
+import { GetPhotosInput, ListPlacesInput, SearchPlaceInput } from '../../schemas/places.schema.js';
+import { placesService } from './places.service.js';
 
 
 
