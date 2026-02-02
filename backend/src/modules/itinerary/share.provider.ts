@@ -1,11 +1,11 @@
-import { PrismaClient, SharePermission, ShareStatus } from '../generated/prisma/client.js';
+import { PrismaClient, SharePermission, ShareStatus } from '../../generated/prisma/client.js';
 import {
   IItineraryShareProvider,
   CreateShareParams,
   UpdateShareStatusParams,
   UpdateSharePermissionParams,
-} from '../provider-contract/itinerary-share.provider-contract.js';
-import prisma from '../lib/prisma.js';
+} from './share.contract.js';
+import prisma from '../../lib/prisma.js';
 
 class ItineraryShareProviderPg implements IItineraryShareProvider {
   constructor(private db: PrismaClient = prisma) {}

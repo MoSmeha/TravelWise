@@ -6,7 +6,7 @@ import {
   cleanupUserLocations,
 } from './location-sharing.service.js';
 import { UpdateLocationSchema } from '../schemas/location-sharing.schema.js';
-import { checkPermission } from './itinerary-share.service.js';
+import { checkPermission } from '../modules/itinerary/share.service.js';
 
 interface AuthSocket extends Socket {
   userId?: string;

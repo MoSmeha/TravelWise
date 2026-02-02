@@ -1,13 +1,13 @@
-import { ChecklistCategory, ItineraryItemType, LocationCategory, Place, PriceLevel, LocationClassification } from '../generated/prisma/client.js';
-import { BudgetLevel, TravelStyle, mapBudgetToPriceLevel } from '../utils/enum-mappers.js';
+import { ChecklistCategory, ItineraryItemType, LocationCategory, Place, PriceLevel, LocationClassification } from '../../generated/prisma/client.js';
+import { BudgetLevel, TravelStyle, mapBudgetToPriceLevel } from '../../utils/enum-mappers.js';
 import { v4 as uuidv4 } from 'uuid';
-import { searchNearbyHotels, enrichPlaceWithGoogleData, searchPlacesByText } from './google-places.service.js';
-import { nearestNeighborRoute, kMeansClustering, orderClustersByProximity } from './route-optimizer.service.js';
-import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils.js';
-import { itineraryProvider } from '../providers/itinerary.provider.pg.js';
-import { IItineraryProvider } from '../provider-contract/itinerary.provider-contract.js';
-import { mapPlaceForGenerateResponse, mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } from '../utils/response-mappers.js';
-import { calculateCentroid, haversineDistance } from '../utils/geo.utils.js';
+import { searchNearbyHotels, enrichPlaceWithGoogleData, searchPlacesByText } from '../../services/google-places.service.js';
+import { nearestNeighborRoute, kMeansClustering, orderClustersByProximity } from '../../services/route-optimizer.service.js';
+import { getOpenAIClient, isOpenAIConfigured } from '../../utils/openai.utils.js';
+import { itineraryProvider } from './itinerary.provider.js';
+import { IItineraryProvider } from './itinerary.contract.js';
+import { mapPlaceForGenerateResponse, mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } from '../../utils/response-mappers.js';
+import { calculateCentroid, haversineDistance } from '../../utils/geo.utils.js';
 
 
 type PlaceExtended = Place & { [key: string]: any };

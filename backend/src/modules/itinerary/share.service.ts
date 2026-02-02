@@ -1,8 +1,8 @@
-import { SharePermission, ShareStatus, NotificationType } from '../generated/prisma/client.js';
-import { itineraryShareProvider } from '../providers/itinerary-share.provider.pg.js';
-import { IItineraryShareProvider } from '../provider-contract/itinerary-share.provider-contract.js';
-import { socketService } from './socket.service.js';
-import prisma from '../lib/prisma.js';
+import { SharePermission, ShareStatus, NotificationType } from '../../generated/prisma/client.js';
+import { itineraryShareProvider } from './share.provider.js';
+import { IItineraryShareProvider } from './share.contract.js';
+import { socketService } from '../../services/socket.service.js';
+import prisma from '../../lib/prisma.js';
 
 
 export async function inviteUser(

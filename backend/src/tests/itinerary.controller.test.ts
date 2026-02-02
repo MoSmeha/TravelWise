@@ -7,7 +7,7 @@ vi.mock('../config/countries.config.js', () => ({
   getAirportConfig: vi.fn(),
 }));
 
-vi.mock('../services/itinerary.service.js', () => ({
+vi.mock('../modules/itinerary/itinerary.service.js', () => ({
   generateItinerary: vi.fn(),
   saveItineraryToDb: vi.fn(),
   enrichLocations: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock('../services/rag-retrieval.service.js', () => ({
   storeItineraryEmbeddings: vi.fn(),
 }));
 
-vi.mock('../providers/itinerary.provider.pg.js', () => ({
+vi.mock('../modules/itinerary/itinerary.provider.js', () => ({
   itineraryProvider: {
     findUserItineraries: vi.fn(),
     findItineraryById: vi.fn(),
@@ -32,9 +32,9 @@ vi.mock('../utils/enum-mappers.js', () => ({
   parseTravelStyles: vi.fn((styles) => styles || []),
 }));
 
-import * as ItineraryController from '../controllers/itinerary.controller.js';
+import * as ItineraryController from '../modules/itinerary/itinerary.controller.js';
 import { getCountriesList } from '../config/countries.config.js';
-import { itineraryProvider } from '../providers/itinerary.provider.pg.js';
+import { itineraryProvider } from '../modules/itinerary/itinerary.provider.js';
 
 const mockItinerary = { id: 'itinerary-123', userId: 'test-user-id-123', country: 'Lebanon' };
 

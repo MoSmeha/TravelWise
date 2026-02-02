@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
+import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 import {
   CreateShareSchema,
   UpdateSharePermissionSchema,
-} from '../schemas/itinerary-share.schema.js';
+} from '../../schemas/itinerary-share.schema.js';
 import {
   inviteUser,
   acceptInvitation,
@@ -13,8 +13,8 @@ import {
   getCollaborators,
   getUserSharedItineraries,
   checkPermission,
-} from '../services/itinerary-share.service.js';
-import { ShareStatus } from '../generated/prisma/client.js';
+} from './share.service.js';
+import { ShareStatus } from '../../generated/prisma/client.js';
 
 
 export async function inviteUserToItinerary(req: Request, res: Response) {

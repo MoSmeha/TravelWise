@@ -1,21 +1,21 @@
 import { Request, Response } from "express";
-import { AuthenticatedRequest } from "../middleware/auth.middleware.js";
+import { AuthenticatedRequest } from "../../middleware/auth.middleware.js";
 import {
   getCountriesList,
   COUNTRIES,
   getAirportConfig,
-} from "../config/countries.config.js";
-import { GenerateItineraryInput } from "../schemas/itinerary.schema.js";
+} from "../../config/countries.config.js";
+import { GenerateItineraryInput } from "../../schemas/itinerary.schema.js";
 import {
   generateItinerary,
   saveItineraryToDb,
   enrichLocations,
   buildItineraryResponse,
   buildItineraryDetailsResponse,
-} from "../services/itinerary.service.js";
-import { storeItineraryEmbeddings } from "../services/rag-retrieval.service.js";
-import { parseBudgetLevel, parseTravelStyles } from "../utils/enum-mappers.js";
-import { itineraryProvider } from "../providers/itinerary.provider.pg.js";
+} from "./itinerary.service.js";
+import { storeItineraryEmbeddings } from "../../services/rag-retrieval.service.js";
+import { parseBudgetLevel, parseTravelStyles } from "../../utils/enum-mappers.js";
+import { itineraryProvider } from "./itinerary.provider.js";
 
 
 export async function getCountries(_req: Request, res: Response) {
