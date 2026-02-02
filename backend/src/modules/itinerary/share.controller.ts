@@ -3,7 +3,7 @@ import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 import {
   CreateShareSchema,
   UpdateSharePermissionSchema,
-} from '../../schemas/itinerary-share.schema.js';
+} from './share.schema.js';
 import {
   inviteUser,
   acceptInvitation,

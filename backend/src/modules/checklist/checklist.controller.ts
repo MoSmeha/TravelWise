@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../../schemas/checklist.schema.js';
+import { CreateChecklistItemInput, UpdateChecklistItemInput } from './checklist.schema.js';
 import {
   getItineraryChecklist,
   updateItem as updateChecklistItem,

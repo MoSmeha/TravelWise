@@ -12,7 +12,7 @@ import {
   UpcomingTripsQuery,
   AddWeatherChecklistInput,
   SendWeatherNotificationInput,
-} from '../../schemas/webhook.schema.js';
+} from './webhook.schema.js';
 
 
 export async function getHealth(_req: Request, res: Response) {

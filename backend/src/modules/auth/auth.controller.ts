@@ -7,7 +7,7 @@ import {
   RegisterInput,
   ResendVerificationInput,
   VerifyEmailInput,
-} from '../../schemas/auth.schema.js';
+} from './auth.schema.js';
 import {
   register as registerUser,
   login as loginUser,

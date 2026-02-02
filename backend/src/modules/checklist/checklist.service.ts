@@ -4,7 +4,7 @@ import {
   ChecklistItemRecord,
   CreateChecklistItemData,
 } from './checklist.contract.js';
-import { CreateChecklistItemInput, UpdateChecklistItemInput } from '../../schemas/checklist.schema.js';
+import { CreateChecklistItemInput, UpdateChecklistItemInput } from './checklist.schema.js';
 
 
 

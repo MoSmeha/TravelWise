@@ -5,7 +5,7 @@ import {
   COUNTRIES,
   getAirportConfig,
 } from "../../config/countries.config.js";
-import { GenerateItineraryInput } from "../../schemas/itinerary.schema.js";
+import { GenerateItineraryInput } from "./itinerary.schema.js";
 import {
   generateItinerary,
   saveItineraryToDb,

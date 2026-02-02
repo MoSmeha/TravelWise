@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AskQuestionInput } from '../../schemas/itinerary.schema.js';
+import { AskQuestionInput } from '../itinerary/itinerary.schema.js';
 import { askAboutItinerary } from './rag.service.js';
 import { ragProvider } from './rag.provider.js';
 

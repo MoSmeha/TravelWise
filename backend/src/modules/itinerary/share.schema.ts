@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SharePermission, ShareStatus } from '../generated/prisma/client.js';
+import { SharePermission, ShareStatus } from '../../generated/prisma/client.js';
 
 export const CreateShareSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
