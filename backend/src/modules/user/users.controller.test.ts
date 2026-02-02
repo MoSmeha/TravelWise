@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createMockContext, resetAllMocks } from './setup.js';
+import { createMockContext, resetAllMocks } from '../../tests/setup.js';
 
-vi.mock('../modules/user/user.service.js', () => ({
+vi.mock('./user.service.js', () => ({
   updateAvatar: vi.fn(),
   getUserById: vi.fn(),
   sanitizeUser: vi.fn((user) => user),
 }));
 
-vi.mock('../services/friendship.service.js', () => ({
+vi.mock('../friendship/friendship.service.js', () => ({
   searchUsers: vi.fn(),
 }));
 
-vi.mock('../services/socket.service.js', () => ({
+vi.mock('../shared/socket.service.js', () => ({
   socketService: { isUserOnline: vi.fn() },
 }));
 
-import * as UsersController from '../modules/user/user.controller.js';
-import { searchUsers } from '../modules/friendship/friendship.service.js';
-import { updateAvatar, getUserById } from '../modules/user/user.service.js';
+import * as UsersController from './user.controller.js';
+import { searchUsers } from '../friendship/friendship.service.js';
+import { updateAvatar, getUserById } from './user.service.js';
 
 const mockUser = { id: 'user-123', name: 'Test User', username: 'testuser' };
 

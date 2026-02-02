@@ -5,7 +5,7 @@ import {
   updateAvatar,
 } from '../modules/user/user.controller.js';
 import { validate } from '../middleware/validate.js';
-import { onlineStatusSchema, searchUsersSchema } from '../schemas/user.schema.js';
+import { onlineStatusSchema, searchUsersSchema } from '../modules/user/user.schema.js';
 import { avatarUpload } from '../middleware/upload.middleware.js';
 
 const router = Router();

@@ -5,7 +5,7 @@ import { validate } from '../middleware/validate.js';
 import { 
   createChecklistItemSchema, 
   updateChecklistItemSchema 
-} from '../schemas/checklist.schema.js';
+} from '../modules/checklist/checklist.schema.js';
 
 const router = Router();
 

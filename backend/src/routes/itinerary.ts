@@ -17,7 +17,7 @@ import {
 } from '../modules/itinerary/share.controller.js';
 import { requireOwnership } from '../middleware/ownership.middleware.js';
 import { validate } from '../middleware/validate.js';
-import { generateItinerarySchema } from '../schemas/itinerary.schema.js';
+import { generateItinerarySchema } from '../modules/itinerary/itinerary.schema.js';
 
 const router = Router();
 

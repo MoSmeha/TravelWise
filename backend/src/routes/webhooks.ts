@@ -6,7 +6,7 @@ import {
   upcomingTripsQuerySchema,
   addWeatherChecklistSchema,
   sendWeatherNotificationSchema,
-} from '../schemas/webhook.schema.js';
+} from '../modules/webhook/webhook.schema.js';
 import {
   getHealth,
   getUpcomingTrips,

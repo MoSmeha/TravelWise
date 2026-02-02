@@ -21,7 +21,7 @@ import {
   userIdParamSchema,
   addCommentSchema,
   deleteCommentSchema,
-} from '../schemas/post.schema.js';
+} from '../modules/post/post.schema.js';
 
 const router = Router();
 

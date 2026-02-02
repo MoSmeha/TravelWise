@@ -1,7 +1,7 @@
 import { SharePermission, ShareStatus, NotificationType } from '../../generated/prisma/client.js';
 import { itineraryShareProvider } from './share.provider.js';
 import { IItineraryShareProvider } from './share.contract.js';
-import { socketService } from '../../services/socket.service.js';
+import { socketService } from '../shared/socket.service.js';
 import prisma from '../../lib/prisma.js';
 
 

@@ -11,7 +11,7 @@ import { validate } from '../middleware/validate.js';
 import {
   sendFriendRequestSchema,
   friendshipIdParamSchema,
-} from '../schemas/friendship.schema.js';
+} from '../modules/friendship/friendship.schema.js';
 
 const router = Router();
 

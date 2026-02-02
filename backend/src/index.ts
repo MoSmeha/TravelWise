@@ -15,7 +15,7 @@ import messagingRouter from './routes/messaging.js';
 import postsRouter from './routes/posts.js';
 import adminRouter from './routes/admin.js';
 import { createServer } from 'http';
-import { socketService } from './services/socket.service.js';
+import { socketService } from './modules/shared/socket.service.js';
 
 import { webhookAuth } from './middleware/webhook-auth.middleware.js';
 

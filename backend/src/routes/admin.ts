@@ -12,7 +12,7 @@ import {
   getEngagement,
 } from '../modules/admin/admin.controller.js';
 import { validate } from '../middleware/validate.js';
-import { listUsersSchema, userStatsSchema } from '../schemas/admin.schema.js';
+import { listUsersSchema, userStatsSchema } from '../modules/admin/admin.schema.js';
 
 const router = Router();
 

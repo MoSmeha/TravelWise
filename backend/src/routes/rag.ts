@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { askQuestion, getEmbeddingStatus } from '../modules/ai/rag.controller.js';
 import { requireOwnership } from '../middleware/ownership.middleware.js';
 import { validate } from '../middleware/validate.js';
-import { askQuestionSchema } from '../schemas/itinerary.schema.js';
+import { askQuestionSchema } from '../modules/itinerary/itinerary.schema.js';
 
 const router = Router();
 

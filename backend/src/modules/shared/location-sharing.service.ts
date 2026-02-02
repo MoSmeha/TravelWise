@@ -1,5 +1,5 @@
-import prisma from '../lib/prisma.js';
-import { UpdateLocationInput } from '../schemas/location-sharing.schema.js';
+import prisma from '../../lib/prisma.js';
+import { UpdateLocationInput } from './location-sharing.schema.js';
 
 
 export async function updateUserLocation(

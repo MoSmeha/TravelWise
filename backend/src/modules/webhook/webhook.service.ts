@@ -1,7 +1,7 @@
 
 
 import { webhookProvider } from './webhook.provider.js';
-import { socketService } from '../../services/socket.service.js';
+import { socketService } from '../shared/socket.service.js';
 import {
   UpcomingTripRecord,
   UncheckedItemsRecord,

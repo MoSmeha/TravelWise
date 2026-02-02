@@ -1,12 +1,12 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import { verifyAccessToken } from '../modules/auth/auth.service.js';
+import { verifyAccessToken } from '../auth/auth.service.js';
 import {
   updateUserLocation,
   cleanupUserLocations,
 } from './location-sharing.service.js';
-import { UpdateLocationSchema } from '../schemas/location-sharing.schema.js';
-import { checkPermission } from '../modules/itinerary/share.service.js';
+import { UpdateLocationSchema } from './location-sharing.schema.js';
+import { checkPermission } from '../itinerary/share.service.js';
 
 interface AuthSocket extends Socket {
   userId?: string;

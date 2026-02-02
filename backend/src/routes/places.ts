@@ -9,7 +9,7 @@ import {
   getDirections,
 } from '../modules/places/places.controller.js';
 import { validate } from '../middleware/validate.js';
-import { getPhotosSchema, listPlacesSchema, searchPlaceSchema } from '../schemas/places.schema.js';
+import { getPhotosSchema, listPlacesSchema, searchPlaceSchema } from '../modules/places/places.schema.js';
 
 const router = Router();
 

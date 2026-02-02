@@ -15,7 +15,7 @@ import {
   paginationSchema,
   messagePaginationSchema,
   conversationIdSchema,
-} from '../schemas/message.schema.js';
+} from '../modules/message/message.schema.js';
 
 const router = Router();
 

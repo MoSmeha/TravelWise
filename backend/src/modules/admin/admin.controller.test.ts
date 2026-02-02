@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createMockContext, resetAllMocks } from './setup.js';
+import { createMockContext, resetAllMocks } from '../../tests/setup.js';
 
-vi.mock('../modules/admin/admin.service.js', () => ({
+vi.mock('./admin.service.js', () => ({
   getOverviewStats: vi.fn(),
   getItinerariesByCountry: vi.fn(),
   getTravelStyleBreakdown: vi.fn(),
@@ -12,8 +12,8 @@ vi.mock('../modules/admin/admin.service.js', () => ({
   getEngagementStats: vi.fn(),
 }));
 
-import * as AdminController from '../modules/admin/admin.controller.js';
-import * as adminService from '../modules/admin/admin.service.js';
+import * as AdminController from './admin.controller.js';
+import * as adminService from './admin.service.js';
 
 describe('Admin Controller', () => {
   beforeEach(() => {

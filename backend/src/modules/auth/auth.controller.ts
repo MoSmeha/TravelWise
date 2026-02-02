@@ -17,7 +17,7 @@ import {
   getUserByEmail,
   generateVerificationOTP,
 } from './auth.service.js';
-import { sendVerificationEmail, sendWelcomeEmail } from '../../services/email.service.js';
+import { sendVerificationEmail, sendWelcomeEmail } from '../shared/email.service.js';
 
 
 

@@ -23,7 +23,7 @@ import {
   registerSchema,
   resendVerificationSchema,
   verifyEmailSchema,
-} from '../schemas/auth.schema.js';
+} from '../modules/auth/auth.schema.js';
 
 const router = Router();
 

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createMockContext, resetAllMocks } from './setup.js';
+import { createMockContext, resetAllMocks } from '../../tests/setup.js';
 
-vi.mock('../modules/ai/rag.service.js', () => ({
+vi.mock('./rag.service.js', () => ({
   askAboutItinerary: vi.fn(),
 }));
 
-vi.mock('../modules/ai/rag.provider.js', () => ({
+vi.mock('./rag.provider.js', () => ({
   ragProvider: {
     itineraryExists: vi.fn(),
     countEmbeddings: vi.fn(),
@@ -13,9 +13,9 @@ vi.mock('../modules/ai/rag.provider.js', () => ({
   },
 }));
 
-import * as RagController from '../modules/ai/rag.controller.js';
-import { askAboutItinerary } from '../modules/ai/rag.service.js';
-import { ragProvider } from '../modules/ai/rag.provider.js';
+import * as RagController from './rag.controller.js';
+import { askAboutItinerary } from './rag.service.js';
+import { ragProvider } from './rag.provider.js';
 
 describe('RAG Controller', () => {
   beforeEach(() => {
