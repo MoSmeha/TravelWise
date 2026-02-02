@@ -8,7 +8,7 @@ import {
   verifyEmail,
   resendVerification,
   me,
-} from '../controllers/auth.controller.js';
+} from '../modules/auth/auth.controller.js';
 import { authenticate } from '../middleware/auth.middleware.js';
 import {
   loginRateLimiter,

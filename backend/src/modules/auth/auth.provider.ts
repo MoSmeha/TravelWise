@@ -1,5 +1,5 @@
-import { EmailVerificationToken } from '../generated/prisma/client.js';
-import prisma from '../lib/prisma.js';
+import { EmailVerificationToken } from '../../generated/prisma/client.js';
+import prisma from '../../lib/prisma.js';
 import {
   CreateRefreshTokenData,
   CreateUserData,
@@ -8,7 +8,7 @@ import {
   RefreshTokenWithUser,
   UserResponse,
   UserWithPassword,
-} from '../provider-contract/auth.provider-contract.js';
+} from './auth.contract.js';
 
 class AuthPgProvider implements IAuthProvider {
   async findUserByEmail(email: string): Promise<UserWithPassword | null> {

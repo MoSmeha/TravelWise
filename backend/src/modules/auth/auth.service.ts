@@ -4,9 +4,9 @@ import argon2 from 'argon2';
 import { createHash } from 'crypto';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { RegisterInput, LoginInput } from '../schemas/auth.schema.js';
-import { authProvider } from '../providers/auth.provider.pg.js';
-import { UserResponse, UserWithPassword } from '../provider-contract/auth.provider-contract.js';
+import { RegisterInput, LoginInput } from '../../schemas/auth.schema.js';
+import { authProvider } from './auth.provider.js';
+import { UserResponse, UserWithPassword } from './auth.contract.js';
 // Removed auth.error.ts imports
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-duper-secret-se-factory';

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext, resetAllMocks, mockUser } from './setup.js';
 
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../modules/auth/auth.service.js', () => ({
   register: vi.fn(),
   login: vi.fn(),
   rotateRefreshToken: vi.fn(),
@@ -16,13 +16,13 @@ vi.mock('../services/email.service.js', () => ({
   sendWelcomeEmail: vi.fn(),
 }));
 
-import { register, login, refresh, me } from '../controllers/auth.controller.js';
+import { register, login, refresh, me } from '../modules/auth/auth.controller.js';
 import {
   register as registerService,
   login as loginService,
   rotateRefreshToken,
   getUserById
-} from '../services/auth.service.js';
+} from '../modules/auth/auth.service.js';
 // Removed auth.error.ts imports
 
 describe('Auth Controller', () => {

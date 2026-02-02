@@ -1,4 +1,4 @@
-import { SharePermission, ShareStatus, ItineraryShare } from '../generated/prisma/client.js';
+import { SharePermission, ShareStatus, ItineraryShare } from '../../generated/prisma/client.js';
 
 export interface CreateShareParams {
   itineraryId: string;

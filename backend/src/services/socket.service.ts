@@ -1,6 +1,6 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import { verifyAccessToken } from './auth.service.js';
+import { verifyAccessToken } from '../modules/auth/auth.service.js';
 import {
   updateUserLocation,
   cleanupUserLocations,

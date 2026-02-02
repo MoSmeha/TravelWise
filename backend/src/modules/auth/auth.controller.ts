@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
+import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 // Removed auth.error.ts imports
 import {
   LoginInput,
@@ -7,7 +7,7 @@ import {
   RegisterInput,
   ResendVerificationInput,
   VerifyEmailInput,
-} from '../schemas/auth.schema.js';
+} from '../../schemas/auth.schema.js';
 import {
   register as registerUser,
   login as loginUser,
@@ -16,8 +16,8 @@ import {
   getUserById,
   getUserByEmail,
   generateVerificationOTP,
-} from '../services/auth.service.js';
-import { sendVerificationEmail, sendWelcomeEmail } from '../services/email.service.js';
+} from './auth.service.js';
+import { sendVerificationEmail, sendWelcomeEmail } from '../../services/email.service.js';
 
 
 
