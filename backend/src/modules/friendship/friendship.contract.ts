@@ -1,4 +1,4 @@
-import { User, Friendship, FriendshipStatus } from '../generated/prisma/client.js';
+import { User, Friendship, FriendshipStatus } from '../../generated/prisma/client.js';
 
 export interface FriendRequestWithUser extends Friendship {
   requester?: User;

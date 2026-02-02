@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware.js';
+import { AuthRequest } from '../../middleware/auth.middleware.js';
 import {
   createPost as createNewPost,
   getFriendsFeed as fetchFriendsFeed,
@@ -13,8 +13,8 @@ import {
   addComment as createComment,
   getPostComments as fetchPostComments,
   deleteComment as removeComment,
-} from '../services/post.service.js';
-import { PostVisibility } from '../generated/prisma/client.js';
+} from './post.service.js';
+import { PostVisibility } from '../../generated/prisma/client.js';
 
 
 export async function createPost(req: AuthRequest, res: Response) {

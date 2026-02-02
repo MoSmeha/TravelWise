@@ -16,7 +16,7 @@ vi.mock('../services/socket.service.js', () => ({
 }));
 
 import * as UsersController from '../modules/user/user.controller.js';
-import { searchUsers } from '../services/friendship.service.js';
+import { searchUsers } from '../modules/friendship/friendship.service.js';
 import { updateAvatar, getUserById } from '../modules/user/user.service.js';
 
 const mockUser = { id: 'user-123', name: 'Test User', username: 'testuser' };

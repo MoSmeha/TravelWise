@@ -1,4 +1,4 @@
-import { Post, Like, Comment, User, PostVisibility } from '../generated/prisma/client.js';
+import { Post, Like, Comment, User, PostVisibility } from '../../generated/prisma/client.js';
 
 
 export interface PaginatedResult<T> {

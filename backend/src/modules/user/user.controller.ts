@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../../middleware/auth.middleware.js';
-import { searchUsers as findUsers } from '../../services/friendship.service.js';
+import { searchUsers as findUsers } from '../friendship/friendship.service.js';
 import { updateAvatar as updateUserAvatar, getUserById as fetchUser, sanitizeUser } from './user.service.js';
 import { socketService } from '../../services/socket.service.js';
 

@@ -6,7 +6,7 @@ import {
   getFriends,
   getPendingRequests,
   getSentRequests,
-} from '../controllers/friendship.controller.js';
+} from '../modules/friendship/friendship.controller.js';
 import { validate } from '../middleware/validate.js';
 import {
   sendFriendRequestSchema,

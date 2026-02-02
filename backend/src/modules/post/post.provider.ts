@@ -1,12 +1,12 @@
-import { Like, PostVisibility } from '../generated/prisma/client.js';
-import prisma from '../lib/prisma.js';
+import { Like, PostVisibility } from '../../generated/prisma/client.js';
+import prisma from '../../lib/prisma.js';
 import {
   IPostProvider,
   PostWithAuthor,
   CommentWithAuthor,
   LikeWithUser,
   PaginatedResult,
-} from '../provider-contract/post.provider-contract.js';
+} from './post.contract.js';
 
 const DEFAULT_LIMIT = 10;
 

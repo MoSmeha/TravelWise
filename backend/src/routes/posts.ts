@@ -12,7 +12,7 @@ import {
   addComment,
   getPostComments,
   deleteComment,
-} from '../controllers/post.controller.js';
+} from '../modules/post/post.controller.js';
 import { validate } from '../middleware/validate.js';
 import { singleImageUpload } from '../middleware/upload.middleware.js';
 import {

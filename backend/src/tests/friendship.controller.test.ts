@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext, resetAllMocks } from './setup.js';
 
-vi.mock('../services/friendship.service.js', () => ({
+vi.mock('../modules/friendship/friendship.service.js', () => ({
   sendFriendRequest: vi.fn(),
   acceptFriendRequest: vi.fn(),
   rejectFriendRequest: vi.fn(),
@@ -10,8 +10,8 @@ vi.mock('../services/friendship.service.js', () => ({
   getSentRequests: vi.fn(),
 }));
 
-import * as FriendshipController from '../controllers/friendship.controller.js';
-import { sendFriendRequest, acceptFriendRequest, getFriends, getPendingRequests } from '../services/friendship.service.js';
+import * as FriendshipController from '../modules/friendship/friendship.controller.js';
+import { sendFriendRequest, acceptFriendRequest, getFriends, getPendingRequests } from '../modules/friendship/friendship.service.js';
 
 const mockFriendship = {
   id: 'friendship-123',

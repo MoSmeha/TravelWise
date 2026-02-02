@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware.js';
+import { AuthRequest } from '../../middleware/auth.middleware.js';
 import {
   sendFriendRequest as sendRequest,
   acceptFriendRequest as acceptRequest,
@@ -7,7 +7,7 @@ import {
   getFriends as listFriends,
   getPendingRequests as listPendingRequests,
   getSentRequests as listSentRequests,
-} from '../services/friendship.service.js';
+} from './friendship.service.js';
 
 export async function sendFriendRequest(req: AuthRequest, res: Response) {
   try {

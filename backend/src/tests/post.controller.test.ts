@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext, resetAllMocks } from './setup.js';
 
-vi.mock('../services/post.service.js', () => ({
+vi.mock('../modules/post/post.service.js', () => ({
   createPost: vi.fn(),
   getFriendsFeed: vi.fn(),
   getPublicFeed: vi.fn(),
@@ -16,8 +16,8 @@ vi.mock('../services/post.service.js', () => ({
   deleteComment: vi.fn(),
 }));
 
-import * as PostController from '../controllers/post.controller.js';
-import * as postService from '../services/post.service.js';
+import * as PostController from '../modules/post/post.controller.js';
+import * as postService from '../modules/post/post.service.js';
 
 const mockPost = { id: 'post-123', userId: 'user-123', imageUrl: 'https://example.com/img.jpg' };
 

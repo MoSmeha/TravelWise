@@ -1,14 +1,14 @@
-import { PostVisibility } from '../generated/prisma/client.js';
-import { postProvider } from '../providers/post.provider.pg.js';
-import { friendshipProvider } from '../providers/friendship.provider.pg.js';
-import { createNotification } from './notification.service.js';
-import { uploadToCloudinary } from '../config/cloudinary.js';
+import { PostVisibility } from '../../generated/prisma/client.js';
+import { postProvider } from './post.provider.js';
+import { friendshipProvider } from '../friendship/friendship.provider.js';
+import { createNotification } from '../../services/notification.service.js';
+import { uploadToCloudinary } from '../../config/cloudinary.js';
 import {
   PostWithAuthor,
   PaginatedResult,
   CommentWithAuthor,
   LikeWithUser,
-} from '../provider-contract/post.provider-contract.js';
+} from './post.contract.js';
 
 
 export async function createPost(
