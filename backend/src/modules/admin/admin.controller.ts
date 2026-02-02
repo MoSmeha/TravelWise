@@ -1,7 +1,7 @@
 
 
 import { Response } from 'express';
-import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
+import { AuthenticatedRequest } from '../../middleware/auth.middleware.js';
 import {
   getOverviewStats,
   getItinerariesByCountry,
@@ -11,7 +11,7 @@ import {
   getUsers,
   getLocationCategoryBreakdown,
   getEngagementStats,
-} from '../services/admin.service.js';
+} from './admin.service.js';
 
 
 export async function getOverview(

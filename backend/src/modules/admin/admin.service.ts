@@ -1,9 +1,9 @@
 
 
-import { adminProvider } from '../providers/admin.provider.pg.js';
+import { adminProvider } from './admin.provider.js';
 import {
   AdminUserListItem,
-} from '../provider-contract/admin.provider-contract.js';
+} from './admin.contract.js';
 
 
 

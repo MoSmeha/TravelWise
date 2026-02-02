@@ -1,6 +1,6 @@
 
 
-import prisma from '../lib/prisma.js';
+import prisma from '../../lib/prisma.js';
 import {
   IWebhookProvider,
   RawUpcomingTripRecord,
@@ -9,7 +9,7 @@ import {
   CreateWeatherChecklistData,
   CreateWeatherNotificationData,
   NotificationRecord,
-} from '../provider-contract/webhook.provider-contract.js';
+} from './webhook.contract.js';
 
 class WebhookPgProvider implements IWebhookProvider {
 

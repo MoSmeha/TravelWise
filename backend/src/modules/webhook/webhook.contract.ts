@@ -1,6 +1,6 @@
 
 
-import { LocationCategory, NotificationType, ChecklistCategory } from '../generated/prisma/client.js';
+import { LocationCategory, NotificationType, ChecklistCategory } from '../../generated/prisma/client.js';
 
 
 

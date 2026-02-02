@@ -7,12 +7,12 @@ import {
   getTripsForWeatherCheck as fetchTripsForWeatherCheck,
   addWeatherChecklist as createWeatherChecklist,
   sendWeatherNotification as createWeatherNotification,
-} from '../services/webhook.service.js';
+} from './webhook.service.js';
 import {
   UpcomingTripsQuery,
   AddWeatherChecklistInput,
   SendWeatherNotificationInput,
-} from '../schemas/webhook.schema.js';
+} from '../../schemas/webhook.schema.js';
 
 
 export async function getHealth(_req: Request, res: Response) {

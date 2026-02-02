@@ -14,7 +14,7 @@ import {
   getTripsForWeatherCheck,
   addWeatherChecklist,
   sendWeatherNotification,
-} from '../controllers/webhook.controller.js';
+} from '../modules/webhook/webhook.controller.js';
 
 const router = Router();
 

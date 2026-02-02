@@ -1,7 +1,7 @@
 
 
-import { webhookProvider } from '../providers/webhook.provider.pg.js';
-import { socketService } from './socket.service.js';
+import { webhookProvider } from './webhook.provider.js';
+import { socketService } from '../../services/socket.service.js';
 import {
   UpcomingTripRecord,
   UncheckedItemsRecord,
@@ -13,7 +13,7 @@ import {
   RawUpcomingTripRecord,
   RawUncheckedItemsRecord,
   RawTripForWeatherCheckRecord,
-} from '../provider-contract/webhook.provider-contract.js';
+} from './webhook.contract.js';
 
 
 

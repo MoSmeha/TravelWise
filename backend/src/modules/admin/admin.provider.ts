@@ -1,6 +1,6 @@
 
 
-import prisma from '../lib/prisma.js';
+import prisma from '../../lib/prisma.js';
 import {
   AdminUserListItem,
   CountResult,
@@ -8,7 +8,7 @@ import {
   ItineraryWithBudget,
   ItineraryWithStyles,
   UserGrowthData,
-} from '../provider-contract/admin.provider-contract.js';
+} from './admin.contract.js';
 
 class AdminPgProvider implements IAdminProvider {
 

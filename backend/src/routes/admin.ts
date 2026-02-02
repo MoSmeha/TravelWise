@@ -10,7 +10,7 @@ import {
   listUsers,
   getCategoryStats,
   getEngagement,
-} from '../controllers/admin.controller.js';
+} from '../modules/admin/admin.controller.js';
 import { validate } from '../middleware/validate.js';
 import { listUsersSchema, userStatsSchema } from '../schemas/admin.schema.js';
 
