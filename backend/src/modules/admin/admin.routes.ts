@@ -1,8 +1,8 @@
 
 
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { requireAdmin } from '../middleware/admin-auth.middleware.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { requireAdmin } from '../../middleware/admin-auth.middleware.js';
 import {
   getOverview,
   getItineraryStats,
@@ -10,9 +10,9 @@ import {
   listUsers,
   getCategoryStats,
   getEngagement,
-} from '../modules/admin/admin.controller.js';
-import { validate } from '../middleware/validate.js';
-import { listUsersSchema, userStatsSchema } from '../modules/admin/admin.schema.js';
+} from './admin.controller.js';
+import { validate } from '../../middleware/validate.js';
+import { listUsersSchema, userStatsSchema } from './admin.schema.js';
 
 const router = Router();
 

@@ -8,22 +8,22 @@ import {
   verifyEmail,
   resendVerification,
   me,
-} from '../modules/auth/auth.controller.js';
-import { authenticate } from '../middleware/auth.middleware.js';
+} from './auth.controller.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
 import {
   loginRateLimiter,
   refreshRateLimiter,
   registerRateLimiter,
   resendVerificationRateLimiter,
-} from '../middleware/rate-limit.middleware.js';
-import { validate } from '../middleware/validate.js';
+} from '../../middleware/rate-limit.middleware.js';
+import { validate } from '../../middleware/validate.js';
 import {
   loginSchema,
   refreshTokenSchema,
   registerSchema,
   resendVerificationSchema,
   verifyEmailSchema,
-} from '../modules/auth/auth.schema.js';
+} from './auth.schema.js';
 
 const router = Router();
 

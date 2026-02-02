@@ -6,16 +6,16 @@ import {
   getMessages,
   sendMessage,
   markConversationRead,
-} from '../modules/message/message.controller.js';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { validate, validateMultiple } from '../middleware/validate.js';
+} from './message.controller.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { validate, validateMultiple } from '../../middleware/validate.js';
 import {
   createConversationSchema,
   sendMessageSchema,
   paginationSchema,
   messagePaginationSchema,
   conversationIdSchema,
-} from '../modules/message/message.schema.js';
+} from './message.schema.js';
 
 const router = Router();
 

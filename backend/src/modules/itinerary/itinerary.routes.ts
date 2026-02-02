@@ -5,7 +5,7 @@ import {
   listUserItineraries,
   getItineraryDetails,
   deleteItinerary,
-} from '../modules/itinerary/itinerary.controller.js';
+} from './itinerary.controller.js';
 import {
   inviteUserToItinerary,
   listCollaborators,
@@ -14,10 +14,10 @@ import {
   removeItineraryCollaborator,
   updateCollaboratorPermission,
   listSharedItineraries,
-} from '../modules/itinerary/share.controller.js';
-import { requireOwnership } from '../middleware/ownership.middleware.js';
-import { validate } from '../middleware/validate.js';
-import { generateItinerarySchema } from '../modules/itinerary/itinerary.schema.js';
+} from './share.controller.js';
+import { requireOwnership } from '../../middleware/ownership.middleware.js';
+import { validate } from '../../middleware/validate.js';
+import { generateItinerarySchema } from './itinerary.schema.js';
 
 const router = Router();
 

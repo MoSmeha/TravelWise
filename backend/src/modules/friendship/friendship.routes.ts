@@ -6,12 +6,12 @@ import {
   getFriends,
   getPendingRequests,
   getSentRequests,
-} from '../modules/friendship/friendship.controller.js';
-import { validate } from '../middleware/validate.js';
+} from './friendship.controller.js';
+import { validate } from '../../middleware/validate.js';
 import {
   sendFriendRequestSchema,
   friendshipIdParamSchema,
-} from '../modules/friendship/friendship.schema.js';
+} from './friendship.schema.js';
 
 const router = Router();
 

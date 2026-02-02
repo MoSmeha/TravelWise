@@ -12,16 +12,16 @@ import {
   addComment,
   getPostComments,
   deleteComment,
-} from '../modules/post/post.controller.js';
-import { validate } from '../middleware/validate.js';
-import { singleImageUpload } from '../middleware/upload.middleware.js';
+} from './post.controller.js';
+import { validate } from '../../middleware/validate.js';
+import { singleImageUpload } from '../../middleware/upload.middleware.js';
 import {
   createPostSchema,
   postIdParamSchema,
   userIdParamSchema,
   addCommentSchema,
   deleteCommentSchema,
-} from '../modules/post/post.schema.js';
+} from './post.schema.js';
 
 const router = Router();
 

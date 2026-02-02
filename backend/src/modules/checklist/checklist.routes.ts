@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { getChecklist, updateItem, createItem, deleteItem, deleteAllItems } from '../modules/checklist/checklist.controller.js';
-import { requireOwnership } from '../middleware/ownership.middleware.js';
-import { validate } from '../middleware/validate.js';
+import { getChecklist, updateItem, createItem, deleteItem, deleteAllItems } from './checklist.controller.js';
+import { requireOwnership } from '../../middleware/ownership.middleware.js';
+import { validate } from '../../middleware/validate.js';
 import { 
   createChecklistItemSchema, 
   updateChecklistItemSchema 
-} from '../modules/checklist/checklist.schema.js';
+} from './checklist.schema.js';
 
 const router = Router();
 

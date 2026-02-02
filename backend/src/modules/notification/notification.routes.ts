@@ -4,10 +4,10 @@ import {
   markAsRead,
   markAllAsRead,
   getUnreadCount,
-} from '../modules/notification/notification.controller.js';
-import { validate } from '../middleware/validate.js';
-import { getNotificationsSchema, notificationIdSchema } from '../modules/notification/notification.schema.js';
-import { authenticate } from '../middleware/auth.middleware.js';
+} from './notification.controller.js';
+import { validate } from '../../middleware/validate.js';
+import { getNotificationsSchema, notificationIdSchema } from './notification.schema.js';
+import { authenticate } from '../../middleware/auth.middleware.js';
 
 const router = Router();
 

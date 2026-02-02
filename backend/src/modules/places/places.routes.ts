@@ -7,9 +7,9 @@ import {
   listPlaces,
   getPlaceById,
   getDirections,
-} from '../modules/places/places.controller.js';
-import { validate } from '../middleware/validate.js';
-import { getPhotosSchema, listPlacesSchema, searchPlaceSchema } from '../modules/places/places.schema.js';
+} from './places.controller.js';
+import { validate } from '../../middleware/validate.js';
+import { getPhotosSchema, listPlacesSchema, searchPlaceSchema } from './places.schema.js';
 
 const router = Router();
 

@@ -1,12 +1,12 @@
 
 
 import { Router } from 'express';
-import { validate } from '../middleware/validate.js';
+import { validate } from '../../middleware/validate.js';
 import {
   upcomingTripsQuerySchema,
   addWeatherChecklistSchema,
   sendWeatherNotificationSchema,
-} from '../modules/webhook/webhook.schema.js';
+} from './webhook.schema.js';
 import {
   getHealth,
   getUpcomingTrips,
@@ -14,7 +14,7 @@ import {
   getTripsForWeatherCheck,
   addWeatherChecklist,
   sendWeatherNotification,
-} from '../modules/webhook/webhook.controller.js';
+} from './webhook.controller.js';
 
 const router = Router();
 
