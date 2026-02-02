@@ -1,11 +1,11 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware.js';
+import { AuthRequest } from '../../middleware/auth.middleware.js';
 import {
   getNotifications as listNotifications,
   markAsRead as markOneAsRead,
   markAllAsRead as markAll,
   getUnreadCount as countUnread
-} from '../services/notification.service.js';
+} from './notification.service.js';
 
 export async function getNotifications(req: AuthRequest, res: Response) {
   try {

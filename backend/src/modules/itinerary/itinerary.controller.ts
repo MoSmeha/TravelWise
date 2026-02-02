@@ -13,7 +13,7 @@ import {
   buildItineraryResponse,
   buildItineraryDetailsResponse,
 } from "./itinerary.service.js";
-import { storeItineraryEmbeddings } from "../../services/rag-retrieval.service.js";
+import { storeItineraryEmbeddings } from "../ai/rag.service.js";
 import { parseBudgetLevel, parseTravelStyles } from "../../utils/enum-mappers.js";
 import { itineraryProvider } from "./itinerary.provider.js";
 

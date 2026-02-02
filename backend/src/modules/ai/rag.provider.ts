@@ -1,8 +1,8 @@
-import prisma from '../lib/prisma.js';
+import prisma from '../../lib/prisma.js';
 import {
   EmbeddingTypeBreakdown,
   IRagProvider,
-} from '../provider-contract/rag.provider-contract.js';
+} from './rag.contract.js';
 
 class RagPgProvider implements IRagProvider {
   async itineraryExists(id: string): Promise<boolean> {

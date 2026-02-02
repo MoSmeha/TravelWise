@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { askQuestion, getEmbeddingStatus } from '../controllers/rag.controller.js';
+import { askQuestion, getEmbeddingStatus } from '../modules/ai/rag.controller.js';
 import { requireOwnership } from '../middleware/ownership.middleware.js';
 import { validate } from '../middleware/validate.js';
 import { askQuestionSchema } from '../schemas/itinerary.schema.js';

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { AskQuestionInput } from '../schemas/itinerary.schema.js';
-import { askAboutItinerary } from '../services/rag-retrieval.service.js';
-import { ragProvider } from '../providers/rag.provider.pg.js';
+import { AskQuestionInput } from '../../schemas/itinerary.schema.js';
+import { askAboutItinerary } from './rag.service.js';
+import { ragProvider } from './rag.provider.js';
 
 
 export async function askQuestion(req: Request, res: Response) {

@@ -15,7 +15,7 @@ vi.mock('../modules/itinerary/itinerary.service.js', () => ({
   buildItineraryDetailsResponse: vi.fn(),
 }));
 
-vi.mock('../services/rag-retrieval.service.js', () => ({
+vi.mock('../modules/ai/rag.service.js', () => ({
   storeItineraryEmbeddings: vi.fn(),
 }));
 

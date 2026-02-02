@@ -1,9 +1,9 @@
-import { ChunkType as PrismaChunkType } from '../generated/prisma/client.js';
-import { ragProvider } from '../providers/rag.provider.pg.js';
-import prisma from '../lib/prisma.js';
+import { ChunkType as PrismaChunkType } from '../../generated/prisma/client.js';
+import { ragProvider } from './rag.provider.js';
+import prisma from '../../lib/prisma.js';
 import { chunkItinerary, ItineraryData } from './chunking.service.js';
 import { batchGenerateEmbeddings, generateEmbedding } from './embedding.service.js';
-import { getOpenAIClient } from '../utils/openai.utils.js';
+import { getOpenAIClient } from '../../utils/openai.utils.js';
 
 
 

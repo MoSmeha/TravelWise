@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext, resetAllMocks } from './setup.js';
 
-vi.mock('../services/notification.service.js', () => ({
+vi.mock('../modules/notification/notification.service.js', () => ({
   getNotifications: vi.fn(),
   markAsRead: vi.fn(),
   markAllAsRead: vi.fn(),
   getUnreadCount: vi.fn(),
 }));
 
-import * as NotificationController from '../controllers/notification.controller.js';
-import * as notificationService from '../services/notification.service.js';
+import * as NotificationController from '../modules/notification/notification.controller.js';
+import * as notificationService from '../modules/notification/notification.service.js';
 
 const mockNotification = { id: 'notif-123', type: 'FRIEND_REQUEST', read: false };
 

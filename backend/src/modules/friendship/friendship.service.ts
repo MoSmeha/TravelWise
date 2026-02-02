@@ -1,6 +1,6 @@
 import { Friendship, User } from '../../generated/prisma/client.js';
 import { friendshipProvider } from './friendship.provider.js';
-import { createNotification } from '../../services/notification.service.js';
+import { createNotification } from '../notification/notification.service.js';
 
 
 export async function sendFriendRequest(requesterId: string, addresseeId: string): Promise<Friendship> {

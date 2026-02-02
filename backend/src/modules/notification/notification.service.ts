@@ -1,6 +1,6 @@
-import prisma from '../lib/prisma.js';
-import { NotificationType } from '../generated/prisma/client.js';
-import { socketService } from './socket.service.js';
+import prisma from '../../lib/prisma.js';
+import { NotificationType } from '../../generated/prisma/client.js';
+import { socketService } from '../../services/socket.service.js';
 
 export interface CreateNotificationParams {
   userId: string;

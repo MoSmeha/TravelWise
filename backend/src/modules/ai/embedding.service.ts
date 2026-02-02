@@ -1,5 +1,5 @@
-import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../lib/circuit-breaker.js';
-import { getOpenAIClient, isOpenAIConfigured } from '../utils/openai.utils.js';
+import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../../lib/circuit-breaker.js';
+import { getOpenAIClient, isOpenAIConfigured } from '../../utils/openai.utils.js';
 
 
 

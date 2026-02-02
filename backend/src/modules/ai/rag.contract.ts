@@ -1,5 +1,5 @@
 
-import { ChunkType } from '../generated/prisma/client.js';
+import { ChunkType } from '../../generated/prisma/client.js';
 
 
 export interface EmbeddingTypeBreakdown {

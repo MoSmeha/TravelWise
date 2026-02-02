@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import prisma from '../lib/prisma.js';
-import { generateEmbedding } from '../services/embedding.service.js';
+import { generateEmbedding } from '../modules/ai/embedding.service.js';
 
 /**
  * Generate Knowledge Embeddings Script

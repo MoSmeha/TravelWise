@@ -4,7 +4,7 @@ import {
   markAsRead,
   markAllAsRead,
   getUnreadCount,
-} from '../controllers/notification.controller.js';
+} from '../modules/notification/notification.controller.js';
 import { validate } from '../middleware/validate.js';
 import { getNotificationsSchema, notificationIdSchema } from '../schemas/notification.schema.js';
 import { authenticate } from '../middleware/auth.middleware.js';
