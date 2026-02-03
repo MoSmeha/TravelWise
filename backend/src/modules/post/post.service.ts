@@ -2,7 +2,7 @@ import { PostVisibility } from '../../generated/prisma/client.js';
 import { postProvider } from './post.provider.js';
 import { friendshipProvider } from '../friendship/friendship.provider.js';
 import { createNotification } from '../notification/notification.service.js';
-import { uploadToCloudinary } from '../../config/cloudinary.js';
+import { uploadToCloudinary } from '../shared/config/cloudinary.js';
 import {
   PostWithAuthor,
   PaginatedResult,

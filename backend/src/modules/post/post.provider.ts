@@ -1,5 +1,5 @@
 import { Like, PostVisibility } from '../../generated/prisma/client.js';
-import prisma from '../../lib/prisma.js';
+import prisma from '../shared/lib/prisma.js';
 import {
   IPostProvider,
   PostWithAuthor,

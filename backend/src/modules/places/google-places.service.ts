@@ -1,4 +1,4 @@
-import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../../lib/circuit-breaker.js';
+import { CIRCUIT_BREAKERS, CircuitOpenError, withCircuitBreaker } from '../shared/lib/circuit-breaker.js';
 import { CACHE_KEYS, CACHE_TTL, cacheGet, cacheSet } from '../shared/cache.service.js';
 
 

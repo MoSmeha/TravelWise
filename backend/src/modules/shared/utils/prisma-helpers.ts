@@ -1,4 +1,4 @@
-import { PriceLevel } from '../generated/prisma/client.js';
+import { PriceLevel } from '../../../generated/prisma/client.js';
 
 export function mapGooglePriceLevel(priceLevel: number | string | null | undefined): PriceLevel | null {
   if (priceLevel === null || priceLevel === undefined) return null;

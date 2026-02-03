@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockContext, resetAllMocks } from '../../tests/setup.js';
 
-vi.mock('../../config/countries.config.js', () => ({
+vi.mock('../shared/config/countries.config.js', () => ({
   getCountriesList: vi.fn(),
   COUNTRIES: { lebanon: { name: 'Lebanon', airports: [{ code: 'BEY' }] } },
   getAirportConfig: vi.fn(),
@@ -27,13 +27,13 @@ vi.mock('./itinerary.provider.js', () => ({
   },
 }));
 
-vi.mock('../../utils/enum-mappers.js', () => ({
+vi.mock('../shared/utils/enum-mappers.js', () => ({
   parseBudgetLevel: vi.fn((level) => level),
   parseTravelStyles: vi.fn((styles) => styles || []),
 }));
 
 import * as ItineraryController from './itinerary.controller.js';
-import { getCountriesList } from '../../config/countries.config.js';
+import { getCountriesList } from '../shared/config/countries.config.js';
 import { itineraryProvider } from './itinerary.provider.js';
 
 const mockItinerary = { id: 'itinerary-123', userId: 'test-user-id-123', country: 'Lebanon' };

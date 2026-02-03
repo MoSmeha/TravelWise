@@ -1,5 +1,5 @@
 import { LocationCategory, Place } from '../../generated/prisma/client.js';
-import { BudgetLevel, TravelStyle } from '../../utils/enum-mappers.js';
+import { BudgetLevel, TravelStyle } from '../shared/utils/enum-mappers.js';
 
 /**
  * Extended Place type with additional dynamic properties

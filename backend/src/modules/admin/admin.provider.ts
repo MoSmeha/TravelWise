@@ -1,6 +1,6 @@
 
 
-import prisma from '../../lib/prisma.js';
+import prisma from '../shared/lib/prisma.js';
 import {
   AdminUserListItem,
   CountResult,

@@ -41,7 +41,7 @@ export function parseTravelStyles(values: string[] | undefined): TravelStyle[] {
   return values.slice(0, 3).map(v => parseTravelStyle(v));
 }
 
-import { PriceLevel } from '../generated/prisma/client.js';
+import { PriceLevel } from '../../../generated/prisma/client.js';
 
 export function mapBudgetToPriceLevel(budget: BudgetLevel): PriceLevel | undefined {
   switch (budget) {

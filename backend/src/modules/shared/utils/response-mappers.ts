@@ -1,4 +1,4 @@
-import { LocationCategory, LocationClassification } from '../generated/prisma/client.js';
+import { LocationCategory, LocationClassification } from '../../../generated/prisma/client.js';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place';

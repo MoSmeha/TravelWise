@@ -1,5 +1,5 @@
 import { LocationCategory, PriceLevel, LocationClassification } from '../../generated/prisma/client.js';
-import { TravelStyle } from '../../utils/enum-mappers.js';
+import { TravelStyle } from '../shared/utils/enum-mappers.js';
 import { itineraryProvider } from './itinerary.provider.js';
 import { IItineraryProvider } from './itinerary.contract.js';
 import { PlaceExtended, ACTIVITY_CATEGORIES } from './itinerary.types.js';

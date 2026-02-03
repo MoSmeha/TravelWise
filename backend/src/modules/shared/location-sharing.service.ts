@@ -1,4 +1,4 @@
-import prisma from '../../lib/prisma.js';
+import prisma from './lib/prisma.js';
 import { UpdateLocationInput } from './location-sharing.schema.js';
 
 

@@ -1,9 +1,10 @@
 import { ChunkType as PrismaChunkType } from '../../generated/prisma/client.js';
 import { ragProvider } from './rag.provider.js';
-import prisma from '../../lib/prisma.js';
+import prisma from '../shared/lib/prisma.js';
 import { chunkItinerary, ItineraryData } from './chunking.service.js';
 import { batchGenerateEmbeddings, generateEmbedding } from './embedding.service.js';
-import { getOpenAIClient } from '../../utils/openai.utils.js';
+import { getOpenAIClient } from '../shared/utils/openai.utils.js';
+import { RagPrompts } from '../prompts/rag.prompts.js';
 
 
 
@@ -282,12 +283,7 @@ export async function generateActionResponse(
   
   const context = safeChunkStrings.join('\n\n---\n\n');
 
-  const systemPrompt = `You are a knowledgeable travel assistant for Lebanon.
-Answer the user's question completely based on the context provided.
-If the answer is not in the context, say so politely.
-Don't use Markdown formatting (bold/italics) in the answer.
-
-${staleWarning ? `Note: ${staleWarning}` : ''}`;
+  const systemPrompt = RagPrompts.systemPrompt(staleWarning);
   
   try {
     const response = await openai.chat.completions.create({

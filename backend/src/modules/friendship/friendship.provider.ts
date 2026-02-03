@@ -1,5 +1,5 @@
 import { User, Friendship, FriendshipStatus } from '../../generated/prisma/client.js';
-import prisma from '../../lib/prisma.js';
+import prisma from '../shared/lib/prisma.js';
 import { IFriendshipProvider, FriendRequestWithUser } from './friendship.contract.js';
 
 export class PostgresFriendshipProvider implements IFriendshipProvider {

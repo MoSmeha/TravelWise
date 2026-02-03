@@ -1,7 +1,7 @@
 
 
 import { NextFunction, Response } from 'express';
-import prisma from '../lib/prisma.js';
+import prisma from '../modules/shared/lib/prisma.js';
 import { AuthenticatedRequest } from './auth.middleware.js';
 
 

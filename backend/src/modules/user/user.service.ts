@@ -1,6 +1,6 @@
 import { User } from '../../generated/prisma/client.js';
 import { userProvider } from './user.provider.js';
-import { uploadToCloudinary } from '../../config/cloudinary.js';
+import { uploadToCloudinary } from '../shared/config/cloudinary.js';
 
 
 export async function getUserById(userId: string): Promise<User | null> {

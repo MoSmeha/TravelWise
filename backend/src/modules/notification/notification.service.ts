@@ -1,4 +1,4 @@
-import prisma from '../../lib/prisma.js';
+import prisma from '../shared/lib/prisma.js';
 import { NotificationType } from '../../generated/prisma/client.js';
 import { socketService } from '../shared/socket.service.js';
 

@@ -17,8 +17,8 @@ import {
   getDirections as googleGetDirections,
   PlaceEnrichment
 } from './google-places.service.js';
-import { extractCityFromAddress } from '../../utils/enum-mappers.js';
-import { mapGooglePriceLevel } from '../../utils/prisma-helpers.js';
+import { extractCityFromAddress } from '../shared/utils/enum-mappers.js';
+import { mapGooglePriceLevel } from '../shared/utils/prisma-helpers.js';
 
 
 

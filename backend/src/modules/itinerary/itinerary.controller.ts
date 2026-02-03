@@ -4,7 +4,7 @@ import {
   getCountriesList,
   COUNTRIES,
   getAirportConfig,
-} from "../../config/countries.config.js";
+} from "../shared/config/countries.config.js";
 import { GenerateItineraryInput } from "./itinerary.schema.js";
 import {
   generateItinerary,
@@ -14,7 +14,7 @@ import {
   buildItineraryDetailsResponse,
 } from "./itinerary.service.js";
 import { storeItineraryEmbeddings } from "../ai/rag.service.js";
-import { parseBudgetLevel, parseTravelStyles } from "../../utils/enum-mappers.js";
+import { parseBudgetLevel, parseTravelStyles } from "../shared/utils/enum-mappers.js";
 import { itineraryProvider } from "./itinerary.provider.js";
 
 

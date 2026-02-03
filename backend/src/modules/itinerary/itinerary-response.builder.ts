@@ -1,4 +1,4 @@
-import { mapPlaceForGenerateResponse, mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } from '../../utils/response-mappers.js';
+import { mapPlaceForGenerateResponse, mapPlaceToLocation, mapPlaceToMeal, mapPlaceToHotel, mapAirportToResponse } from '../shared/utils/response-mappers.js';
 import { ItineraryResult } from './itinerary.types.js';
 
 /**

@@ -2,7 +2,7 @@ import { SharePermission, ShareStatus, NotificationType } from '../../generated/
 import { itineraryShareProvider } from './share.provider.js';
 import { IItineraryShareProvider } from './share.contract.js';
 import { socketService } from '../shared/socket.service.js';
-import prisma from '../../lib/prisma.js';
+import prisma from '../shared/lib/prisma.js';
 
 
 export async function inviteUser(
