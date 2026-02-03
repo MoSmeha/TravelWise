@@ -7,9 +7,11 @@ import type {
   GenerateItineraryRequest,
   ItineraryResponse,
   Place,
+  PlaceReview,
   PlacesResponse,
   RAGResponse
 } from '../types/api';
+import type { Post, Comment, PaginatedResponse, PostVisibility } from '../types/post';
 import {
   ChecklistItemSchema,
   CountryConfigSchema,
@@ -182,9 +184,9 @@ export const placesService = {
     return response.data.data;
   },
 
-  async getPlacePhotos(name: string, lat?: number, lng?: number, id?: string): Promise<{ photos: string[]; reviews: any[] }> {
+  async getPlacePhotos(name: string, lat?: number, lng?: number, id?: string): Promise<{ photos: string[]; reviews: PlaceReview[] }> {
     const params = { name, lat, lng, id };
-    const response = await api.get<{ photos: string[]; reviews: any[] }>('/places/photos', { params });
+    const response = await api.get<{ photos: string[]; reviews: PlaceReview[] }>('/places/photos', { params });
     return response.data;
   },
 
@@ -237,7 +239,6 @@ export const checklistService = {
   },
 };
 
-import type { Post, Comment, PaginatedResponse, PostVisibility } from '../types/post';
 
 export const postService = {
   async getFeed(cursor?: string, limit: number = 10): Promise<PaginatedResponse<Post>> {
