@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { itineraryService } from '../../services/api';
+import { itineraryService } from '../../services/itinerary';
 import { GenerateItineraryRequest, ItineraryResponse, RAGResponse } from '../../types/api';
 
 export const useGenerateItinerary = () => {

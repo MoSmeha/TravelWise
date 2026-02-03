@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import api from '../../services/api';
+import api from '../../services/api-client';
 import { useAuth } from '../../store/authStore';
 import {
   ConversationSchema,

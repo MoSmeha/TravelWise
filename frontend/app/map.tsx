@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Text, View, TouchableOpacity } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { MapPin, MapPinOff, Plane, Hotel as HotelIcon } from 'lucide-react-native';
-import { placesService } from '../services/api';
+import { placesService } from '../services/places';
 import { DAY_COLORS } from '../constants/theme';
 import { useItineraryDetails } from '../hooks/queries/useItineraries';
 import { useMultipleDirections } from '../hooks/queries/useDirections';

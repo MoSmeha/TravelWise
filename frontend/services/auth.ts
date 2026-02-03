@@ -1,4 +1,4 @@
-import api from './api';
+import api from './api-client';
 import { RegisterInput, LoginInput, VerifyEmailInput, ResendVerificationInput } from '../types/auth';
 import { 
   AuthResponseSchema, 

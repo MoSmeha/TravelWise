@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { checklistService } from '../../services/api';
+import { checklistService } from '../../services/checklist';
 
 export const useToggleChecklistItem = () => {
   const queryClient = useQueryClient();

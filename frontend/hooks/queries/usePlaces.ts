@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { placesService } from '../../services/api';
+import { placesService } from '../../services/places';
 import { PlacesResponse, Place } from '../../types/api';
 
 interface UsePlacesParams {

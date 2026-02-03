@@ -68,7 +68,7 @@ export const useSocket = () => {
     // This ensures the conversations list refetches with updated read status
     if (isViewingThisConversation) {
       try {
-        const api = (await import('../services/api')).default;
+        const api = (await import('../services/api-client')).default;
         await api.put(`/messages/conversations/${event.conversationId}/read`);
       } catch (error) {
         console.error('[useSocket] Failed to mark conversation as read:', error);
