@@ -17,7 +17,5 @@ export const useOnlineStatus = (userIds: string[]) => {
       return response.data;
     },
     enabled: isAuthenticated && !isRestoring && userIds.length > 0,
-
-
   });
 };

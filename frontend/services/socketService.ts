@@ -82,17 +82,18 @@ class SocketService {
     console.log('[Socket] Force reconnecting...');
     this.currentToken = token;
     
-
-    if (this.socket && !this.socket.connected) {
-      console.log('[Socket] Socket exists but disconnected, reconnecting...');
-      this.socket.connect();
-    } else if (!this.socket) {
-
-      console.log('[Socket] No socket exists, creating new connection...');
-      this.connect(token);
-    } else {
-      console.log('[Socket] Socket already connected');
+    // Always destroy and recreate socket to ensure fresh auth token is used
+    if (this.socket) {
+      console.log('[Socket] Destroying existing socket and creating new connection with fresh token...');
+      this.stopPing();
+      this.socket.disconnect();
+      this.socket.removeAllListeners();
+      this.socket = null;
     }
+    
+    // Create new connection with fresh token
+    console.log('[Socket] Creating new connection with fresh token...');
+    this.connect(token);
   }
   
   private startPing() {

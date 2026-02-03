@@ -117,6 +117,29 @@ export const useSocket = () => {
     };
   }, [accessToken, user?.id]);
 
+  // Handle online/offline status updates globally
+  const handleUserOnline = useCallback((data: { userId: string }) => {
+    console.log('[useSocket] User came online:', data.userId);
+    queryClient.setQueriesData<Record<string, boolean>>(
+      { queryKey: ['users', 'online-status'] },
+      (oldData) => {
+        if (!oldData) return oldData;
+        return { ...oldData, [data.userId]: true };
+      }
+    );
+  }, [queryClient]);
+
+  const handleUserOffline = useCallback((data: { userId: string }) => {
+    console.log('[useSocket] User went offline:', data.userId);
+    queryClient.setQueriesData<Record<string, boolean>>(
+      { queryKey: ['users', 'online-status'] },
+      (oldData) => {
+        if (!oldData) return oldData;
+        return { ...oldData, [data.userId]: false };
+      }
+    );
+  }, [queryClient]);
+
   useEffect(() => {
 
     if (accessToken && !isRestoring && user?.id) {
@@ -127,6 +150,8 @@ export const useSocket = () => {
 
       socketService.on('notification:new', handleNotification);
       socketService.on('message:new', handleNewMessage);
+      socketService.on('user:online', handleUserOnline);
+      socketService.on('user:offline', handleUserOffline);
     } else if (!accessToken) {
       socketService.disconnect();
     }
@@ -136,9 +161,11 @@ export const useSocket = () => {
         console.log('[useSocket] Cleaning up listeners');
         socketService.off('notification:new', handleNotification);
         socketService.off('message:new', handleNewMessage);
+        socketService.off('user:online', handleUserOnline);
+        socketService.off('user:offline', handleUserOffline);
       }
     };
-  }, [accessToken, isRestoring, user?.id, handleNotification, handleNewMessage]);
+  }, [accessToken, isRestoring, user?.id, handleNotification, handleNewMessage, handleUserOnline, handleUserOffline]);
 
   return socketService;
 };

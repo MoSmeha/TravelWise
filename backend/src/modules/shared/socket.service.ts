@@ -52,12 +52,21 @@ class SocketService {
       console.log(`[SOCKET] User connected: ${socket.userId}, socketId: ${socket.id}`);
       
 
+      // Track if this is the user's first socket (they just came online)
+      const wasOffline = !this.userSockets.has(socket.userId) || this.userSockets.get(socket.userId)?.size === 0;
+      
       if (!this.userSockets.has(socket.userId)) {
         this.userSockets.set(socket.userId, new Set());
       }
       this.userSockets.get(socket.userId)?.add(socket.id);
       
       console.log(`[SOCKET] Active users: ${Array.from(this.userSockets.keys()).join(', ')}`);
+      
+      // Broadcast that user came online (only if they weren't already online)
+      if (wasOffline) {
+        console.log(`[SOCKET] Broadcasting user:online for ${socket.userId}`);
+        this.io?.emit('user:online', { userId: socket.userId });
+      }
 
 
       socket.join(`user:${socket.userId}`);
@@ -134,6 +143,9 @@ class SocketService {
             this.userSockets.get(socket.userId)?.delete(socket.id);
             if (this.userSockets.get(socket.userId)?.size === 0) {
               this.userSockets.delete(socket.userId);
+              // Broadcast that user went offline
+              console.log(`[SOCKET] Broadcasting user:offline for ${socket.userId}`);
+              this.io?.emit('user:offline', { userId: socket.userId });
             }
           }
         }
