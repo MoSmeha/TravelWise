@@ -95,6 +95,19 @@ export const APP_COLORS = {
   dark: '#1C1C1E',
 } as const;
 
+/**
+ * Brand-specific colors used throughout the TravelWise app.
+ * Use these instead of hardcoding hex values in components.
+ */
+export const BRAND_COLORS = {
+  /** Main brand color - used for primary buttons, headers, and accents */
+  primary: '#0A4974',
+  /** Lighter shade of primary - used for backgrounds and hover states */
+  primaryLight: 'rgba(10, 73, 116, 0.1)',
+  /** Text on primary background */
+  primaryText: '#FFFFFF',
+} as const;
+
 
 export function getClassificationLabel(classification: keyof typeof CLASSIFICATION_COLORS): string {
   const labels: Record<keyof typeof CLASSIFICATION_COLORS, string> = {

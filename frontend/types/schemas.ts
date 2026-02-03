@@ -5,6 +5,14 @@ import { z } from 'zod';
 export const LocationClassificationSchema = z.enum(['HIDDEN_GEM', 'CONDITIONAL', 'TOURIST_TRAP', 'MUST_SEE']);
 export const CrowdLevelSchema = z.enum(['EMPTY', 'QUIET', 'MODERATE', 'BUSY', 'OVERCROWDED']);
 export const PriceLevelSchema = z.enum(['INEXPENSIVE', 'MODERATE', 'EXPENSIVE']);
+
+export const PlaceReviewSchema = z.object({
+  author: z.string(),
+  rating: z.number(),
+  text: z.string(),
+  time: z.string(),
+});
+
 export const LocationCategorySchema = z.enum([
   'RESTAURANT', 'CAFE', 'BAR', 'NIGHTCLUB',
   'BEACH', 'HIKING', 'HISTORICAL_SITE', 'MUSEUM',
@@ -482,6 +490,7 @@ export type Warning = z.infer<typeof WarningSchema>;
 
 export type ItineraryResponse = z.infer<typeof ItineraryResponseSchema>;
 export type Place = z.infer<typeof PlaceSchema>;
+export type PlaceReview = z.infer<typeof PlaceReviewSchema>;
 export type ChecklistItem = z.infer<typeof ChecklistItemSchema>;
 
 export type RAGResponse = z.infer<typeof RAGResponseSchema>;

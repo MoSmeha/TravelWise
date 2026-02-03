@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { deleteItemAsync, getItemAsync, setItemAsync } from 'expo-secure-store';
-import { User } from '../types/auth';
+import { queryClient } from '../lib/react-query';
+import type { User } from '../types/auth';
 
 interface AuthState {
   user: User | null;
@@ -30,9 +31,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     console.log('[AUTH] Logout called');
     await deleteItemAsync(STORAGE_KEY_ACCESS);
     await deleteItemAsync(STORAGE_KEY_REFRESH);
-    
 
-    const { queryClient } = require('../lib/react-query');
     queryClient.clear();
     console.log('[AUTH] Cleared tokens and query cache');
     
