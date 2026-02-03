@@ -68,15 +68,27 @@ api.interceptors.response.use(
         
         if (isRestoring) {
           console.log('[Auth] Waiting for hydration to complete...');
-          let waitCount = 0;
-          while (isRestoring && waitCount < 6) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const state = useAuth.getState();
-            isRestoring = state.isRestoring;
-            rToken = state.refreshToken;
-            waitCount++;
-          }
-          console.log('[Auth] Hydration wait complete, hasRefreshToken:', !!rToken);
+          await new Promise<void>((resolve) => {
+            // Check if already done
+            if (!useAuth.getState().isRestoring) {
+              resolve();
+              return;
+            }
+            // Otherwise subscribe and wait for change
+            const unsubscribe = useAuth.subscribe(
+              (state) => state.isRestoring,
+              (stillRestoring) => {
+                if (!stillRestoring) {
+                  unsubscribe();
+                  resolve();
+                }
+              }
+            );
+          });
+          // Re-fetch state after hydration
+          const state = useAuth.getState();
+          rToken = state.refreshToken;
+          console.log('[Auth] Hydration complete, hasRefreshToken:', !!rToken);
         }
         
         if (!rToken) {

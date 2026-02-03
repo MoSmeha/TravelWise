@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
 import { deleteItemAsync, getItemAsync, setItemAsync } from 'expo-secure-store';
 import { queryClient } from '../lib/react-query';
 import type { User } from '../types/auth';
@@ -20,7 +21,7 @@ interface AuthState {
 const STORAGE_KEY_ACCESS = 'auth_access_token';
 const STORAGE_KEY_REFRESH = 'auth_refresh_token';
 
-export const useAuth = create<AuthState>((set, get) => ({
+export const useAuth = create<AuthState>()(subscribeWithSelector((set, get) => ({
   user: null,
   accessToken: null,
   refreshToken: null,
@@ -79,4 +80,4 @@ export const useAuth = create<AuthState>((set, get) => ({
   updateUser: (user) => {
       set({ user });
   }
-}));
+})));
