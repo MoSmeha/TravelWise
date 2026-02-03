@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
-import prisma from '../lib/prisma.js';
-import { generateEmbedding } from '../services/embedding.service.js';
+import prisma from '../modules/shared/lib/prisma.js';
+import { generateEmbedding } from '../modules/ai/embedding.service.js';
 
 async function main() {
   console.log('>>> Starting Reddit Data Ingestion...');

@@ -1,8 +1,8 @@
 
 
 import { NextFunction, Request, Response } from 'express';
-import prisma from '../lib/prisma.js';
-import { verifyAccessToken } from '../services/auth.service.js';
+import prisma from '../modules/shared/lib/prisma.js';
+import { verifyAccessToken } from '../modules/auth/auth.service.js';
 
 
 export interface AuthenticatedRequest extends Request {

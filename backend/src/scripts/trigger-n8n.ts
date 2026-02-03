@@ -1,5 +1,5 @@
 
-import prisma from '../lib/prisma.js';
+import prisma from '../modules/shared/lib/prisma.js';
 
 const EMAIL = 'mohamad.smeha.cs@gmail.com';
 

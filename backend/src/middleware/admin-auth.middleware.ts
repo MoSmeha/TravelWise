@@ -2,7 +2,7 @@
 
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from './auth.middleware.js';
-import prisma from '../lib/prisma.js';
+import prisma from '../modules/shared/lib/prisma.js';
 
 
 export async function requireAdmin(
