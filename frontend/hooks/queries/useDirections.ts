@@ -1,5 +1,5 @@
 import { useQueries } from '@tanstack/react-query';
-import { placesService } from '../../services/api';
+import { placesService } from '../../services/places';
 import { decodePolyline } from '../../lib/polyline';
 
 interface RouteCoord {

@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { postService } from '../../services/api';
+import { postService } from '../../services/post';
 import type { Post, Comment, PaginatedResponse, PostVisibility } from '../../types/post';
 
 
