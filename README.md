@@ -65,8 +65,7 @@ TravelWise/
 
 ### Backend Architecture
 
-The backend is built using a **Modern Modular Architecture** that prioritizes **Separation of Concerns**, **Scalability**, and **Maintainability**. Instead of grouping files by type (controllers, services, etc.), I grouped them by **Module** (e.g., Auth, Itinerary, User) to keep related logic independent, inspired by the [Repository Pattern](https://blog.alexrusin.com/clean-architecture-in-node-js-implementing-the-repository-pattern-with-typescript-and-prisma/).
-
+The backend is built using a **Modern Modular Architecture** and inspired by the [Repository Pattern](https://blog.alexrusin.com/clean-architecture-in-node-js-implementing-the-repository-pattern-with-typescript-and-prisma/) that prioritizes **Separation of Concerns**, **Scalability**, and **Maintainability**. Instead of grouping files by type (controllers, services, etc.), I grouped them by **Module** (e.g., Auth, Itinerary, User) to keep related logic independent.
 <div align="center">
   <img src="./readme/diagrams/Backend_Architecture.png" style="max-width:100%; height:auto;" alt="High Level Backend Architecture" />
 </div>
