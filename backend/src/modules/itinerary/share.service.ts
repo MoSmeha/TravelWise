@@ -12,6 +12,17 @@ export async function inviteUser(
   permission: SharePermission = SharePermission.VIEWER,
   provider: IItineraryShareProvider = itineraryShareProvider
 ) {
+  // Check if user is already invited to this itinerary
+  const existingShare = await prisma.itineraryShare.findFirst({
+    where: {
+      itineraryId,
+      userId,
+    },
+  });
+
+  if (existingShare) {
+    throw new Error('User has already been invited to this itinerary');
+  }
 
   const share = await provider.createShare({
     itineraryId,
