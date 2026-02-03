@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./readme/title1.svg" width="100%" />
+  <img src="./readme/titles/title1.svg" width="100%" />
 </div>
 
 <br/>
@@ -28,7 +28,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <!-- project overview -->
 <div id="overview" align="center">
-  <img src="./readme/title2.svg" width="100%" />
+  <img src="./readme/titles/title2.svg" width="100%" />
 </div>
 <br/>
 
@@ -52,13 +52,23 @@ TravelWise/
 
 <!-- System Design -->
 <div align="center">
-  <img src="./readme/title3.svg" width="100%" />
+  <img src="./readme/titles/title3.svg" width="100%" />
 </div>
 
 ### System Design
 
 <div align="center">
-  <img src="./readme/System_Design.png" style="max-width:100%; height:auto;" />
+  <img src="./readme/diagrams/System_Design.png" style="max-width:100%; height:auto;" />
+</div>
+
+<br/>
+
+### Backend Architecture
+
+The backend is built using a **Modern Modular Architecture** that prioritizes **Separation of Concerns**, **Scalability**, and **Maintainability**. Instead of grouping files by type (controllers, services, etc.), I grouped them by **Module** (e.g., Auth, Itinerary, User) to keep related logic independent, inspired by the [Repository Pattern](https://blog.alexrusin.com/clean-architecture-in-node-js-implementing-the-repository-pattern-with-typescript-and-prisma/).
+
+<div align="center">
+  <img src="./readme/diagrams/Backend_Architecture.png" style="max-width:100%; height:auto;" alt="High Level Backend Architecture" />
 </div>
 
 <br/>
@@ -66,15 +76,15 @@ TravelWise/
 ### Entity Relationship Diagram
 
 <div align="center">
-  <img src="./readme/Database_Architecture.png" style="max-width:100%; height:auto;" />
+  <img src="./readme/diagrams/Database_Architecture.png" style="max-width:100%; height:auto;" />
 </div>
 
 <br/>
 
 ### TravelWise AI Agent
 
-<a href="./readme/AI_Agent.png">
-  <img src="./readme/AI_Agent.png" alt="Agent Flow" width="1200">
+<a href="./readme/diagrams/AI_Agent.png">
+  <img src="./readme/diagrams/AI_Agent.png" alt="Agent Flow" width="1200">
 </a>
 
 <br/>
@@ -82,25 +92,25 @@ TravelWise/
 ### n8n Workflow
 
 <div align="center">
-  <img src="./readme/n8n.png" style="max-width:100%; height:auto;" />
+  <img src="./readme/diagrams/n8n.png" style="max-width:100%; height:auto;" />
 </div>
 
 <br/>
 
 <!-- Project Highlights -->
 <div align="center">
-  <img src="./readme/title4.svg" width="100%" />
+  <img src="./readme/titles/title4.svg" width="100%" />
 </div>
 
 ### Interesting Features
 
-<img src="./readme/Interesting_Features.png"/>
+<img src="./readme/assets/Interesting_Features.png"/>
 
 <br/>
 
 <!-- User Screens -->
 <div align="center">
-  <img src="./readme/title5.svg" width="100%" />
+  <img src="./readme/titles/title5.svg" width="100%" />
 </div>
 
 ### User Screens
@@ -207,7 +217,7 @@ TravelWise/
 
 <!-- Development & Testing -->
 <div align="center">
-  <img src="./readme/title6.svg" width="100%" />
+  <img src="./readme/titles/title6.svg" width="100%" />
 </div>
 
 <br/>
@@ -263,14 +273,14 @@ TravelWise/
 
 <!-- Deployment -->
 <div align="center">
-  <img src="./readme/title7.svg" width="100%" />
+  <img src="./readme/titles/title7.svg" width="100%" />
 </div>
 
 ### Deployment Map
 
 | Deployment Flow                        |
 | -------------------------------------- |
-| ![Map](./readme/Docker_Deployment.png) |
+| ![Map](./readme/diagrams/Docker_Deployment.png) |
 
 <br/>
 
@@ -287,6 +297,6 @@ Built with **Supabase**, **React**, and **Express**.
 
 <div align="center">
   <a href="https://ama-chatbot.vercel.app/">
-    <img src="./readme/AMA-Chatbot.png" style="max-width:100%; height:auto;" />
+    <img src="./readme/assets/AMA-Chatbot.png" style="max-width:100%; height:auto;" />
   </a>
 </div>
